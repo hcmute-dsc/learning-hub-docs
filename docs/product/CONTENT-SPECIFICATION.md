@@ -158,7 +158,7 @@ spec:
 
 **`self_check`**: `spec: { checklist: [..] }` (≥ 1 mục) — member tự đánh dấu hoàn thành; đáp án gập nằm trong `statement.md` (§3.8).
 
-**`project`**: `spec: { deliverable: github_repo_or_pr, rubric: [ {criterion: "...", weight: 2} ] }` — `deliverable`: `github_repo_or_pr` hoặc `link`; `rubric` ≥ 1 mục, `weight` số nguyên 1–10 (mặc định 1). Mentor đánh giá theo rubric.
+**`project`**: `spec: { deliverable: github_repo_or_pr, rubric: [ {criterion: "...", weight: 2} ] }` — `deliverable`: `github_repo_or_pr` hoặc `link`; `rubric` ≥ 1 mục, `weight` số nguyên 1–100 (mặc định 1; có thể là điểm, ví dụ rubric 100 điểm của dự án cuối khóa SQL). Mentor đánh giá theo rubric.
 
 ### 3.6 Test cases (cho `code`)
 Test ẩn nằm trong `learning-hub-checker` (repo riêng, chỉ Ban kỹ thuật có quyền ghi) để thành viên không đọc/sửa được. Định dạng test do exercise quyết định (vd so sánh kết quả truy vấn với tập kỳ vọng); ví dụ test hiển thị công khai (2–3 ca) đặt trong `statement.md` hoặc `examples:` trong `exercise.yaml`. Tác giả content gửi test qua PR vào checker repo (review bởi CODEOWNERS), liên kết bằng `spec.checker.tests`.
