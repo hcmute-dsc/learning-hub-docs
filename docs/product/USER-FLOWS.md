@@ -159,13 +159,13 @@ Review có thể làm ngay trên GitHub (comment PR); hub chỉ lưu kết luậ
 flowchart TD
   A[Thành viên muốn thêm/sửa bài] --> B[Fork/branch learning-hub-content]
   B --> C[Viết lesson.md/exercise.yaml theo CONTENT-SPECIFICATION]
-  C --> D[Chạy pnpm validate cục bộ]
+  C --> D[Chạy hub-content-validate cục bộ]
   D --> E[Mở Pull Request]
-  E --> F[CI: schema, link, prerequisite, test case chạy mẫu]
+  E --> F[CI: hub-content-validate - schema, tham chiếu, prerequisite, link/gitleaks dự kiến]
   F --> G{CODEOWNERS review}
   G -- Cần sửa --> C
   G -- Duyệt --> H[Merge vào main]
-  H --> I[Webhook/Action → hub tạo content_version draft]
+  H --> I[Webhook/Action/CLI sync → hub tạo content_version draft]
   I --> J[Admin xem diff và Publish]
 ```
 
@@ -173,27 +173,43 @@ Phase 2: nút "Sửa trên GitHub" trên mỗi lesson, preview PR.
 
 ## 10. Admin publish learning path [MVP]
 
+Hai bước tách biệt: **sync** chỉ đọc + validate + ghi một `content_version` (không đụng catalog); **publish** mới ghi catalog.
+
 ```mermaid
 sequenceDiagram
   actor Mt as Content maintainer
   actor Ad as Admin
   participant Hub as API (content)
-  participant CS as ContentSource (GitHub)
+  participant CS as ContentSource (GitHub / LocalDir)
   participant DB as DB
   Mt->>Hub: POST /api/v1/admin/content/sync (commit_sha tùy chọn)
-  Hub->>CS: Đọc cây thư mục tại commit
-  Hub->>Hub: Validate schema + toàn vẹn tham chiếu
+  Hub->>CS: getHead() nếu không có SHA, đọc cây file tại commit SHA
+  Hub->>DB: Đã có version (source_repo, commit_sha)? → trả lại version đó (idempotent)
+  Hub->>Hub: Validate (@hub/content) + khóa tự nhiên so với DB
   alt lỗi
+    Hub->>DB: INSERT content_version(status=rejected, summary.issues)
     Hub-->>Mt: 422 danh sách lỗi theo file
   else hợp lệ
-    Hub->>DB: INSERT content_version(status=draft, commit_sha)
-    Hub->>DB: Upsert track/module/lesson/exercise (gắn version, chưa hiển thị)
-    Hub-->>Mt: Diff so với bản published
+    Hub->>DB: INSERT content_version(status=draft, commit_sha, summary.diff)
+    Hub-->>Mt: Diff so với catalog hiện tại (thêm/sửa/xóa/không đổi theo loại)
   end
+  Note over Hub,DB: Sync KHÔNG ghi tracks/modules/lessons/exercises
   Ad->>Hub: POST /api/v1/admin/content/versions/{id}/publish
-  Hub->>DB: Chuyển version=published; bản trước=superseded (1 giao dịch)
-  Hub->>DB: audit_logs
+  Hub->>CS: Đọc lại cây file tại đúng commit SHA đã ghim
+  Hub->>Hub: Validate lại (+ khóa tự nhiên)
+  alt lỗi / nguồn đã đổi
+    Hub-->>Ad: 422 (version giữ nguyên draft)
+  else hợp lệ
+    Hub->>DB: 1 giao dịch: bản published trước=superseded, upsert item mới/đổi (theo uid, content_hash) gắn content_version_id, item biến mất → archived, thay exercise_prerequisites, version=published
+    Hub->>DB: audit_logs
+    Hub-->>Ad: 200 version published
+  end
 ```
+
+- **Sync** idempotent theo `(source_repo, commit_sha)`: sync lại cùng commit trả về version đã có, không tạo bản ghi mới.
+- **`rejected`** = sync gặp lỗi validate; `summary` giữ danh sách lỗi để maintainer sửa trong PR mới (commit mới ⇒ version mới).
+- **Publish** chỉ upsert item mới/đổi (so `content_hash`), không bao giờ xóa cứng: item không còn trong Git chuyển `archived`. Kiểm tra khóa tự nhiên chặn trường hợp `uid` bị đổi (item "mới" trùng cha + slug, hoặc track slug, của bản ghi có `id` khác).
+- MVP-Lite chưa có UI admin: maintainer chạy `pnpm --filter @hub/api content:sync [--sha <sha>] [--publish]` (cùng service với endpoint). UI xem diff/publish ở MVP-Full.
 
 Bài đã nộp giữ `content_version_id` lúc nộp, nên đổi đề sau đó không làm hỏng lịch sử.
 

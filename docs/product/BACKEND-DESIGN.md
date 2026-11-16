@@ -36,6 +36,8 @@ learning-hub/                  # monorepo (pnpm workspace)
     web/                       # Next.js (xem FRONTEND-DESIGN)
   packages/
     shared/                    # Zod schema + type dùng chung, error codes, client OpenAPI sinh tự động
+    content/                   # @hub/content: Zod schema file nội dung, parser/validator, CLI hub-content-validate
+  content-example/             # cây nội dung mẫu nhỏ cho dev/test (sync bằng LocalDirContentSource)
   infra/                       # docker-compose, Caddyfile, workflows mẫu
   docs/
 ```
@@ -78,9 +80,11 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 - E: không. D: `common`.
 
 ### content
-- **Trách nhiệm:** đồng bộ từ Git qua `ContentSource`, validate schema + toàn vẹn, tạo `content_version`, diff, publish.
-- C: `AdminContentController` (`POST /admin/content/sync`, `GET /admin/content/versions`, `GET .../{id}`, `POST .../{id}/publish`, `POST .../{id}/reject`).
-- S: `ContentSyncService`, `ContentValidator`, `ContentPublisher`, `ContentDiffService`. R: `ContentVersionRepository`. Port: `ContentSource`.
+- **Trách nhiệm:** đọc repo nội dung qua `ContentSource`, validate (parser/validator dùng chung trong `packages/content` = `@hub/content`) + kiểm tra khóa tự nhiên so với DB, ghi `content_version`, diff, publish.
+- **Sync** (`POST /admin/content/sync`, tuỳ chọn `commitSha`): đọc cây file tại commit SHA → validate → ghi `content_version` `draft` + `summary` diff (thêm/sửa/xóa/không đổi theo loại), hoặc `rejected` + danh sách lỗi (trả **422**). Idempotent theo `(source_repo, commit_sha)`. **Không ghi** bảng catalog.
+- **Publish** (`POST .../{id}/publish`): đọc lại nguồn tại đúng commit SHA đã ghim, validate lại, rồi trong **một giao dịch**: version published trước → `superseded`; upsert chỉ item mới/đổi (theo `uid`, so `content_hash`) và gắn `content_version_id`; item biến mất → `archived` (không xóa cứng); thay `exercise_prerequisites`; version → `published`.
+- C: `AdminContentController` (`POST /admin/content/sync`, `GET /admin/content/versions`, `GET .../{id}`, `POST .../{id}/publish`, `POST .../{id}/reject` [Full]). CLI cho MVP-Lite (chưa có UI admin): `pnpm --filter @hub/api content:sync [--sha <sha>] [--publish]`, gọi cùng service.
+- S: `ContentSyncService`, `ContentPublisher`, `ContentDiffService` (validator là `parseContent()` của `@hub/content`). R: `ContentVersionRepository`. Port: `ContentSource` (`LocalDirContentSource` cho dev/test, `GithubContentSource`; chọn bằng env `CONTENT_SOURCE` — ARCHITECTURE §7).
 - E: `ContentVersionDrafted`, `ContentVersionPublished`. D: `catalog` (qua `CatalogWriter`), `audit` (qua event).
 
 ### learning
@@ -123,7 +127,7 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 - D: `common` (không phụ thuộc module khác; nhận event).
 
 ### integrations/github
-Adapter: `GithubIdentityProvider`, `GithubContentSource`, `GithubRepoReader`, `GithubWebhookController`, `GithubAppAuth` (JWT → installation token). Không chứa luật nghiệp vụ; chỉ dịch giữa GitHub và port.
+Adapter: `GithubIdentityProvider`, `GithubContentSource` (GitHub REST, token tuỳ chọn ở MVP-Lite), `GithubRepoReader`, `GithubWebhookController`, `GithubAppAuth` (JWT → installation token). Không chứa luật nghiệp vụ; chỉ dịch giữa GitHub và port.
 
 ### integrations/discord
 Adapter: `DiscordWebhookChannel` implements `NotificationChannel`. (P2) `DiscordBot` dùng `discord.js`.
@@ -177,7 +181,7 @@ Theo tinh thần RFC 9457 (problem+json):
 - `POST /exercises/{id}/submissions` yêu cầu header `Idempotency-Key` (UUID); lưu vào `submissions.idempotency_key` (UQ theo user). Gửi lại cùng key → trả lại submission cũ (200), khác nội dung cùng key → 422.
 - Enroll: idempotent theo UQ `(user, track)`.
 - Webhook GitHub: idempotent theo `X-GitHub-Delivery` + UQ `(provider, external_run_id)`.
-- Publish content: idempotent theo `(source_repo, commit_sha)`.
+- Sync content: idempotent theo `(source_repo, commit_sha)` (sync lại cùng commit trả version đã có).
 
 ### 3.8 Khác
 - Thời gian ISO-8601 UTC; id là UUID; trường JSON `camelCase` (map với cột `snake_case` ở repository).
@@ -209,8 +213,8 @@ Theo tinh thần RFC 9457 (problem+json):
 | `POST /reviews/{id}/complete` | reviewer | MVP | `{status: approved\|changes_requested, summary}` |
 | `GET /mentor/mentees` | mentor | MVP | |
 | `POST /admin/mentorship/{id}/assign` | admin | MVP | |
-| `POST /admin/content/sync` | content_maintainer, admin | MVP | |
-| `POST /admin/content/versions/{id}/publish` | admin | MVP | |
+| `POST /admin/content/sync` | content_maintainer, admin | MVP | `{commitSha?}` → version `draft` + diff; 422 + danh sách lỗi (version `rejected`); không ghi catalog |
+| `POST /admin/content/versions/{id}/publish` | admin | MVP | đọc lại tại commit SHA đã ghim, validate lại, ghi catalog trong 1 giao dịch; 422 nếu không còn hợp lệ |
 | `PUT /admin/users/{id}/roles` | admin | MVP | ghi audit |
 | `POST /admin/users/{id}/approve` | admin, mentor | MVP | `pending` → `active`, ghi audit |
 | `POST /exercises/{id}/self-check` | member | MVP | `{completed:true}` cho bài `self_check` |

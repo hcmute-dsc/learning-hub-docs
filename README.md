@@ -2,7 +2,7 @@
 
 Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student Club**, lấy cảm hứng từ [Exercism](https://exercism.org/): học bằng cách làm, có bài tập, có mentor review. **Không phải SaaS** — một nền tảng cho một CLB, thiết kế để các thế hệ sinh viên kế tiếp bảo trì được.
 
-> Trạng thái: **tài liệu thiết kế v0.1 (nháp, chờ Ban chủ nhiệm duyệt)** · Chưa có mã ứng dụng · Ngày audit repo: 2026-11-16.
+> Trạng thái: **tài liệu thiết kế v0.1 (nháp, chờ Ban chủ nhiệm duyệt)** · Mã ứng dụng đang dựng trong monorepo `learning-hub` (E3 đang làm) · Ngày audit repo: 2026-11-16.
 > Ngôn ngữ: tiếng Việt (thuật ngữ kỹ thuật giữ tiếng Anh).
 
 ## Đọc theo thứ tự nào?
@@ -39,7 +39,7 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 4. **Kiến trúc.** Modular monolith NestJS + Next.js + PostgreSQL; 3 tiến trình ở MVP; không Redis/MinIO/microservice; adapter GitHub/Discord cô lập sau các port. *(ARCHITECTURE)*
 5. **Database.** 17 bảng domain + 3 bảng hạ tầng; ràng buộc idempotency, 1 version published, 1 review mở/submission. *(DATABASE)*
 6. **API.** `/api/v1`, cursor pagination, lỗi `problem+json`, `Idempotency-Key`, OpenAPI → client sinh tự động. *(BACKEND-DESIGN §3–4)*
-7. **Nội dung.** Repo `learning-hub-content`; `uid` ổn định; JSON Schema + CI; mỗi publish = 1 commit SHA; trừu tượng `ContentSource`. *(CONTENT-SPECIFICATION)*
+7. **Nội dung.** Repo `learning-hub-content`; `uid` ổn định (UUID v7); schema Zod + validator `@hub/content` chạy trong CI; sync tạo version `draft`, publish mới ghi catalog (1 version = 1 commit SHA); trừu tượng `ContentSource`. *(CONTENT-SPECIFICATION)*
 8. **Chiến lược repo.** `learning-hub` (monorepo), `learning-hub-content` (công khai), `learning-hub-checker` (riêng tư, test ẩn), `learning-hub-docs`; `learning-hub-runner` chỉ tương lai. **Chưa tạo repo nào.** *(DECISIONS ADR-09)*
 9. **Bảo mật.** GitHub OAuth, session DB, RBAC + policy tài nguyên, HMAC webhook, **CI chấm do CLB sở hữu** (không tin workflow của thành viên), sandbox riêng cho tương lai. *(SECURITY)*
 10. **Lộ trình.** Phase 0 (4–6 tuần) → MVP-Lite (~8 tuần) → MVP-Full (~4 tuần), nhóm 3–6 sinh viên. *(MVP-BACKLOG §4)*

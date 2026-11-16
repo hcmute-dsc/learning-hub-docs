@@ -107,12 +107,13 @@ Cô lập trong `integrations/github`, chỉ lộ ra các port:
 
 | Port (do business module sở hữu) | Chức năng | Adapter GitHub |
 | --- | --- | --- |
-| `ContentSource` (content) | liệt kê file, đọc file tại commit SHA, lấy commit hiện tại của branch | Octokit: Git Trees/Contents API, hoặc tải tarball tại SHA |
+| `ContentSource` (content) | liệt kê file, đọc file tại commit SHA, lấy commit hiện tại của branch | `GithubContentSource`: GitHub REST `commits/{branch}`, `git/trees/{sha}?recursive=1`, `contents/{path}?ref={sha}` (tarball tại SHA: tối ưu sau). Dev/test: `LocalDirContentSource` (không phải adapter GitHub) |
 | `RepoReader` (submissions) | kiểm tra PR/commit tồn tại, thuộc user, lấy head_sha, danh sách file đổi | Octokit pulls API |
 | `CiResultReceiver` (assessments) | nhận kết quả CI | Webhook `workflow_run`, `check_run`, `pull_request` |
 | `IdentityProvider` (identity) | đổi code lấy token, lấy hồ sơ, kiểm tra org | OAuth + `GET /user`, `GET /orgs/{org}/members/{user}` |
 
-- **GitHub App** (đề xuất) thay vì PAT: quyền tối thiểu `Contents: read`, `Pull requests: read`, `Checks: read`, `Actions: read`, `Metadata: read`; cài trên content repo (và repo exercise nếu private). Token cài đặt ngắn hạn, sinh từ private key.
+- Chọn nguồn nội dung bằng env: `CONTENT_SOURCE=local|github`; `local` đọc `CONTENT_LOCAL_DIR` (SHA giả = sha1 trên đường dẫn đã sắp xếp + nội dung, publish báo lỗi nếu thư mục đổi sau sync); `github` đọc `CONTENT_REPO` nhánh `CONTENT_BRANCH`, không cần token với repo công khai, `CONTENT_GITHUB_TOKEN` tuỳ chọn để nâng rate limit (CONTENT-SPECIFICATION §8).
+- **GitHub App** (đề xuất, đích dài hạn cả cho đọc content) thay vì PAT: quyền tối thiểu `Contents: read`, `Pull requests: read`, `Checks: read`, `Actions: read`, `Metadata: read`; cài trên content repo (và repo exercise nếu private). Token cài đặt ngắn hạn, sinh từ private key.
 - Webhook endpoint `/api/v1/integrations/github/webhook`: kiểm tra chữ ký, ghi `delivery_id` để chống xử lý trùng, trả 2xx nhanh, xử lý ngắn (ghi test_run); nặng hơn thì đẩy vào job nội bộ.
 - Rate limit: cache ETag, ưu tiên webhook thay vì polling; đối soát định kỳ thưa (§8).
 - Cách chấm bài `code` (**repo chấm do CLB sở hữu**, không tin workflow trong repo thành viên):
@@ -180,7 +181,7 @@ flowchart LR
 
 | Môi trường | Mô tả |
 | --- | --- |
-| Local | `docker compose up` (postgres + mailhog tuỳ chọn); `pnpm dev` chạy api/web; seed demo; GitHub OAuth app "dev". |
+| Local | `docker compose up` (postgres + mailhog tuỳ chọn); `pnpm dev` chạy api/web; seed roles/admin; nội dung demo bằng `content:sync --publish` từ `content-example`; GitHub OAuth app "dev". |
 | Staging (tuỳ chọn) | Một compose nhỏ, content repo nhánh `staging`. |
 | Production | 1 VM (2 vCPU/4 GB đủ), Caddy (TLS tự động), Compose; backup `pg_dump` sang storage rẻ; image gắn tag theo commit SHA. |
 

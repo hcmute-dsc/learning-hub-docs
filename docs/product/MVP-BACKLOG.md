@@ -7,7 +7,7 @@
 
 | Việc | Kết quả | Tiêu chí hoàn thành |
 | --- | --- | --- |
-| P0-1 Tạo `learning-hub-content`, schema, CI validate | Repo có `tools/validate` + CI | `pnpm validate` chạy trên bản import mẫu |
+| P0-1 Tạo `learning-hub-content`, schema, CI validate | Repo có CI chạy `hub-content-validate` (package `@hub/content` trong monorepo app) | Validate pass trên bản import mẫu |
 | P0-2 Import SQL Challenge (script + rà soát) | Track `sql-30-days` hợp lệ | 33 bài qua validate; maintainer duyệt |
 | P0-3 Chạy 1 đợt thử (4–6 tuần, ≥ 20 người) bằng site VitePress + PR/Issue + Discord | Số liệu & phản hồi | Báo cáo theo CRITIQUE §6 |
 | P0-4 Quyết định đi/không đi | Biên bản Ban chủ nhiệm | ≥ 3/5 tiêu chí đạt |
@@ -46,11 +46,13 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 | Phân quyền | Bảng `roles`, `user_roles`, guard + policy, seed admin | Ma trận quyền có test e2e |
 | Duyệt thành viên | Admin/mentor duyệt `pending` (UI tối giản hoặc SQL runbook ở Lite) | Chuyển `active` + audit |
 
-### E3 — Nội dung từ Git (M) → E2
-| Story | Task | Acceptance |
-| --- | --- | --- |
-| US-09/10 Sync & publish | `ContentSource` + `LocalDir`/`Github`; parser + validator; bảng `content_versions`; upsert catalog; endpoint sync/publish (CLI/curl ở Lite, UI ở Full) | Version `draft` có `commit_sha`; publish đúng 1 version; lỗi validate nêu file |
-| Import SQL | Dùng script P0-2 | Track SQL hiển thị trong DB |
+### E3 — Nội dung từ Git (M) → E2 — **đang làm**
+| Story | Task | Acceptance | Trạng thái |
+| --- | --- | --- | --- |
+| Validator | Package `@hub/content` (Zod schema, parser, CLI `hub-content-validate`); `content-example` cho dev/test | Lỗi nêu file; exit 1 khi có lỗi | Đang làm |
+| US-09/10 Sync & publish | `ContentSource` + `LocalDirContentSource`/`GithubContentSource`; bảng `content_versions`; sync = validate + ghi version `draft`/`rejected` (không ghi catalog); publish = đọc lại tại SHA, validate lại, upsert catalog trong 1 giao dịch; endpoint sync/publish + CLI `pnpm --filter @hub/api content:sync [--sha <sha>] [--publish]` ở Lite, UI admin ở Full | Version `draft` có `commit_sha` + diff; sync lại cùng commit không tạo version mới; publish đúng 1 version; item bị gỡ → `archived`; lỗi validate nêu file (422) | Đang làm |
+| Seed không còn track demo | Nội dung demo local từ sync `content-example` | Seed chỉ tạo roles/admin | Đang làm |
+| Import SQL | Dùng script P0-2 | Track SQL hiển thị trong DB | Chưa làm |
 
 ### E4 — Catalog & học (M) → E3
 | Story | Task | Acceptance |

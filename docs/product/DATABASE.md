@@ -7,7 +7,7 @@
 
 | Loại | Bảng | Nguồn sự thật |
 | --- | --- | --- |
-| Nội dung (đọc là chính) | `tracks`, `modules`, `lessons`, `exercises`, `exercise_prerequisites`, `content_versions` | **Git** (DB là bản sao có chỉ mục, ghi bởi content sync) |
+| Nội dung (đọc là chính) | `tracks`, `modules`, `lessons`, `exercises`, `exercise_prerequisites`, `content_versions` | **Git** (DB là bản sao có chỉ mục; catalog chỉ được ghi khi **publish** một content version, sync chỉ ghi `content_versions`) |
 | Người dùng & quyền | `users`, `roles`, `user_roles` | DB |
 | Học tập | `enrollments`, `lesson_progress`, `submissions`, `test_runs` | DB |
 | Mentoring | `mentor_assignments`, `reviews`, `review_comments` | DB |
@@ -86,24 +86,26 @@ Danh mục vai trò (seed cố định): `member`, `mentor`, `content_maintainer
 | PK | (user_id, role_id) | |
 
 ### 3.4 `content_versions` [MVP]
-**Mục đích:** mỗi lần sync/publish nội dung từ Git, truy vết tới commit.
+**Mục đích:** mỗi lần sync nội dung từ Git tạo một version, truy vết tới commit; publish version đó mới ghi catalog.
 
 | Cột | Kiểu | Ghi chú |
 | --- | --- | --- |
 | id | uuid | PK |
 | source_repo | text | not null, vd `hcmute-dsc/learning-hub-content` |
 | commit_sha | char(40) | not null, check `~ '^[0-9a-f]{40}$'` |
-| status | text | `draft` \| `published` \| `superseded` \| `rejected` |
-| summary | jsonb | số lượng thêm/sửa/xóa, danh sách lỗi validate |
+| status | text | `draft` (sync hợp lệ, chưa publish) \| `published` \| `superseded` (bị version publish sau thay) \| `rejected` (sync không qua validate) |
+| summary | jsonb | `draft`: diff theo loại (track/module/lesson/exercise: added/changed/removed/unchanged); `rejected`: danh sách lỗi `{path, message}` |
 | synced_by, published_by | uuid | FK → users, null |
 | published_at | timestamptz | null |
 | UQ | (source_repo, commit_sha) | một commit = một version |
 | partial UQ | `status = 'published'` | **chỉ 1 version published tại một thời điểm** (`create unique index … on content_versions ((true)) where status='published'`) |
 
+Sync idempotent nhờ UQ `(source_repo, commit_sha)`. Publish (1 giao dịch): version published trước → `superseded`; upsert item mới/đổi (theo `id = uid`, so `content_hash`) với `content_version_id` = version này; item biến mất → `status = archived`; thay `exercise_prerequisites`; version → `published`.
+
 ### 3.5 `tracks` [MVP]
 | Cột | Kiểu | Ghi chú |
 | --- | --- | --- |
-| id | uuid | PK (sinh từ `uid` trong track.yaml để ổn định giữa các lần sync — xem CONTENT-SPECIFICATION) |
+| id | uuid | PK = `uid` trong track.yaml (UUID, khuyến nghị v7), ổn định giữa các lần sync — xem CONTENT-SPECIFICATION §2. Module/lesson/exercise cũng vậy |
 | slug | text | not null, UQ |
 | title | text | not null |
 | summary | text | |
@@ -112,10 +114,10 @@ Danh mục vai trò (seed cố định): `member`, `mentor`, `content_maintainer
 | est_hours | smallint | |
 | position | int | thứ tự hiển thị |
 | tags | text[] | GIN index |
-| status | text | `active` \| `archived` |
-| content_version_id | uuid | FK → content_versions (version gần nhất chạm tới bản ghi) |
+| status | text | `active` \| `archived` (bị gỡ khỏi Git khi publish, hoặc `status: archived` trong track.yaml) |
+| content_version_id | uuid | FK → content_versions (version **published** gần nhất thêm/sửa bản ghi; sync không đổi cột này) |
 | source_path | text | đường dẫn trong repo |
-| content_hash | text | sha256 nội dung đã chuẩn hóa, để sync bỏ qua thứ không đổi |
+| content_hash | text | sha256 nội dung đã chuẩn hóa, để diff khi sync và để publish bỏ qua thứ không đổi |
 | updated_at | timestamptz | |
 
 IX: `(status, position)`, GIN `(tags)`.
@@ -158,7 +160,7 @@ IX: `(status, position)`, GIN `(tags)`.
 | position | int | |
 | status, content_version_id, source_path, content_hash, updated_at | | |
 
-Check: `type in (...)`; `spec` được validate bằng Zod ở tầng ứng dụng khi sync. Lời giải **không** lưu trong cột trả cho member (P2: bảng/khối riêng có quyền).
+Check: `type in (...)`; `spec` được validate bằng Zod (`@hub/content`) khi sync và publish. Lời giải **không** lưu trong cột trả cho member (P2: bảng/khối riêng có quyền).
 
 ### 3.9 `exercise_prerequisites` [MVP]
 | Cột | Kiểu | Ghi chú |
@@ -325,7 +327,7 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 - Prisma Migrate: mỗi thay đổi một migration nhỏ, đặt tên có ngày; `prisma migrate deploy` trong bước khởi động container (CI/CD), **không** dùng `db push` ở production.
 - Check/partial unique/BRIN/GIN không biểu diễn được bằng Prisma schema → viết trong file SQL của migration (`--create-only` rồi sửa tay) và ghi chú rõ trong PR.
 - Nguyên tắc **expand → migrate → contract**: thêm cột nullable → backfill → siết ràng buộc ở release sau; không đổi tên cột trong một bước.
-- Seed: `prisma/seed.ts` chèn `roles`, 1 admin (từ biến môi trường `BOOTSTRAP_ADMIN_GITHUB_LOGIN`), dữ liệu demo cho local.
+- Seed: `prisma/seed.ts` chèn `roles`, 1 admin (từ biến môi trường `BOOTSTRAP_ADMIN_GITHUB_LOGIN`). Seed **không** chèn track demo: nội dung demo local có được bằng cách sync + publish `content-example` (`CONTENT_SOURCE=local`).
 - Test: CI chạy migration trên Postgres container trống + so sánh với `prisma migrate diff` để phát hiện drift.
 - Sao lưu: `pg_dump` hằng ngày, giữ 14 ngày; thử khôi phục mỗi học kỳ.
 

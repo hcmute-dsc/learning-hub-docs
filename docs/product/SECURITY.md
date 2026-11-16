@@ -102,7 +102,7 @@ Chưa xây ở MVP (ADR-07, ADR-08).
 | --- | --- | --- |
 | GitHub App (hub) | `Metadata: read`, `Contents: read`, `Pull requests: read`, `Actions: write` (chỉ để dispatch workflow ở checker repo), `Checks: read` | Cài đặt chỉ trên `learning-hub-content` và `learning-hub-checker`; không cài trên toàn org |
 | OAuth App (đăng nhập) | `read:user`, `user:email`, (`read:org` nếu cần) | Có thể dùng chính GitHub App (user-to-server) để gộp |
-| PAT | **Không dùng** | Nếu bắt buộc, fine-grained, hết hạn ≤ 90 ngày, gắn tài khoản tổ chức, không phải cá nhân |
+| PAT | **Không dùng** | Nếu bắt buộc, fine-grained, hết hạn ≤ 90 ngày, gắn tài khoản tổ chức, không phải cá nhân. Ngoại lệ tạm thời (MVP-Lite): `CONTENT_GITHUB_TOKEN` **tuỳ chọn** cho `GithubContentSource`, chỉ để nâng rate limit khi đọc content repo công khai — fine-grained, read-only, theo điều kiện trên; bỏ khi có GitHub App |
 | Deploy | Token GitHub Actions mặc định `contents: read`; deploy key riêng | Không dùng quyền admin |
 
 Bật 2FA bắt buộc cho tất cả thành viên Ban kỹ thuật và chủ org; bật branch protection cho `main` ở các repo; bật Dependabot + secret scanning + push protection.

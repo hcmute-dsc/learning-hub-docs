@@ -131,7 +131,7 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | US-06 | Là member, tôi muốn xin mentor để được hướng dẫn. | Gửi yêu cầu kèm lời nhắn; thấy trạng thái `pending/accepted`; chỉ 1 yêu cầu `pending` cùng lúc. |
 | US-07 | Là mentor, tôi muốn xem hàng đợi bài cần review. | Sắp xếp cũ nhất trước; lọc theo track/mentee; bài đã có người review hiển thị người đó. |
 | US-08 | Là mentor, tôi muốn comment theo dòng và chọn kết quả. | Chọn `approved` hoặc `changes_requested`; member nhận thông báo Discord; không sửa được review của mentor khác. |
-| US-09 | Là content maintainer, tôi muốn thêm lesson bằng PR. | CI content repo fail nếu thiếu `id`, trùng slug, prerequisite không tồn tại; PR merged → có `content_version` `draft`. |
+| US-09 | Là content maintainer, tôi muốn thêm lesson bằng PR. | CI content repo fail nếu thiếu `uid`, trùng slug, prerequisite không tồn tại; PR merged → có `content_version` `draft`. |
 | US-10 | Là admin, tôi muốn publish version. | Xem diff (thêm/sửa/xóa mục) trước khi publish; publish lưu `commit_sha`, người publish, thời điểm; audit log được ghi. |
 | US-11 | Là admin, tôi muốn gán mentor cho member. | Một member tối đa 1 mentor `active` mỗi track; đổi mentor giữ lịch sử. |
 
