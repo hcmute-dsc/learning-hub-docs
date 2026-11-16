@@ -57,7 +57,7 @@ modules/submissions/
   index.ts        chỉ export API công khai (service, event, type)
 ```
 
-**Domain model chỉ ở nơi có luật nghiệp vụ**: `submissions` (vòng đời trạng thái), `learning` (điều kiện mở khóa bài), `mentorship` (state machine assignment), `content` (validate toàn vẹn). `users`, `catalog`, `audit` là CRUD/đọc, không cần lớp domain.
+**Domain model chỉ ở nơi có luật nghiệp vụ**: `submissions` (vòng đời trạng thái, trạng thái exercise và điều kiện mở khóa bài), `learning` (tiến độ, hoàn thành track), `mentorship` (state machine assignment), `content` (validate toàn vẹn). `users`, `catalog`, `audit` là CRUD/đọc, không cần lớp domain.
 
 ## 2. Module
 
@@ -90,16 +90,17 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 - E: `ContentVersionDrafted`, `ContentVersionPublished`. D: `catalog` (qua `CatalogWriter`), `audit` (qua event).
 
 ### learning
-- **Trách nhiệm:** enroll, lesson progress, tính khóa/mở bài, tiến độ track, dashboard.
-- C: `EnrollmentsController`, `ProgressController`, `DashboardController`.
-- S: `EnrollmentService`, `ProgressService`, `UnlockPolicy` (domain). R: `EnrollmentRepository`, `LessonProgressRepository`.
-- E: `Enrolled`, `LessonCompleted`, `TrackCompleted`. D: `catalog`, `users`. Lắng nghe `SubmissionApproved/Passed` để cập nhật hoàn thành.
+- **Trách nhiệm:** enroll, lesson progress, tiến độ track, mục "Tiếp tục học", hoàn thành track, dashboard. Trạng thái khóa/mở của exercise **không** tính ở đây: lấy từ `ExerciseStateService` của `submissions`.
+- C: `EnrollmentsController`, `MyEnrollmentsController` (`GET /me/enrollments`), `LessonsController` (`GET /lessons/{id}`, `PUT /lessons/{id}/progress`).
+- S: `EnrollmentService`, `ProgressService`, `LessonService`; luật thuần trong `progress.ts`. R: `EnrollmentRepository`, `LessonProgressRepository`.
+- E: `Enrolled`, `LessonCompleted`, `TrackCompleted`. D: `catalog`, `submissions` (chiều phụ thuộc: learning → submissions → catalog). Lắng nghe `SubmissionPassed` (sau này cả `SubmissionApproved`) để ghi hoàn thành track; khi đọc tiến độ cũng kiểm tra lại (lưới an toàn).
 
 ### submissions
 - **Trách nhiệm:** tạo submission (idempotent), kiểm tra nguồn bài nộp, vòng đời trạng thái, danh sách/chi tiết.
 - C: `SubmissionsController` (`POST /exercises/{id}/submissions`, `GET /submissions/{id}`, `GET /me/submissions`, `POST /submissions/{id}/rerun`).
 - S: `SubmitSolutionService`, `SubmissionStateMachine` (domain). R: `SubmissionRepository`. Port: `RepoReader`.
-- E: `SubmissionCreated`, `SubmissionPassed`, `SubmissionFailed`, `SubmissionAwaitingReview`, `SubmissionApproved`, `SubmissionChangesRequested`. D: `catalog`, `learning` (kiểm tra mở khóa), `common`.
+- Trạng thái exercise của member (gồm khóa/mở theo prerequisite) là hàm thuần trong `submissions/exercise-state.ts` (`exerciseState`, `statesWithPrerequisites`); `ExerciseStateService` nạp dữ liệu và được export cho `learning`.
+- E: `SubmissionCreated`, `SubmissionPassed`, `SubmissionFailed`, `SubmissionAwaitingReview`, `SubmissionApproved`, `SubmissionChangesRequested`. D: `catalog`, `common`. **Không bao giờ** import `learning` (learning phụ thuộc submissions, không ngược lại).
 
 ### assessments
 - **Trách nhiệm:** tạo/cập nhật `test_runs`; chấm quiz trong app; xử lý kết quả CI nhận từ adapter; đối soát.
@@ -257,6 +258,7 @@ HTTP/1.1 202 Accepted
 | `SubmissionAwaitingReview` | submissions | notifications (kênh mentor) |
 | `ReviewCompleted` | reviews | submissions (→ `approved`/`changes_requested`), notifications (member), learning |
 | `SubmissionPassed/Approved` | submissions | learning (hoàn thành exercise/enrollment) |
+| `Enrolled`, `LessonCompleted`, `TrackCompleted` | learning | audit, notifications (sau này) |
 | `MentorRequested/Assigned` | mentorship | notifications |
 | `ContentVersionPublished` | content | notifications, audit |
 | `RoleGranted/Revoked` | users | audit |
