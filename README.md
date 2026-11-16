@@ -40,7 +40,7 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 5. **Database.** 17 bảng domain + 3 bảng hạ tầng; ràng buộc idempotency, 1 version published, 1 review mở/submission. *(DATABASE)*
 6. **API.** `/api/v1`, cursor pagination, lỗi `problem+json`, `Idempotency-Key`, OpenAPI → client sinh tự động. *(BACKEND-DESIGN §3–4)*
 7. **Nội dung.** Repo `learning-hub-content`; `uid` ổn định (UUID v7); schema Zod + validator `@hub/content` chạy trong CI; sync tạo version `draft`, publish mới ghi catalog (1 version = 1 commit SHA); trừu tượng `ContentSource`. *(CONTENT-SPECIFICATION)*
-8. **Chiến lược repo.** `learning-hub` (monorepo), `learning-hub-content` (công khai), `learning-hub-checker` (riêng tư, test ẩn), `learning-hub-docs`; `learning-hub-runner` chỉ tương lai. **Chưa tạo repo nào.** *(DECISIONS ADR-09)*
+8. **Chiến lược repo.** `learning-hub` (monorepo), `learning-hub-content` (công khai), `learning-hub-checker` (riêng tư, test ẩn), `learning-hub-docs`; `learning-hub-runner` chỉ tương lai. Đã tạo: `learning-hub` và `learning-hub-docs` (công khai, 16/11/2026). Chưa tạo: `learning-hub-content`, `learning-hub-checker`. *(DECISIONS ADR-09)*
 9. **Bảo mật.** GitHub OAuth, session DB, RBAC + policy tài nguyên, HMAC webhook, **CI chấm do CLB sở hữu** (không tin workflow của thành viên), sandbox riêng cho tương lai. *(SECURITY)*
 10. **Lộ trình.** Phase 0 (4–6 tuần) → MVP-Lite (~8 tuần) → MVP-Full (~4 tuần), nhóm 3–6 sinh viên. *(MVP-BACKLOG §4)*
 11. **Câu hỏi mở.** Xem bên dưới.

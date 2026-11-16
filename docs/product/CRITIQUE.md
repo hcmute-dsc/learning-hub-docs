@@ -34,7 +34,7 @@ Sinh viên tốt nghiệp sau 2–3 năm; stack gồm NestJS, Next.js, Prisma, D
 ### 2.3 🟠 Có nên tự xây? So sánh với công cụ sẵn có
 | Lựa chọn | Hợp lý khi | Vì sao chưa chọn |
 | --- | --- | --- |
-| **Không xây gì mới**, dùng GitHub Classroom + site tĩnh + Discord | Muốn chạy ngay, ngân sách 0 | Không có tiến độ chung, không có hàng đợi review; vẫn là bước tốt cho Phase 0 |
+| **Không xây gì mới**, dùng repo template trên GitHub + PR/Issue + site tĩnh + Discord | Muốn chạy ngay, ngân sách 0 | Không có tiến độ chung, không có hàng đợi review; vẫn là bước tốt cho Phase 0. (GitHub Classroom đã ngừng hỗ trợ nên không còn là lựa chọn.) |
 | **Exercism tự host** (mã nguồn mở) | Học lập trình theo ngôn ngữ chuẩn | Rails + nhiều dịch vụ, nặng vận hành, nội dung tiếng Anh, không hợp SQL/Docker/Git tiếng Việt |
 | **Moodle/Open edX** | Có giáo viên, chấm điểm, chứng nhận | Giao diện "LMS công ty", nặng, ít hợp văn hóa PR/GitHub |
 | **CTFd** | Cuộc thi kiểu CTF | Không có lộ trình/mentor review |
