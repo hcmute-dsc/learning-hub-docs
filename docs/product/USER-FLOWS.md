@@ -5,7 +5,7 @@
 
 ## 1. Đăng ký & đăng nhập [MVP]
 
-Không có form đăng ký riêng: lần đăng nhập GitHub đầu tiên tạo tài khoản nếu hợp lệ.
+Không có form đăng ký riêng: lần đăng nhập GitHub đầu tiên tạo tài khoản nếu hợp lệ. Duyệt bằng **danh sách email** của CLB (đã chốt 16/11/2026): API đọc mọi email đã xác minh trên GitHub (`GET /user/emails`, cả email phụ) và so với `approved_emails`. Kiểm tra org `hcmute-dsc` chỉ là tùy chọn bổ sung, không nằm trong luồng mặc định.
 
 ```mermaid
 flowchart TD
@@ -13,11 +13,12 @@ flowchart TD
   B --> C[GitHub OAuth consent]
   C --> D{Callback hợp lệ?<br/>state + PKCE}
   D -- Không --> E[Trang lỗi: thử lại]
-  D -- Có --> H{User đã tồn tại?}
-  H -- Không --> P{Thuộc org hcmute-dsc<br/>hoặc trong allowlist?}
+  D -- Có --> V[Đọc mọi email đã xác minh<br/>GET /user/emails]
+  V --> H{User đã tồn tại?}
+  H -- Không --> P{Có email khớp approved_emails<br/>hoặc là BOOTSTRAP_ADMIN_GITHUB_LOGIN?}
   P -- Có --> I[Tạo user status=active + role member + audit log]
-  P -- Không --> G[Tạo user status=pending<br/>trang Đang chờ duyệt, Ban/mentor duyệt trong admin]
-  H -- Có --> J[Cập nhật avatar/tên]
+  P -- Không --> G[Tạo user status=pending<br/>trang Đang chờ duyệt, admin/mentor duyệt tay]
+  H -- Có --> J[Cập nhật avatar/tên<br/>nếu đang pending và email khớp thì active]
   I --> K[Tạo session cookie httpOnly]
   J --> K
   K --> L[Onboarding 3 bước lần đầu<br/>nhập tên hiển thị, chọn mục tiêu, gợi ý track]
@@ -151,7 +152,7 @@ flowchart TD
   H --> I[Member sửa, nộp lại → submission mới quay về bước test]
 ```
 
-Review có thể làm ngay trên GitHub (comment PR); hub chỉ lưu kết luận + liên kết. Đề xuất: hub là nơi ghi kết luận (`reviews`) và comment chính; GitHub vẫn dùng được để thảo luận thêm. **Requires human confirmation** với nhóm mentor.
+**Đã chốt (16/11/2026):** kết luận review (`approved` / `changes_requested`) luôn ghi ở hub (`reviews`); thảo luận chi tiết làm được ở cả hub (`review_comments`) và GitHub (comment PR), hub lưu liên kết tới PR. Thời gian review mục tiêu cấu hình theo học kỳ (`REVIEW_TARGET_HOURS`, mặc định 72 giờ).
 
 ## 9. Đóng góp nội dung [MVP]
 

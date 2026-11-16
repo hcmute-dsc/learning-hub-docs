@@ -116,6 +116,7 @@ Bố cục hai cột (desktop):
 | Khu | Trang | Chức năng |
 | --- | --- | --- |
 | Người dùng | `/admin/users` | duyệt `pending`, gán vai trò, tạm khóa |
+| Email được duyệt | `/admin/approved-emails` | dán/thay danh sách email thành viên (chỉ admin) |
 | Mentoring | `/admin/mentorship` | gán/đổi mentor, xem giới hạn mentee |
 | Nội dung | `/admin/content` | danh sách version (draft/published), nút Sync, xem diff & lỗi validate, Publish/Reject |
 | Nhật ký | `/admin/audit` | tìm theo người/hành động/thời gian |

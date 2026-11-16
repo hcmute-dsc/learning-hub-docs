@@ -196,7 +196,7 @@ Validator không dừng ở lỗi đầu tiên: trả về **toàn bộ** lỗi 
 | Link | link nội bộ gãy; link ngoài (cảnh báo, không fail) | Dự kiến — bước CI của content repo |
 | Secret | secret lọt vào nội dung (gitleaks) | Dự kiến — bước CI của content repo |
 | Ảnh | ảnh > 500 KB | Dự kiến |
-| Giấy phép | thiếu `license`/`authors` khi có `source` | Dự kiến |
+| Giấy phép | thiếu `license`/`authors` khi có `source` (nội dung import phải giữ giấy phép gốc, §10) | Dự kiến |
 | Code exercise | `spec.checker` tồn tại trong checker repo (job CI chéo repo, tuỳ chọn) | Dự kiến |
 
 Kết quả lưu trong `content_versions.summary`: diff khi `draft`, danh sách lỗi khi `rejected` (§5).
@@ -261,12 +261,15 @@ Thay đổi cấu trúc thư mục chỉ ảnh hưởng parser + schema trong `@
 | Nguồn | Cách import | Việc cần làm | Trạng thái |
 | --- | --- | --- | --- |
 | `sql-challenge/lessons/*.md` (30 bài + 3 ôn tập) | Script `tools/import-sql-challenge`: mỗi file → `lessons/NN-slug.md` giữ nguyên Markdown, tự sinh front-matter (`title` từ H1, `objectives` từ "Sau bài này bạn có thể", `prerequisites` từ "Cần biết trước"); ngày ôn tập → module riêng | Tách bài tập ở cuối mỗi bài thành `exercise.yaml` (`self_check` trước, `code` cho một số bài chọn lọc); chuyển ảnh `lessons/img` vào `assets/`; dataset DSC Shop dùng `setup/init` làm `starterTemplate` | Verified (cấu trúc bài); phần bài tập cần đọc từng bài |
-| `html-css/src/data/exercises.json` | Script convert → `exercise.yaml` | Cần đọc file để ánh xạ trường; xác nhận nguồn/bản quyền | Partially verified |
+| `html-css/src/data/exercises.json` | Script convert → `exercise.yaml` | Cần đọc file để ánh xạ trường; xác nhận nguồn/tác giả trong mô tả PR (§10) | Partially verified |
 | `mentoring-program/src/diagrams/*.ts` | Giữ nguyên ở MVP; P2 chuyển roadmap thành YAML | — | Verified |
-| `it-quiz` | Ánh xạ ngân hàng câu hỏi → `quiz` | Xác nhận định dạng/nguồn | Unknown |
+| `it-quiz` | Ánh xạ ngân hàng câu hỏi → `quiz` | Xác nhận định dạng; xác nhận nguồn/tác giả trong mô tả PR (§10) | Unknown |
 | Study Jam Git & GitHub (slide/Tài liệu) | Viết lại thành track `git-github-basics` | Tìm tài liệu gốc | Requires human confirmation |
 
 Quy trình import: chạy script → PR → validate → maintainer rà soát từng track → publish. Ghi `source.repo/commit` để truy vết. Không xóa site VitePress cho đến khi hub phục vụ track tương đương.
 
 ## 10. Giấy phép
-Mặc định đề xuất: **CC BY-SA 4.0** cho văn bản/hình, **MIT** cho mã mẫu (ghi tại `LICENSE` và từng file qua `license`). Sql-challenge hiện là MIT; giữ ghi nhận tác giả. **Cần Ban chủ nhiệm quyết định** (CRITIQUE §8).
+**Đã chốt (16/11/2026, giao tech lead quyết):**
+- Nội dung **import giữ giấy phép gốc**: sql-challenge là MIT → track `sql-30-days` dùng `license: MIT`, giữ ghi nhận tác giả (`authors`) và link nguồn (`source`).
+- Nội dung **mới** mặc định **CC BY-SA 4.0** cho văn bản/hình, **MIT** cho mã mẫu (ghi tại `LICENSE` và từng file qua `license`).
+- Trước khi import tài liệu bên thứ ba (it-quiz, dữ liệu html-css, …), người import **xác nhận nguồn/tác giả trong mô tả PR**; maintainer không merge nếu thiếu.

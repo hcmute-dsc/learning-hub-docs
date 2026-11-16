@@ -96,7 +96,7 @@ Next.js (App Router) + TypeScript, server components cho trang đọc (catalog, 
 
 | Điểm | Thiết kế |
 | --- | --- |
-| Đăng nhập | GitHub OAuth (authorization code + PKCE + `state`). Scope tối thiểu `read:user` (+ `user:email` nếu cần; `read:org` chỉ khi kiểm tra org membership). |
+| Đăng nhập | GitHub OAuth (authorization code + PKCE + `state`). Scope tối thiểu `read:user` + `user:email` (đọc mọi email đã xác minh để khớp danh sách `approved_emails`); `read:org` chỉ khi bật kiểm tra org tùy chọn. |
 | Session | Cookie `__Host-` httpOnly, Secure, SameSite=Lax; session lưu trong DB (bảng `sessions`, token chỉ lưu dạng băm). **Đề xuất:** session ID ngẫu nhiên, thu hồi được; không dùng JWT cho web. |
 | Phân quyền | RBAC 4 vai trò + kiểm tra **quyền sở hữu/quan hệ** (mentor chỉ thấy mentee được giao) trong policy (`can(user, action, resource)`). |
 | Webhook | Không dùng session; xác thực HMAC SHA-256 (`X-Hub-Signature-256`). |
@@ -170,7 +170,7 @@ flowchart LR
   Dev[Dev push/PR] --> CI[GitHub Actions: lint, test, build, prisma migrate check]
   CI --> Img[Build image api + web → GHCR]
   Img -->|merge main| Deploy[Deploy workflow: SSH hoặc watchtower pull]
-  subgraph VM[1 VM Linux nhỏ - Docker Compose]
+  subgraph VM[1 VPS Linux nhỏ - Docker Compose]
     Caddy --> web
     Caddy --> api
     api --> db[(postgres)]
@@ -183,9 +183,9 @@ flowchart LR
 | --- | --- |
 | Local | `docker compose up` (postgres + mailhog tuỳ chọn); `pnpm dev` chạy api/web; seed roles/admin; nội dung demo bằng `content:sync --publish` từ `content-example`; GitHub OAuth app "dev". |
 | Staging (tuỳ chọn) | Một compose nhỏ, content repo nhánh `staging`. |
-| Production | 1 VM (2 vCPU/4 GB đủ), Caddy (TLS tự động), Compose; backup `pg_dump` sang storage rẻ; image gắn tag theo commit SHA. |
+| Production | 1 VPS được tài trợ (2 vCPU/4 GB đủ), Caddy (TLS tự động), Compose; backup `pg_dump` sang storage rẻ; image gắn tag theo commit SHA. |
 
-Hạ tầng cụ thể (nhà cung cấp, chi phí, ai giữ tài khoản cloud) là **Open Question** cần Ban chủ nhiệm quyết; kiến trúc không phụ thuộc nhà cung cấp.
+**Đã chốt (16/11/2026):** production chạy trên **1 VPS** do Chủ nhiệm CLB đương nhiệm (GitHub `TienNHM`) tài trợ; người này cũng giữ GitHub App/OAuth app, domain và secret. Docker Compose như sơ đồ trên. Để giảm bus factor, runbook bàn giao (MVP-BACKLOG E11) liệt kê mọi tài khoản/secret theo chức danh (không chứa giá trị) để chuyển quyền sở hữu cho Chủ nhiệm kế tiếp. Kiến trúc vẫn không phụ thuộc nhà cung cấp.
 
 ## 15. Đánh đổi & phương án thay thế
 

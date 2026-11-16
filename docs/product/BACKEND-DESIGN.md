@@ -62,14 +62,14 @@ modules/submissions/
 Ký hiệu: C = controllers, S = application services, R = repositories, E = domain events phát ra, D = phụ thuộc.
 
 ### identity
-- **Trách nhiệm:** OAuth GitHub flow, tạo/đóng session, guard xác thực, kiểm tra allowlist/org.
+- **Trách nhiệm:** OAuth GitHub flow, tạo/đóng session, guard xác thực, đọc email đã xác minh (`GET /user/emails`) và khớp với `approved_emails` (kiểm tra org: tùy chọn).
 - C: `AuthController` (`GET /auth/github/login`, `GET /auth/github/callback`, `POST /auth/logout`, `GET /auth/me`).
 - S: `AuthService`, `SessionService`. R: `SessionRepository`. Port: `IdentityProvider`.
 - E: `UserLoggedIn`. D: `users`, `common`.
 
 ### users
 - **Trách nhiệm:** hồ sơ, vai trò, tìm người dùng.
-- C: `UsersController` (`GET /users/me`, `PATCH /users/me`), `AdminUsersController` (`GET/PATCH /admin/users`, `PUT /admin/users/{id}/roles`).
+- C: `UsersController` (`GET /users/me`, `PATCH /users/me`), `AdminUsersController` (`GET/PATCH /admin/users`, `PUT /admin/users/{id}/roles`), `AdminApprovedEmailsController` (`GET/PUT /admin/approved-emails`, chỉ admin).
 - S: `UsersService`, `RolesService`. R: `UserRepository`, `UserRoleRepository`.
 - E: `UserRegistered`, `RoleGranted`, `RoleRevoked`. D: `common`.
 
@@ -115,6 +115,7 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 - **Trách nhiệm:** yêu cầu mentor, gán, kết thúc, danh sách mentee.
 - C: `MentorshipController` (`POST /mentorship/requests`, `GET /me/mentorship`, `GET /mentor/mentees`), `AdminMentorshipController` (`POST /admin/mentorship/{id}/assign`).
 - S: `MentorshipService`, `AssignmentStateMachine` (domain). R: `MentorAssignmentRepository`.
+- Cấu hình (chốt theo học kỳ, không hard-code): `MENTOR_MAX_MENTEES` (mặc định 5), `REVIEW_TARGET_HOURS` (mặc định 72, chỉ là mục tiêu để hiển thị/đo). MVP đọc từ env; sau có thể chuyển thành setting admin.
 - E: `MentorRequested`, `MentorAssigned`, `MentorshipEnded`. D: `users`.
 
 ### notifications
@@ -217,6 +218,8 @@ Theo tinh thần RFC 9457 (problem+json):
 | `POST /admin/content/versions/{id}/publish` | admin | MVP | đọc lại tại commit SHA đã ghim, validate lại, ghi catalog trong 1 giao dịch; 422 nếu không còn hợp lệ |
 | `PUT /admin/users/{id}/roles` | admin | MVP | ghi audit |
 | `POST /admin/users/{id}/approve` | admin, mentor | MVP | `pending` → `active`, ghi audit |
+| `GET /admin/approved-emails` | admin | MVP | danh sách email được duyệt; không mở cho vai trò khác |
+| `PUT /admin/approved-emails` | admin | MVP | `{emails[], note?, mode: replace\|append}`; chuẩn hóa chữ thường, 1 giao dịch; audit chỉ ghi số lượng thêm/bớt |
 | `POST /exercises/{id}/self-check` | member | MVP | `{completed:true}` cho bài `self_check` |
 | `GET /admin/audit-logs` | admin | MVP | cursor |
 | `POST /integrations/github/webhook` | chữ ký HMAC | MVP | không dùng session |

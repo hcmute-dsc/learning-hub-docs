@@ -35,29 +35,37 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 
 1. **Hệ sinh thái hiện có.** 19 repo public + 4 private. Nội dung học rải rác (sql-challenge/VitePress, html-css/React data, mentoring-program/bản đồ TS); hai stack song song (Java/Spring cũ, TS/React mới); chưa có theo dõi tiến độ, bài nộp, review. Hoạt động gần đây tập trung vào site tĩnh. *(REPOSITORY-AUDIT §2)*
 2. **Audit & tái sử dụng.** study-jam-api → INTEGRATE/DEPRECATE; study-jam-ui → KEEP; mentoring-program → KEEP+INTEGRATE; Course-DSC → DEPRECATE; **sql-challenge → INTEGRATE (nội dung đầu tiên)**; html-css → INTEGRATE dữ liệu; .github → REFACTOR. Repo private: Unknown/cần xác nhận. *(REPOSITORY-AUDIT §3–4)*
-3. **Tầm nhìn & MVP.** Tracks → Modules → Lessons/Exercises; 4 loại bài (`code`, `quiz`, `self_check`, `project`); nộp qua GitHub; mentor review; nội dung từ Git. MVP chia Lite/Full, **bắt đầu bằng Phase 0** (thử nhu cầu bằng công cụ sẵn có). *(PRD §10, CRITIQUE)*
+3. **Tầm nhìn & MVP.** Tracks → Modules → Lessons/Exercises; 4 loại bài (`code`, `quiz`, `self_check`, `project`); nộp qua GitHub; mentor review; nội dung từ Git. MVP chia Lite/Full, **bắt đầu bằng Phase 0** (đã chốt: content repo + import SQL Challenge + một đợt thử bằng công cụ sẵn có; khung app E1–E3 đã có). *(PRD §10, CRITIQUE)*
 4. **Kiến trúc.** Modular monolith NestJS + Next.js + PostgreSQL; 3 tiến trình ở MVP; không Redis/MinIO/microservice; adapter GitHub/Discord cô lập sau các port. *(ARCHITECTURE)*
-5. **Database.** 17 bảng domain + 3 bảng hạ tầng; ràng buộc idempotency, 1 version published, 1 review mở/submission. *(DATABASE)*
+5. **Database.** 18 bảng domain (gồm `approved_emails`) + 3 bảng hạ tầng; ràng buộc idempotency, 1 version published, 1 review mở/submission. *(DATABASE)*
 6. **API.** `/api/v1`, cursor pagination, lỗi `problem+json`, `Idempotency-Key`, OpenAPI → client sinh tự động. *(BACKEND-DESIGN §3–4)*
 7. **Nội dung.** Repo `learning-hub-content`; `uid` ổn định (UUID v7); schema Zod + validator `@hub/content` chạy trong CI; sync tạo version `draft`, publish mới ghi catalog (1 version = 1 commit SHA); trừu tượng `ContentSource`. *(CONTENT-SPECIFICATION)*
 8. **Chiến lược repo.** `learning-hub` (monorepo), `learning-hub-content` (công khai), `learning-hub-checker` (riêng tư, test ẩn), `learning-hub-docs`; `learning-hub-runner` chỉ tương lai. Đã tạo: `learning-hub` và `learning-hub-docs` (công khai, 16/11/2026). Chưa tạo: `learning-hub-content`, `learning-hub-checker`. *(DECISIONS ADR-09)*
-9. **Bảo mật.** GitHub OAuth, session DB, RBAC + policy tài nguyên, HMAC webhook, **CI chấm do CLB sở hữu** (không tin workflow của thành viên), sandbox riêng cho tương lai. *(SECURITY)*
-10. **Lộ trình.** Phase 0 (4–6 tuần) → MVP-Lite (~8 tuần) → MVP-Full (~4 tuần), nhóm 3–6 sinh viên. *(MVP-BACKLOG §4)*
-11. **Câu hỏi mở.** Xem bên dưới.
+9. **Bảo mật.** GitHub OAuth + duyệt thành viên bằng danh sách email của CLB, session DB, RBAC + policy tài nguyên, HMAC webhook, **CI chấm do CLB sở hữu** (không tin workflow của thành viên), sandbox riêng cho tương lai. *(SECURITY)*
+10. **Lộ trình.** Phase 0 (4–6 tuần) → MVP-Lite (~8 tuần) → MVP-Full (~4 tuần), nhóm 3–6 sinh viên; Phase 2 có chứng nhận hoàn thành track. *(MVP-BACKLOG §4)*
+11. **Quyết định & câu hỏi mở.** Xem bên dưới.
 
-## Câu hỏi mở cần CLB quyết định
+## Quyết định đã chốt (16/11/2026)
 
-1. Có chạy **Phase 0** trước khi xây app không? Tiêu chí đi/không đi có chấp nhận được không? *(CRITIQUE §6)*
-2. study-jam-api / study-jam-ui còn chạy production không? Chi phí AWS hiện tại? *(AUDIT)*
-3. Ai sở hữu `management-service`, `HCMUTE-DSC-be`? Có dữ liệu thành viên cần dùng lại?
-4. Mở cho **toàn trường** hay chỉ thành viên? Quy trình duyệt thành viên mới (GitHub org, allowlist, email trường)?
-5. Số mentor cam kết, giới hạn mentee/mentor, mục tiêu thời gian review, cách ghi nhận mentor?
-6. Hosting: nhà cung cấp, ngân sách, ai giữ tài khoản/domain/GitHub App/secret?
-7. Giấy phép nội dung (đề xuất CC BY-SA 4.0 + MIT) và quy trình xác nhận bản quyền khi import (it-quiz, html-css)?
-8. Review ghi ở hub hay ở GitHub (đề xuất: kết luận ở hub, thảo luận ở cả hai)?
-9. Có liên kết điểm rèn luyện/chứng nhận hoạt động với nhà trường không? *(chưa kiểm chứng)*
-10. Ai là tech lead và người kế nhiệm? Chu kỳ bàn giao mỗi nhiệm kỳ?
-11. Course-DSC và các repo legacy: có đồng ý archive?
+Do Chủ nhiệm CLB quyết định; chi tiết ở CRITIQUE §8 và các tài liệu được dẫn.
+
+1. **Phase 0: có.** Khung app E1–E3 đã dựng; Phase 0 = content repo + import SQL Challenge + một đợt thử, chưa thêm tính năng app cho tới quyết định đi/không đi (tiêu chí đề xuất ở CRITIQUE §6). *(MVP-BACKLOG §0, PRD §10)*
+2. **Chủ sở hữu tài khoản/hạ tầng:** Chủ nhiệm CLB đương nhiệm (GitHub `TienNHM`) giữ GitHub App/OAuth app, domain, VPS, secret và tài trợ VPS. Hosting = 1 VPS + Docker Compose. Runbook bàn giao liệt kê mọi tài khoản/secret theo chức danh để chuyển cho Chủ nhiệm kế tiếp. *(ARCHITECTURE §14, MVP-BACKLOG E11)*
+3. **Ai được vào & duyệt thành viên:** duyệt bằng **danh sách email** do CLB duy trì. Khi đăng nhập GitHub, API đọc mọi email đã xác minh (`GET /user/emails`, cả email phụ); khớp danh sách → `active`, còn lại `pending` để admin/mentor duyệt tay. Email trường có thể thêm vào GitHub làm email phụ đã xác minh. Admin quản lý danh sách trong app (bảng `approved_emails`); dữ liệu cá nhân → chỉ admin, thay đổi ghi audit, không xuất cho member. Org GitHub chỉ là kiểm tra tùy chọn; giữ `BOOTSTRAP_ADMIN_GITHUB_LOGIN` cho admin đầu tiên. *(SECURITY §1, USER-FLOWS §1, DATABASE §3.1b, MVP-BACKLOG E2)*
+4. **Mentor:** số mentor, giới hạn mentee/mentor, thời gian review mục tiêu và cách ghi nhận được chốt **theo từng học kỳ**; giữ ở cấu hình (`MENTOR_MAX_MENTEES`, `REVIEW_TARGET_HOURS`), 72 giờ chỉ là mặc định. *(BACKEND-DESIGN §2 mentorship, PRD §11)*
+5. **Giấy phép nội dung** (giao tech lead): nội dung import giữ giấy phép gốc (SQL Challenge MIT → track `sql-30-days` dùng MIT, giữ tác giả + link nguồn); nội dung mới CC BY-SA 4.0 (văn bản) + MIT (code mẫu); người import xác nhận nguồn/tác giả trong mô tả PR. *(CONTENT-SPECIFICATION §10)*
+6. **Chứng nhận:** hub tự cấp chứng nhận hoàn thành mỗi track (trang/link xác minh được: tên, track, ngày hoàn thành, phiên bản nội dung) ở **P2**. Quy đổi điểm rèn luyện: ngoài phạm vi, chưa xác nhận. *(PRD F19)*
+7. **Review:** kết luận (`approved`/`changes_requested`) ghi ở hub; thảo luận chi tiết ở cả hub và GitHub. *(USER-FLOWS §8)*
+
+## Câu hỏi còn mở
+
+1. study-jam-api / study-jam-ui còn chạy production không? Chi phí AWS hiện tại? *(AUDIT)*
+2. Ai sở hữu `management-service`, `HCMUTE-DSC-be`? Có dữ liệu thành viên cần dùng lại?
+3. Ai là tech lead và người kế nhiệm? Chu kỳ bàn giao mỗi nhiệm kỳ?
+4. Course-DSC và các repo legacy: có đồng ý archive?
+5. Ngoại lệ tạm `CONTENT_GITHUB_TOKEN` (PAT fine-grained, read-only, tuỳ chọn — SECURITY §10): có dùng ở MVP-Lite không, và tài khoản nào tạo/giữ token cho tới khi có GitHub App?
+6. Điều khoản "mentor góp ý, không chịu trách nhiệm học thuật chính thức" trong onboarding? *(CRITIQUE §4.2)*
+7. Dữ liệu thành viên (kể cả danh sách email) có cần đăng ký/tuân theo quy định riêng của nhà trường không? *(CRITIQUE §5, SECURITY §13)*
 
 ## Quy ước
 

@@ -58,9 +58,9 @@
 | --- | --- | --- |
 | A. GitHub only | Bài nộp qua GitHub cần identity này; thành viên CNTT đều có | Thành viên mới chưa có GitHub phải tạo |
 | B. Google only | Quen thuộc, email trường | Phải liên kết GitHub riêng để nộp bài |
-| C. **GitHub là chính, liên kết Google/email trường tùy chọn** | Một identity cho bài nộp + review; có thể xác thực thành viên qua org membership | Hai luồng OAuth |
+| C. **GitHub là chính, liên kết Google/email trường tùy chọn** | Một identity cho bài nộp + review; xác thực thành viên qua email đã xác minh trên GitHub khớp danh sách của CLB | Hai luồng OAuth |
 
-**Đề xuất: C** — MVP chỉ cần GitHub OAuth (hoặc GitHub App user-to-server). Google để Phase 2 cho xác thực `@student.hcmute.edu.vn` nếu CLB muốn. Không lưu mật khẩu. Quyền vào hệ thống = tài khoản GitHub thuộc **org hcmute-dsc** hoặc nằm trong allowlist (xem Open Questions).
+**Đề xuất: C** — MVP chỉ cần GitHub OAuth (hoặc GitHub App user-to-server). Google để Phase 2 cho xác thực `@student.hcmute.edu.vn` nếu CLB muốn. Không lưu mật khẩu. Quyền vào hệ thống (đã chốt 16/11/2026) = tài khoản GitHub có email **đã xác minh** (chính hoặc phụ) nằm trong **danh sách email** của CLB (`approved_emails`); tài khoản khác ở `pending` chờ admin/mentor duyệt tay. Membership org `hcmute-dsc` chỉ là kiểm tra tùy chọn (SECURITY §1).
 
 ## ADR-07 — Chấm bài tự động: GitHub Actions, Judge0, Piston, hay khác?
 

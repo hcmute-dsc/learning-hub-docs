@@ -5,6 +5,8 @@
 
 ## 0. Phase 0 — xác thực nhu cầu (trước khi viết app) — **Must**
 
+**Đã chốt (16/11/2026): chạy Phase 0.** Khung app E1–E3 đã dựng từ trước; trong Phase 0 chưa thêm tính năng app mới, chỉ làm P0-1…P0-4.
+
 | Việc | Kết quả | Tiêu chí hoàn thành |
 | --- | --- | --- |
 | P0-1 Tạo `learning-hub-content`, schema, CI validate | Repo có CI chạy `hub-content-validate` (package `@hub/content` trong monorepo app) | Validate pass trên bản import mẫu |
@@ -28,7 +30,7 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 | E9 | Thông báo Discord | Full (webhook đơn giản ở Lite) | S |
 | E10 | Quản trị & audit | Full | S |
 | E11 | Vận hành & bàn giao | Lite → Full | M |
-| E12 | Phase 2 (hint, huy hiệu, notification, Google, v.v.) | P2 | W (MVP) |
+| E12 | Phase 2 (hint, huy hiệu, notification, Google, chứng nhận hoàn thành track, v.v.) | P2 | W (MVP) |
 
 ## 2. Chi tiết
 
@@ -40,11 +42,12 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 | Là dev, tôi muốn chuẩn code | ESLint, Prettier, commitlint, Husky; pino, Zod env | Pre-commit chạy được | E1 |
 
 ### E2 — Danh tính & quyền (M) → E1
-| Story | Task | Acceptance |
-| --- | --- | --- |
-| US-01 Đăng nhập GitHub | OAuth + PKCE, tạo user, session DB, cookie | Đăng nhập/đăng xuất; user `pending` thấy `/pending` |
-| Phân quyền | Bảng `roles`, `user_roles`, guard + policy, seed admin | Ma trận quyền có test e2e |
-| Duyệt thành viên | Admin/mentor duyệt `pending` (UI tối giản hoặc SQL runbook ở Lite) | Chuyển `active` + audit |
+| Story | Task | Acceptance | Trạng thái |
+| --- | --- | --- | --- |
+| US-01 Đăng nhập GitHub | OAuth + PKCE, tạo user, session DB, cookie | Đăng nhập/đăng xuất; user `pending` thấy `/pending` | Đã có (khung E1–E3) |
+| Phân quyền | Bảng `roles`, `user_roles`, guard + policy, seed admin | Ma trận quyền có test e2e | Đã có (khung E1–E3) |
+| Duyệt thành viên | Admin/mentor duyệt `pending` (UI tối giản hoặc SQL runbook ở Lite) | Chuyển `active` + audit | Đã có (khung E1–E3) |
+| Duyệt bằng danh sách email (quyết định 16/11/2026) | Bảng `approved_emails` + migration; lúc đăng nhập gọi `GET /user/emails` (scope `user:email`), khớp mọi email đã xác minh → `active`, user `pending` khớp ở lần sau cũng `active`; `GET/PUT /admin/approved-emails` (chỉ admin; Lite: form dán danh sách tối giản); bỏ org/allowlist login khỏi quy tắc tự duyệt (org chỉ là tùy chọn); giữ `BOOTSTRAP_ADMIN_GITHUB_LOGIN` | Email phụ đã xác minh khớp → `active`; email chưa xác minh không khớp; thay đổi danh sách ghi audit (không chép danh sách); member/mentor không đọc được danh sách | Chưa làm |
 
 ### E3 — Nội dung từ Git (M) → E2 — **đang làm**
 | Story | Task | Acceptance | Trạng thái |
@@ -89,7 +92,7 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 | Story | Task | Acceptance |
 | --- | --- | --- |
 | US-06 Xin mentor | `mentor_assignments`, form, trạng thái | 1 yêu cầu mở/track |
-| US-11 Gán/đổi | Admin UI, giới hạn mentee/mentor | Lịch sử giữ |
+| US-11 Gán/đổi | Admin UI, giới hạn mentee/mentor qua cấu hình `MENTOR_MAX_MENTEES` (chốt theo học kỳ) | Lịch sử giữ |
 | Danh sách mentee | `/mentor/mentees` | Tiến độ từng mentee |
 
 ### E9 — Thông báo Discord (S) → E7
@@ -107,8 +110,8 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 ### E11 — Vận hành & bàn giao (M) → E1
 | Story | Task | Acceptance |
 | --- | --- | --- |
-| Triển khai | Dockerfile api/web, compose prod, Caddy, deploy workflow, backup `pg_dump` + thử khôi phục | Deploy bằng 1 nút; restore thử thành công |
-| Runbook | Danh sách tài khoản/secret/chủ sở hữu (không giá trị), quy trình đổi người, sự cố | Người mới làm theo được trong 1 buổi |
+| Triển khai | Dockerfile api/web, compose prod trên 1 VPS (được tài trợ), Caddy, deploy workflow, backup `pg_dump` + thử khôi phục | Deploy bằng 1 nút; restore thử thành công |
+| Runbook bàn giao | Danh sách **mọi** tài khoản/secret (GitHub App/OAuth app, domain, VPS, Discord webhook, …) theo **chức danh**, không chứa giá trị; người giữ hiện tại: Chủ nhiệm CLB (GitHub `TienNHM`, tài trợ VPS); quy trình chuyển quyền sở hữu cho Chủ nhiệm kế tiếp; xử lý sự cố | Người mới làm theo được trong 1 buổi; checklist chuyển chủ sở hữu đủ mọi mục |
 | Giám sát | Health check, cảnh báo Discord | Có cảnh báo khi 5xx |
 | Đóng góp | `/contribute`, `CONTRIBUTING.md` hai repo | PR đầu tiên từ người ngoài Ban |
 
@@ -141,7 +144,7 @@ gantt
   E8 Mentorship + E9 Discord            :e8, after e11, 2w
   E10 Admin/Audit + đối soát            :e10, after e8, 2w
 ```
-Ngày chỉ minh họa; Ban chủ nhiệm đặt lịch thật theo học kỳ. Nên phát hành nội bộ cho một nhóm nhỏ ở cuối MVP-Lite và nhận phản hồi trước khi làm Full.
+Sau MVP-Full, Phase 2 gồm **chứng nhận hoàn thành track** do hub cấp (PRD F19; không quy đổi điểm rèn luyện). Ngày chỉ minh họa; Ban chủ nhiệm đặt lịch thật theo học kỳ. Nên phát hành nội bộ cho một nhóm nhỏ ở cuối MVP-Lite và nhận phản hồi trước khi làm Full.
 
 ## 5. Ước lượng & đội hình khuyến nghị
 

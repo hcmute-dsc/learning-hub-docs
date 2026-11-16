@@ -4,11 +4,13 @@
 
 ## 1. Xác thực
 
-- **GitHub OAuth** (authorization code + PKCE + `state` chống CSRF đăng nhập). Scope tối thiểu: `read:user`, `user:email` (nếu cần email), `read:org` chỉ khi kiểm tra org membership. Không lưu token người dùng lâu dài (chỉ dùng trong lúc callback; nếu cần gọi API thay mặt user, lưu mã hóa AES-256-GCM, hết hạn ngắn).
+- **GitHub OAuth** (authorization code + PKCE + `state` chống CSRF đăng nhập). Scope tối thiểu: `read:user`, `user:email` (bắt buộc: đọc email đã xác minh để duyệt theo danh sách), `read:org` chỉ khi bật kiểm tra org membership (tùy chọn). Không lưu token người dùng lâu dài (chỉ dùng trong lúc callback; nếu cần gọi API thay mặt user, lưu mã hóa AES-256-GCM, hết hạn ngắn).
 - Không có mật khẩu → không có kho mật khẩu để lộ. Định danh bằng `github_id` (bất biến), không phải `login`.
 - Session: ID ngẫu nhiên 256-bit, lưu **băm** trong DB; cookie `__Host-sid` (httpOnly, Secure, SameSite=Lax, Path=/); hết hạn tuyệt đối 14 ngày, trượt 7 ngày; đăng xuất & đổi vai trò làm mất hiệu lực; admin có thể thu hồi theo user.
 - Tài khoản `pending`/`suspended` không có quyền truy cập dữ liệu (guard kiểm tra `status`).
-- Admin đầu tiên được bootstrap bằng biến môi trường, sau đó quản lý trong app.
+- **Duyệt thành viên bằng danh sách email (đã chốt 16/11/2026).** Trong callback, API gọi `GET /user/emails` và lấy **mọi** email có `verified = true` (không chỉ email chính); chuẩn hóa chữ thường rồi so với bảng `approved_emails` (DATABASE §3.1b). Có email khớp → `active`; không khớp → `pending`, admin/mentor duyệt tay (`POST /admin/users/{id}/approve`). User `pending` đăng nhập lại sau khi email được thêm vào danh sách cũng thành `active`. Email chưa xác minh **không** bao giờ được dùng để khớp. Thành viên có email trường trong danh sách có thể thêm email đó vào GitHub làm email phụ đã xác minh. Membership org `hcmute-dsc` không còn là quy tắc tự duyệt; nếu bật thì chỉ là điều kiện bổ sung tùy chọn.
+- Danh sách email là **dữ liệu cá nhân**: chỉ admin xem/sửa (nhập hoặc thay toàn bộ, vd dán từ form thành viên của CLB); mọi thay đổi ghi `audit_logs` (metadata chỉ ghi số lượng thêm/bớt, không chép danh sách); không có endpoint/xuất nào cho member hay mentor.
+- Admin đầu tiên được bootstrap bằng biến môi trường `BOOTSTRAP_ADMIN_GITHUB_LOGIN` (luôn `active`), sau đó quản lý trong app.
 
 ## 2. RBAC & ranh giới phân quyền
 
@@ -86,7 +88,7 @@ Chưa xây ở MVP (ADR-07, ADR-08).
 ## 8. Quản lý secret
 
 - Không commit secret; `.env.example` chỉ có tên biến. `gitleaks` trong CI cả hai repo (code và content).
-- Production: biến môi trường qua trình quản lý chung của CLB (vd GitHub Actions Secrets/Environments cho deploy, file `.env` quyền 600 trên VM hoặc Docker secrets). Danh sách secret & chủ sở hữu nằm trong runbook (không chứa giá trị).
+- Production: biến môi trường qua trình quản lý chung của CLB (vd GitHub Actions Secrets/Environments cho deploy, file `.env` quyền 600 trên VPS hoặc Docker secrets). Danh sách secret & chủ sở hữu (ghi theo **chức danh**; hiện do Chủ nhiệm CLB giữ, xem ARCHITECTURE §14) nằm trong runbook bàn giao (không chứa giá trị).
 - Secret chính: `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_OAUTH_CLIENT_SECRET`, `SESSION/ENCRYPTION_KEY`, `DATABASE_URL`, `DISCORD_WEBHOOK_URL`.
 - Xoay vòng: khi đổi người giữ/hằng năm/khi nghi ngờ lộ; quy trình thu hồi ghi sẵn trong runbook.
 - Log không chứa secret/token (redaction Pino).
@@ -101,7 +103,7 @@ Chưa xây ở MVP (ADR-07, ADR-08).
 | Đối tượng | Quyền | Ghi chú |
 | --- | --- | --- |
 | GitHub App (hub) | `Metadata: read`, `Contents: read`, `Pull requests: read`, `Actions: write` (chỉ để dispatch workflow ở checker repo), `Checks: read` | Cài đặt chỉ trên `learning-hub-content` và `learning-hub-checker`; không cài trên toàn org |
-| OAuth App (đăng nhập) | `read:user`, `user:email`, (`read:org` nếu cần) | Có thể dùng chính GitHub App (user-to-server) để gộp |
+| OAuth App (đăng nhập) | `read:user`, `user:email` (đọc email đã xác minh), (`read:org` chỉ khi bật kiểm tra org tùy chọn) | Có thể dùng chính GitHub App (user-to-server) để gộp |
 | PAT | **Không dùng** | Nếu bắt buộc, fine-grained, hết hạn ≤ 90 ngày, gắn tài khoản tổ chức, không phải cá nhân. Ngoại lệ tạm thời (MVP-Lite): `CONTENT_GITHUB_TOKEN` **tuỳ chọn** cho `GithubContentSource`, chỉ để nâng rate limit khi đọc content repo công khai — fine-grained, read-only, theo điều kiện trên; bỏ khi có GitHub App |
 | Deploy | Token GitHub Actions mặc định `contents: read`; deploy key riêng | Không dùng quyền admin |
 
@@ -109,7 +111,7 @@ Bật 2FA bắt buộc cho tất cả thành viên Ban kỹ thuật và chủ or
 
 ## 11. Audit logging
 
-Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường [P2], cấp/thu hồi vai trò, duyệt/khóa user, gán/đổi mentor, sync/publish/reject content, chạy lại test do admin, xóa/ẩn danh dữ liệu, thay đổi cấu hình. Trường: ai, hành động, đối tượng, thời điểm, IP/User-Agent (băm hoặc rút gọn), metadata (không chứa secret). Chỉ admin đọc. Giữ 24 tháng (DATABASE §9).
+Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường [P2], cấp/thu hồi vai trò, duyệt/khóa user, thay đổi danh sách email được duyệt, gán/đổi mentor, sync/publish/reject content, chạy lại test do admin, xóa/ẩn danh dữ liệu, thay đổi cấu hình. Trường: ai, hành động, đối tượng, thời điểm, IP/User-Agent (băm hoặc rút gọn), metadata (không chứa secret). Chỉ admin đọc. Giữ 24 tháng (DATABASE §9).
 
 ## 12. Bảo mật hạ tầng & chuỗi cung ứng
 
@@ -120,7 +122,7 @@ Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường 
 
 ## 13. Riêng tư & tuân thủ
 
-Thu thập tối thiểu (tên hiển thị, GitHub id/login, email nếu cần, avatar). Trang chính sách riêng tư bằng tiếng Việt ngắn gọn; thành viên có thể yêu cầu xóa/ẩn danh (DATABASE §8). Không bán/chia sẻ dữ liệu. **Cần xác nhận** với nhà trường nếu có quy định riêng cho CLB.
+Thu thập tối thiểu (tên hiển thị, GitHub id/login, email nếu cần, avatar). Trang chính sách riêng tư bằng tiếng Việt ngắn gọn; thành viên có thể yêu cầu xóa/ẩn danh (DATABASE §8). Không bán/chia sẻ dữ liệu. Danh sách email được duyệt chỉ admin truy cập, không xuất cho member. **Cần xác nhận** với nhà trường nếu có quy định riêng cho CLB.
 
 ## 14. Quản lý sự cố
 

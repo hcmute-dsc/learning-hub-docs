@@ -66,5 +66,5 @@
 1. study-jam-api / study-jam-ui còn chạy production (AWS) không? Chi phí hiện tại?
 2. Ai sở hữu `management-service`, `HCMUTE-DSC-be`? Có dữ liệu thành viên cần tái sử dụng?
 3. Course-DSC có kế hoạch tiếp tục không?
-4. `exercises.json` (html-css) và dữ liệu it-quiz có bản quyền/nguồn gốc rõ ràng để import?
-5. Giấy phép nội dung chung cho content repo (sql-challenge đang MIT).
+4. `exercises.json` (html-css) và dữ liệu it-quiz có bản quyền/nguồn gốc rõ ràng để import? (Quy trình đã chốt: người import xác nhận nguồn/tác giả trong mô tả PR; nguồn cụ thể vẫn cần xác nhận.)
+5. Giấy phép nội dung chung cho content repo (sql-challenge đang MIT). → **Đã chốt 16/11/2026** (CONTENT-SPECIFICATION §10).

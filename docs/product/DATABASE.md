@@ -1,14 +1,14 @@
 # DATABASE — Thiết kế PostgreSQL
 
 > PostgreSQL 16 + Prisma. Quy ước: bảng `snake_case` số nhiều, cột `snake_case` (Prisma map bằng `@map`). Khóa chính `uuid` (v7 sinh ở ứng dụng, để sắp xếp theo thời gian). Thời gian `timestamptz` (UTC). Nhãn: **[MVP]** hoặc **[P2]**.
-> Nguyên tắc: **schema MVP gọn** — 17 bảng domain (kể cả bảng nối) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). Các bảng P2 chỉ mô tả ngắn, chưa tạo migration.
+> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). Các bảng P2 chỉ mô tả ngắn, chưa tạo migration.
 
 ## 1. Phân loại dữ liệu
 
 | Loại | Bảng | Nguồn sự thật |
 | --- | --- | --- |
 | Nội dung (đọc là chính) | `tracks`, `modules`, `lessons`, `exercises`, `exercise_prerequisites`, `content_versions` | **Git** (DB là bản sao có chỉ mục; catalog chỉ được ghi khi **publish** một content version, sync chỉ ghi `content_versions`) |
-| Người dùng & quyền | `users`, `roles`, `user_roles` | DB |
+| Người dùng & quyền | `users`, `roles`, `user_roles`, `approved_emails` | DB |
 | Học tập | `enrollments`, `lesson_progress`, `submissions`, `test_runs` | DB |
 | Mentoring | `mentor_assignments`, `reviews`, `review_comments` | DB |
 | Vận hành | `audit_logs` | DB |
@@ -19,6 +19,7 @@
 ```mermaid
 erDiagram
   users ||--o{ user_roles : has
+  users |o--o{ approved_emails : "added by"
   roles ||--o{ user_roles : grants
   content_versions ||--o{ tracks : "introduced in"
   tracks ||--o{ modules : contains
@@ -60,11 +61,23 @@ Ký hiệu: PK, FK, UQ (unique), IX (index). Mọi bảng có `created_at timest
 | display_name | text | not null |
 | email | citext | null, UQ (partial: `where email is not null`) |
 | avatar_url | text | null |
-| status | text | `pending` (chờ duyệt) \| `active` \| `suspended`; default `pending`, tự thành `active` nếu thuộc org/allowlist |
+| status | text | `pending` (chờ duyệt) \| `active` \| `suspended`; default `pending`, tự thành `active` nếu có email đã xác minh trên GitHub khớp `approved_emails` (hoặc là admin bootstrap) |
 | last_login_at | timestamptz | null |
 | updated_at, deleted_at | timestamptz | `deleted_at` = xóa mềm |
 
 Quan hệ: 1–N `user_roles`, `enrollments`, `submissions`, …
+
+### 3.1b `approved_emails` [MVP]
+**Mục đích:** danh sách email thành viên do CLB duy trì để tự duyệt tài khoản (quyết định 16/11/2026). Khi đăng nhập, mọi email **đã xác minh** trên GitHub của người dùng được so với bảng này; khớp → `users.status = 'active'`.
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| email | citext | PK — lưu đã `trim` + chữ thường |
+| note | text | null — vd "Gen 7", "form 2026-11" |
+| added_by | uuid | FK → users, null (import bởi hệ thống/seed) |
+| created_at | timestamptz | |
+
+Không có FK tới `users` theo email (chỉ dùng lúc khớp). Admin nhập thêm hoặc **thay toàn bộ** danh sách trong một giao dịch. Dữ liệu cá nhân: chỉ admin đọc/ghi; mọi thay đổi ghi `audit_logs` (`approved_emails.import`/`approved_emails.replace`, metadata chỉ số lượng thêm/bớt); không xuất cho member/mentor.
 
 ### 3.2 `roles` [MVP]
 Danh mục vai trò (seed cố định): `member`, `mentor`, `content_maintainer`, `admin`.
@@ -339,6 +352,7 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 | tracks/modules/lessons/exercises | Không xóa cứng; `status = 'archived'` khi bị gỡ khỏi Git; vẫn truy cập được nếu đã có enrollment/submission. |
 | submissions, test_runs, reviews, review_comments | Không xóa mềm lẻ; bất biến. Xóa chỉ khi hết thời hạn lưu giữ. |
 | enrollments | `status = 'dropped'` thay vì xóa. |
+| approved_emails | Xóa cứng khi admin gỡ hoặc thay danh sách (thay đổi đã ghi `audit_logs`). Gỡ email không tự khóa tài khoản đã `active`. |
 | audit_logs | Append-only, không xóa trước hạn. |
 
 Mọi truy vấn mặc định lọc `deleted_at is null` qua Prisma middleware/extension; ngoại lệ phải tường minh.
@@ -352,3 +366,4 @@ Mọi truy vấn mặc định lọc `deleted_at is null` qua Prisma middleware/
 | `test_runs.summary` | 6 tháng (log đầy đủ nằm ở GitHub) |
 | audit_logs | 24 tháng |
 | content_versions | Giữ vô thời hạn (nhỏ) |
+| approved_emails | Đến khi người đó rời CLB; admin rà soát danh sách mỗi học kỳ |

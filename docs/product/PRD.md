@@ -57,6 +57,8 @@ Một nơi duy nhất để thành viên HCMUTE DSC **học bằng cách làm**:
 | Nhận mentee (self-claim) / được gán | — | ✔ | — | ✔ |
 | Gán mentor cho member | — | — | — | ✔ |
 | Đồng bộ/publish content version | — | — | ✔ (yêu cầu) | ✔ (duyệt) |
+| Duyệt tài khoản `pending` | — | ✔ | — | ✔ |
+| Quản lý danh sách email được duyệt (`approved_emails`) | — | — | — | ✔ |
 | Quản lý user & vai trò | — | — | — | ✔ |
 | Xem audit log | — | — | — | ✔ |
 
@@ -83,13 +85,14 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | F15 | Liên kết Google/email trường | P2 |
 | F16 | Bản đồ mentoring đọc từ content repo | P2 |
 | F17 | Runner sandbox riêng (Judge0/Piston hoặc runner tự dựng) | F |
-| F18 | Cohort/Sprint đầy đủ (lịch, deadline), chứng nhận hoàn thành, API công khai (nhãn `enrollments.cohort` có từ MVP) | P2/F |
+| F18 | Cohort/Sprint đầy đủ (lịch, deadline), API công khai (nhãn `enrollments.cohort` có từ MVP) | P2/F |
+| F19 | Chứng nhận hoàn thành track do hub tự cấp: trang/link xác minh được, gồm tên thành viên, track, ngày hoàn thành, phiên bản nội dung (`commit_sha`). Không quy đổi điểm rèn luyện | P2 |
 
 ## 7. Yêu cầu chức năng (rút gọn)
 
 | ID | Yêu cầu | Phase |
 | --- | --- | --- |
-| FR-01 | Hệ thống cho phép đăng nhập bằng GitHub; tạo `user` ở lần đầu; tài khoản thuộc org/allowlist tự `active`, tài khoản khác ở trạng thái `pending` chờ Ban/mentor duyệt. | MVP |
+| FR-01 | Hệ thống cho phép đăng nhập bằng GitHub; tạo `user` ở lần đầu; đọc mọi email đã xác minh của tài khoản GitHub (`GET /user/emails`); nếu có email khớp danh sách `approved_emails` của CLB (hoặc là admin bootstrap) thì tự `active`, ngược lại ở trạng thái `pending` chờ admin/mentor duyệt; user `pending` khớp danh sách ở lần đăng nhập sau cũng thành `active`. Membership org GitHub chỉ là kiểm tra tùy chọn. | MVP |
 | FR-02 | Liệt kê track đã publish, lọc theo level/tag, sắp xếp theo `position`. | MVP |
 | FR-03 | Enroll/unenroll track; một user có thể enroll nhiều track. | MVP |
 | FR-04 | Exercise có `prerequisites`; exercise bị khóa cho tới khi prerequisite đã hoàn thành. | MVP |
@@ -103,6 +106,8 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | FR-12 | Mọi hành động quản trị ghi `audit_logs`. | MVP |
 | FR-13 | Xóa mềm user/nội dung; giữ bài nộp (xem DATABASE). | MVP |
 | FR-14 | Xuất tiến độ (CSV) cho admin. | P2 |
+| FR-15 | Admin nhập/thay danh sách email được duyệt; chỉ admin xem được; mọi thay đổi ghi `audit_logs`; không xuất cho member. | MVP |
+| FR-16 | Hoàn thành track → cấp chứng nhận có link xác minh công khai (F19). | P2 |
 
 ## 8. Yêu cầu phi chức năng
 
@@ -123,7 +128,7 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 
 | ID | Story | Acceptance criteria |
 | --- | --- | --- |
-| US-01 | Là member, tôi muốn đăng nhập bằng GitHub để không phải nhớ mật khẩu. | Given tôi thuộc org/allowlist, When bấm "Đăng nhập GitHub", Then vào dashboard; tài khoản ngoài allowlist thấy trang "Đang chờ duyệt" (status `pending`), chưa xem được catalog, và được thông báo khi duyệt. |
+| US-01 | Là member, tôi muốn đăng nhập bằng GitHub để không phải nhớ mật khẩu. | Given tài khoản GitHub của tôi có một email đã xác minh (chính hoặc phụ) nằm trong danh sách email của CLB, When bấm "Đăng nhập GitHub", Then vào dashboard; tài khoản không có email khớp thấy trang "Đang chờ duyệt" (status `pending`), chưa xem được catalog, và được thông báo khi admin/mentor duyệt. |
 | US-02 | Là member, tôi muốn xem danh sách track để chọn lộ trình. | Hiển thị tiêu đề, level, số bài, thời lượng ước tính; chỉ track `published`. |
 | US-03 | Là member, tôi muốn enroll vào track để theo dõi tiến độ. | Enroll lần 2 là idempotent (không tạo trùng); dashboard hiện track với % hoàn thành. |
 | US-04 | Là member, tôi muốn đọc lesson rồi làm bài tập liên quan. | Lesson có nút "Đánh dấu đã học"; bài tập bị khóa hiển thị lý do (prerequisite nào chưa xong). |
@@ -139,15 +144,16 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 
 ### Phase 0 — xác thực nhu cầu (trước MVP, xem CRITIQUE §1.2, §6)
 Dựng content repo, import SQL Challenge, chạy một đợt với ≥ 20 thành viên bằng công cụ có sẵn; chỉ xây app khi đạt tiêu chí đi/không đi.
+**Đã chốt (16/11/2026): có chạy Phase 0.** Khung app (E1–E3) đã dựng từ trước; trong Phase 0 chưa thêm tính năng app mới.
 
 ### MVP (8–12 tuần, nhóm 3–5 sinh viên bán thời gian; chia **MVP-Lite** trước, **MVP-Full** sau — xem MVP-BACKLOG)
 F1–F10, FR-01…FR-13. Nội dung đầu tiên: track **SQL 30 ngày** (import) + một track **Git & GitHub** (viết mới từ Study Jam) làm bài `code` mẫu. Mục tiêu hạ rào cản: track "làm quen GitHub" dùng quiz + `self_check` trước khi nộp PR.
 
 ### Phase 2
-F11–F16, xuất CSV, thông báo in-app/email, Redis + BullMQ nếu cần retry/queue, MinIO nếu cho upload file.
+F11–F16, F19 (chứng nhận hoàn thành track), xuất CSV, thông báo in-app/email, Redis + BullMQ nếu cần retry/queue, MinIO nếu cho upload file.
 
 ### Future
-F17–F18, runner sandbox, cohort, chứng nhận, tích hợp dữ liệu từ `HCMUTE-DSC-be`/`management-service` nếu được xác nhận.
+F17–F18, runner sandbox, cohort, tích hợp dữ liệu từ `HCMUTE-DSC-be`/`management-service` nếu được xác nhận. Quy đổi chứng nhận sang điểm rèn luyện của trường: **ngoài phạm vi** (chưa xác nhận).
 
 ## 11. Chỉ số thành công
 
@@ -156,7 +162,7 @@ F17–F18, runner sandbox, cohort, chứng nhận, tích hợp dữ liệu từ 
 | Thành viên active hằng tuần / tổng thành viên | 15–25% (đặt lại sau khi đo baseline ở Phase 0) |
 | Tỷ lệ enroll → hoàn thành ≥ 1 exercise | ≥ 50% |
 | Tỷ lệ hoàn thành track SQL 30 ngày | 10–15% (học tự nguyện thường dưới 15%) |
-| Thời gian trung vị bài nộp → có review | ≤ 72 giờ (theo dõi, không cam kết) |
+| Thời gian trung vị bài nộp → có review | ≤ 72 giờ mặc định (theo dõi, không cam kết; mục tiêu chốt theo học kỳ qua cấu hình `REVIEW_TARGET_HOURS`) |
 | Số bài/lesson do thành viên (không phải Ban) đóng góp | ≥ 10 |
 | Thời gian onboard dev mới (clone → chạy) | ≤ 30 phút |
 | Số mentor active | ≥ 5 |
@@ -166,11 +172,13 @@ F17–F18, runner sandbox, cohort, chứng nhận, tích hợp dữ liệu từ 
 | ID | Rủi ro / giả định | Giảm thiểu |
 | --- | --- | --- |
 | R1 | Nhóm dev sinh viên rời đi cuối nhiệm kỳ | Tài liệu, ADR, tránh công nghệ lạ, README onboarding |
-| R2 | Thiếu mentor → bài chờ review lâu | Hàng đợi, mentor luân phiên, review ngang hàng (P2) |
+| R2 | Thiếu mentor → bài chờ review lâu | Hàng đợi, mentor luân phiên, review ngang hàng (P2); cam kết mentor (số mentor, giới hạn mentee, thời gian review) chốt mỗi học kỳ và cấu hình được |
 | R3 | Phụ thuộc GitHub (rate limit/Actions/outage) | Cache nội dung vào DB; nộp bài chịu được trễ; retry |
 | R4 | Nội dung không đủ → nền tảng trống | Import SQL Challenge ngay MVP; ưu tiên 2 track |
 | R5 | Thành viên chưa có GitHub / chưa quen PR | Track Git & GitHub là bài đầu; hỗ trợ bằng mentor |
-| R6 | Chi phí hosting | 1 VM + Postgres; tận dụng Actions free tier (xem Open Questions) |
-| R7 | Bản quyền nội dung import (it-quiz, html-css) | Xác nhận nguồn trước khi import |
-| A1 | Giả định: GitHub org `hcmute-dsc` đủ để xác thực thành viên | Cần xác nhận (allowlist thay thế) |
+| R6 | Chi phí hosting | 1 VPS do Chủ nhiệm CLB tài trợ + Docker Compose (Postgres trong compose); tận dụng Actions free tier |
+| R7 | Bản quyền nội dung import (it-quiz, html-css) | Giữ giấy phép gốc; người import xác nhận nguồn/tác giả trong mô tả PR (CONTENT-SPECIFICATION §10) |
+| R8 | Tài khoản/hạ tầng do một người giữ (Chủ nhiệm đương nhiệm) | Runbook bàn giao liệt kê mọi tài khoản/secret theo chức danh (MVP-BACKLOG E11) |
+| R9 | Danh sách email được duyệt là dữ liệu cá nhân | Chỉ admin xem/sửa; thay đổi ghi audit; không xuất cho member (SECURITY §1) |
+| A1 | Giả định: thành viên có email nằm trong danh sách email của CLB và thêm được email đó (đã xác minh) vào GitHub | Người không khớp vẫn vào được qua duyệt tay (`pending` → `active`) |
 | A2 | Giả định: ≤ 1.000 user | Nếu lớn hơn, xem lại ADR-07 |
