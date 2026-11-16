@@ -1,6 +1,6 @@
 # DECISIONS — Các quyết định kiến trúc
 
-> Mỗi quyết định có: Options · Ưu · Nhược · Đề xuất · Lý do. Trạng thái tất cả: **Đề xuất, cần Ban chủ nhiệm duyệt**. Nguyên tắc chung: không viết lại chỉ để đồng nhất công nghệ; ưu tiên chi phí bảo trì và dễ onboard thành viên mới.
+> Mỗi quyết định có: Options · Ưu · Nhược · Quyết định · Lý do. Trạng thái: **ADR-01 … ADR-09 đã chốt (16/11/2026)** — Chủ nhiệm CLB quyết định; bảng options giữ lại làm lịch sử. Nguyên tắc chung: không viết lại chỉ để đồng nhất công nghệ; ưu tiên chi phí bảo trì và dễ onboard thành viên mới.
 
 ## ADR-01 — Mở rộng Study Jam hay xây ứng dụng mới?
 
@@ -10,7 +10,7 @@
 | B. Ứng dụng mới (NestJS + Next.js) | Domain sạch; một ngôn ngữ (TypeScript) cho cả FE/BE/content tooling; khớp stack yêu cầu | Phải dựng auth, CI/CD lại; hai hệ thống cùng tồn tại một thời gian |
 | C. Mới nhưng đọc dữ liệu cũ qua API | Giữ dữ liệu Study Jam | Phụ thuộc hệ thống ít được bảo trì |
 
-**Đề xuất: B**, giữ Study Jam chạy nguyên trạng (KEEP) đến hết khóa hiện tại rồi DEPRECATE.
+**Đã chốt (16/11/2026): B** (ứng dụng mới NestJS + Next.js), giữ Study Jam chạy nguyên trạng (KEEP) đến hết khóa hiện tại rồi DEPRECATE.
 **Lý do:** study-jam-api chỉ có `User/Event/Task`, không có phần nào của domain học tập; chi phí "tận dụng" thấp hơn chi phí gỡ. Không migrate dữ liệu ở MVP; nếu cần, nhập danh sách thành viên một lần bằng script.
 
 ## ADR-02 — mentoring-program độc lập hay thành module của Learning Hub?
@@ -21,7 +21,7 @@
 | B. Gộp vào hub (route `/mentoring`) | Một cổng duy nhất | Phải port React/Vite canvas sang Next; không đem lại giá trị MVP |
 | C. Tách đôi: bản đồ độc lập (nội dung), tác vụ mentoring (ghép cặp, review) trong hub | Mỗi bên làm đúng việc | Cần đồng bộ nội dung roadmap |
 
-**Đề xuất: C** — mentoring-program giữ vai trò "bản đồ chương trình" (KEEP); module `mentorship` của hub xử lý mentor assignment và review. Phase 2: roadmap mentoring là YAML trong content repo, bản đồ đọc từ đó.
+**Đã chốt (16/11/2026): C** — mentoring-program giữ vai trò "bản đồ chương trình" (KEEP); module `mentorship` của hub xử lý mentor assignment và review. Phase 2: roadmap mentoring là YAML trong content repo, bản đồ đọc từ đó.
 
 ## ADR-03 — SQL Challenge và Course-DSC có import vào content repo trung tâm?
 
@@ -31,7 +31,7 @@
 | B. Import SQL Challenge; HTML/CSS (dữ liệu); Course-DSC deprecate | Nội dung thật được tái dùng; chi phí thấp | Cần script convert front-matter |
 | C. Không import, hub trỏ link ra ngoài | Không tốn công | Không theo dõi tiến độ/bài nộp được |
 
-**Đề xuất: B.** SQL Challenge là lộ trình mẫu (30 bài, "cần biết trước", bài tập, đáp án) — gần như đã đúng mô hình Track → Lesson → Exercise. Import bằng script một lần, giữ lịch sử bằng subtree/ghi `source:` trong front-matter, site VitePress vẫn chạy song song cho đến khi hub đủ dùng.
+**Đã chốt (16/11/2026): B.** SQL Challenge **đã import** vào [hcmute-dsc/learning-hub-content](https://github.com/hcmute-dsc/learning-hub-content) (track `sql-30-days`); dữ liệu HTML/CSS import sau; Course-DSC deprecate. SQL Challenge là lộ trình mẫu (30 bài, "cần biết trước", bài tập, đáp án) — gần như đã đúng mô hình Track → Lesson → Exercise. Import bằng script một lần, giữ lịch sử bằng subtree/ghi `source:` trong front-matter, site VitePress vẫn chạy song song cho đến khi hub đủ dùng.
 
 ## ADR-04 — Monorepo?
 
@@ -40,7 +40,7 @@
 | A. Monorepo pnpm (`apps/api`, `apps/web`, `packages/shared`) | Chia sẻ Zod schema/type API; 1 PR cho thay đổi xuyên FE/BE; 1 lần setup lint/CI | CI lâu hơn khi lớn (dùng path filter) |
 | B. Nhiều repo (api, web) | Phân quyền tách biệt | Đồng bộ type thủ công; nhiều chi phí cho nhóm nhỏ |
 
-**Đề xuất: A** cho code; **content ở repo riêng** (ADR-05) vì vòng đời, người sở hữu và quy trình review khác code.
+**Đã chốt (16/11/2026): A** cho code (monorepo pnpm); **content ở repo riêng** (ADR-05) vì vòng đời, người sở hữu và quy trình review khác code.
 
 ## ADR-05 — Nội dung lưu ở PostgreSQL, Git, hay cả hai?
 
@@ -50,7 +50,7 @@
 | B. Chỉ Git, đọc trực tiếp lúc request | Đơn giản | Chậm, rate limit GitHub, khó query/tìm kiếm/ràng buộc khóa ngoại |
 | C. **Git là nguồn sự thật + sync sang DB** | PR review, lịch sử, mỗi bản publish gắn commit SHA; DB phục vụ truy vấn nhanh, tiến độ, FK | Cần pipeline sync + validation |
 
-**Đề xuất: C.** Tiến độ, bài nộp, review (dữ liệu người dùng) chỉ ở DB. Nội dung (track/module/lesson/exercise) chỉ chỉnh ở Git; DB là bản sao có chỉ mục, lưu `content_version_id` → `commit_sha`. Truy cập repo thông qua interface `ContentSource` (xem CONTENT-SPECIFICATION).
+**Đã chốt (16/11/2026): C** (Git là nguồn sự thật, sync sang DB). Tiến độ, bài nộp, review (dữ liệu người dùng) chỉ ở DB. Nội dung (track/module/lesson/exercise) chỉ chỉnh ở Git; DB là bản sao có chỉ mục, lưu `content_version_id` → `commit_sha`. Truy cập repo thông qua interface `ContentSource` (xem CONTENT-SPECIFICATION).
 
 ## ADR-06 — Đăng nhập bằng Google, GitHub, hay cả hai?
 
@@ -60,7 +60,7 @@
 | B. Google only | Quen thuộc, email trường | Phải liên kết GitHub riêng để nộp bài |
 | C. **GitHub là chính, liên kết Google/email trường tùy chọn** | Một identity cho bài nộp + review; xác thực thành viên qua email đã xác minh trên GitHub khớp danh sách của CLB | Hai luồng OAuth |
 
-**Đề xuất: C** — MVP chỉ cần GitHub OAuth (hoặc GitHub App user-to-server). Google để Phase 2 cho xác thực `@student.hcmute.edu.vn` nếu CLB muốn. Không lưu mật khẩu. Quyền vào hệ thống (đã chốt 16/11/2026) = tài khoản GitHub có email **đã xác minh** (chính hoặc phụ) nằm trong **danh sách email** của CLB (`approved_emails`); tài khoản khác ở `pending` chờ admin/mentor duyệt tay. Membership org `hcmute-dsc` chỉ là kiểm tra tùy chọn (SECURITY §1).
+**Đã chốt (16/11/2026): C** (GitHub là chính; liên kết Google/email trường tùy chọn, P2) — MVP chỉ cần GitHub OAuth (hoặc GitHub App user-to-server). Google để Phase 2 cho xác thực `@student.hcmute.edu.vn` nếu CLB muốn. Không lưu mật khẩu. Quyền vào hệ thống (đã chốt 16/11/2026) = tài khoản GitHub có email **đã xác minh** (chính hoặc phụ) nằm trong **danh sách email** của CLB (`approved_emails`); tài khoản khác ở `pending` chờ admin/mentor duyệt tay. Membership org `hcmute-dsc` chỉ là kiểm tra tùy chọn (SECURITY §1).
 
 ## ADR-07 — Chấm bài tự động: GitHub Actions, Judge0, Piston, hay khác?
 
@@ -71,21 +71,32 @@
 | C. Chạy trong API | — | **Cấm** (không an toàn) |
 | D. Quiz/self-check không cần chạy code | Rẻ, cho khái niệm | Không kiểm tra kỹ năng viết code |
 
-**Đề xuất: A + D ở MVP.** B chỉ khi có nhu cầu thật (>~200 bài nộp/tuần hoặc yêu cầu phản hồi tức thời) và khi có người sở hữu `learning-hub-runner` (cách ly hoàn toàn, xem SECURITY).
+**Đã chốt (16/11/2026): A + D ở MVP → ngay sau MVP-Lite thêm checker chỉ cho SQL ("B-lite", thuộc MVP-Full) → B tổng quát chỉ ở Future.**
+
+1. **MVP:** A cho bài `code`/`project` cần chạy test (workflow trong repo `learning-hub-checker` do CLB sở hữu); D cho `quiz` và `self_check` (không cần chạy code).
+2. **Ngay sau MVP-Lite — `sql-checker` trên VPS của CLB (MVP-Full).** Lý do: phần lớn nội dung là SQL; 31 bài `self_check` của `sql-30-days` có thể chuyển thành bài chấm tự động, phản hồi tính bằng giây thay vì 30–120 s của Actions. Thiết kế: service/container `sql-checker` riêng với **PostgreSQL riêng** (không phải DB của hub) nạp dataset DSC Shop; API hub gọi qua **mạng nội bộ**; truy vấn chạy bằng role ít quyền trong `BEGIN READ ONLY … ROLLBACK` (hoặc schema/database dùng một lần cho bài sửa dữ liệu), có `statement_timeout`, giới hạn dòng/kích thước kết quả, không mạng ra ngoài; so sánh với tập kết quả kỳ vọng (có thứ tự khi đề yêu cầu `ORDER BY`); kết quả kỳ vọng/lời giải nằm trong `learning-hub-checker` (riêng tư). Chi tiết: ARCHITECTURE §7 (sql-checker), §14; SECURITY §7.
+3. **Loại bài:** thêm type `sql` mới hay dùng `code` với `runtime.language: sql` + `checker.kind: sql` — **quyết khi cài đặt**, nghiêng về biến thể spec mới trong `code` (không thêm type).
+4. **Judge0/Piston nhiều ngôn ngữ (B tổng quát): chỉ Future, và không bao giờ chạy chung VPS với hub** — chúng cần container đặc quyền (privileged); một lần thoát sandbox sẽ chạm tới DB và secret của hub. Nếu thật sự cần (vd > ~200 bài nộp/tuần ngoài SQL, có người sở hữu `learning-hub-runner`), đặt trên **một VPS nhỏ riêng** (SECURITY §7).
 
 ## ADR-08 — Loại khỏi MVP
 
-Loại: online judge tự dựng; code editor chạy code trong trình duyệt phía server; gamification ngoài streak/huy hiệu đơn giản (Phase 2); bảng xếp hạng công khai; chat realtime (dùng Discord); thông báo push; thanh toán; multi-tenant; Redis/BullMQ (chỉ thêm khi webhook/Discord cần retry – xem ARCHITECTURE); MinIO/upload file (bài nộp là link GitHub); tìm kiếm toàn văn nâng cao (dùng Postgres `tsvector` khi cần); cổng Google OAuth; tích hợp dữ liệu từ repo private.
+**Đã chốt (16/11/2026).** Loại: online judge tự dựng nhiều ngôn ngữ (Judge0/Piston — Future, VPS riêng; `sql-checker` chỉ cho SQL là ngoại lệ ở MVP-Full, ADR-07); code editor chạy code trong trình duyệt phía server; gamification ngoài streak/huy hiệu đơn giản (Phase 2) và bảng xếp hạng opt-in theo học kỳ; chat realtime (dùng Discord); thanh toán; multi-tenant; Redis/BullMQ (chỉ thêm khi webhook/Discord cần retry – xem ARCHITECTURE); MinIO/upload file (bài nộp là link GitHub); tìm kiếm toàn văn nâng cao (dùng Postgres `tsvector` khi cần); cổng Google OAuth; tích hợp dữ liệu từ repo private.
 
-## ADR-09 — Chiến lược repo GitHub (tóm tắt, chưa tạo)
+**Giữ trong MVP (MVP-Full)** theo quyết định của Chủ nhiệm CLB (16/11/2026), trước đây nằm trong danh sách loại:
+- **Bảng xếp hạng** theo "thiết kế an toàn": chỉ hiện thành viên đã **opt-in** (mặc định ẩn); theo học kỳ/đợt và reset mỗi kỳ, không có xếp hạng toàn thời gian; xếp theo số bài hoàn thành (`approved` hoặc tự động `passed`), `self_check` có trọng số thấp hơn bài chấm tự động/mentor duyệt, **không bao giờ** theo tốc độ; hiện top 10 + hạng của chính người xem. Xem CRITIQUE §3.4, FRONTEND-DESIGN §13, DATABASE §6.
+- **Thông báo push trên trình duyệt** (Web Push: service worker + khóa VAPID): bài nộp được review, có yêu cầu review mới (mentor), track mới được publish. Discord vẫn là kênh thứ hai. Xem ARCHITECTURE §10, SECURITY §8.
+
+## ADR-09 — Chiến lược repo GitHub (tóm tắt)
+
+**Đã chốt (16/11/2026)** — chấp nhận chiến lược dưới đây.
 
 | Repo | Vai trò | Khi nào tạo |
 | --- | --- | --- |
-| `learning-hub` | Monorepo code (`apps/api`, `apps/web`, `packages/shared`, `infra/`) | Sau khi duyệt tài liệu |
-| `learning-hub-content` | Track/module/lesson/exercise (YAML + Markdown), CI validate | Cùng lúc, import sql-challenge đầu tiên |
-| `learning-hub-docs` | Bộ tài liệu này; có thể chuyển vào `learning-hub/docs` nếu muốn một repo | Đã có local |
-| `learning-hub-checker` | Workflow + test ẩn chấm bài `code` trên GitHub Actions (ADR-07 A); chỉ Ban kỹ thuật có quyền ghi | Cùng lúc với bài `code` đầu tiên |
-| `learning-hub-runner` | Sandbox chạy code riêng (**tương lai**) | Chỉ khi ADR-07 chuyển sang B |
+| `learning-hub` | Monorepo code (`apps/api`, `apps/web`, `packages/shared`, `infra/`; MVP-Full thêm `apps/sql-checker` — đề xuất) | Đã tạo (16/11/2026) |
+| `learning-hub-content` | Track/module/lesson/exercise (YAML + Markdown), CI validate | Đã tạo (16/11/2026), đã import sql-challenge (`sql-30-days`) |
+| `learning-hub-docs` | Bộ tài liệu này; có thể chuyển vào `learning-hub/docs` nếu muốn một repo | Đã tạo (16/11/2026) |
+| `learning-hub-checker` | Workflow + test ẩn chấm bài `code` trên GitHub Actions (ADR-07 A); kết quả kỳ vọng/lời giải cho `sql-checker` (MVP-Full); chỉ Ban kỹ thuật có quyền ghi | Cùng lúc với bài `code` đầu tiên |
+| `learning-hub-runner` | Sandbox chạy code nhiều ngôn ngữ (Judge0/Piston, **tương lai**); chạy trên VPS riêng, không chung VPS với hub | Chỉ khi cần B tổng quát (ADR-07 mục 4) |
 | `learning-hub-exercises-*` (tùy chọn) | Template repo cho exercise cần starter code | Khi có bài `code` |
 
 Chuyển đổi: (1) tạo content repo, import sql-challenge, giữ site cũ; (2) dựng hub; (3) ngừng cập nhật Course-DSC/study-jam-*; (4) cập nhật `.github` profile và website CLB. Không có repo nào bị xóa; chỉ archive sau khi owner đồng ý.

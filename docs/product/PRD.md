@@ -1,6 +1,6 @@
 # PRD — HCMUTE DSC Learning Hub
 
-> Trạng thái: bản nháp v0.1 (chờ Ban chủ nhiệm duyệt) · Nhãn phạm vi: **[MVP]**, **[P2]** = Phase 2, **[F]** = Future.
+> Trạng thái: bản nháp v0.1 (chờ Ban chủ nhiệm duyệt) · Nhãn phạm vi: **[MVP]** (MVP-Lite trước, **MVP-Full** sau), **[P2]** = Phase 2, **[F]** = Future. ADR đã chốt 16/11/2026 (DECISIONS).
 > Tên làm việc: "Learning Hub". Cảm hứng: Exercism (học bằng làm bài, có mentor review) nhưng dành cho **một** CLB, không phải SaaS.
 
 ## 1. Tầm nhìn
@@ -26,14 +26,14 @@ Một nơi duy nhất để thành viên HCMUTE DSC **học bằng cách làm**:
 - G3: Mentor review được bài nộp, comment theo dòng, yêu cầu sửa/duyệt. [MVP]
 - G4: Nội dung quản lý bằng Git, mỗi bản publish truy vết được tới commit SHA. [MVP]
 - G5: Thành viên theo dõi được tiến độ cá nhân; mentor/admin thấy tiến độ nhóm. [MVP]
-- G6: Dễ bảo trì: modular monolith, ≤ 3 service chạy (api, web, postgres), setup cục bộ ≤ 15 phút. [MVP]
+- G6: Dễ bảo trì: modular monolith, ≤ 3 service chạy ở MVP-Lite (api, web, postgres; MVP-Full thêm `sql-checker` + PostgreSQL riêng, ADR-07), setup cục bộ ≤ 15 phút. [MVP]
 
 **Không phải mục tiêu**
 - Không phải SaaS/đa tổ chức, không bán khóa học, không thanh toán.
-- Không xây online judge riêng ở MVP.
+- Không xây online judge nhiều ngôn ngữ (Judge0/Piston) ở MVP; chỉ có checker riêng cho SQL ở MVP-Full (ADR-07).
 - Không thay Discord (chat, thảo luận) hay site CLB (tin tức).
 - Không thay thế mentoring-program (bản đồ) hay Study Jam đang chạy.
-- Không gamification nặng (điểm thưởng, leaderboard công khai).
+- Không gamification nặng (điểm thưởng, xếp hạng toàn thời gian hoặc theo tốc độ). Bảng xếp hạng chỉ có dạng opt-in theo học kỳ (F21, ADR-08).
 
 ## 4. Người dùng mục tiêu & persona
 
@@ -84,9 +84,12 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | F14 | Đóng góp nội dung qua UI "Edit on GitHub" + preview | P2 |
 | F15 | Liên kết Google/email trường | P2 |
 | F16 | Bản đồ mentoring đọc từ content repo | P2 |
-| F17 | Runner sandbox riêng (Judge0/Piston hoặc runner tự dựng) | F |
+| F17 | Runner sandbox nhiều ngôn ngữ (Judge0/Piston hoặc runner tự dựng), trên VPS riêng — không chung VPS với hub | F |
 | F18 | Cohort/Sprint đầy đủ (lịch, deadline), API công khai (nhãn `enrollments.cohort` có từ MVP) | P2/F |
 | F19 | Chứng nhận hoàn thành track do hub tự cấp: trang/link xác minh được, gồm tên thành viên, track, ngày hoàn thành, phiên bản nội dung (`commit_sha`). Không quy đổi điểm rèn luyện | P2 |
+| F20 | Chấm SQL tự động bằng `sql-checker` trên VPS (PostgreSQL riêng, dataset DSC Shop): nộp câu truy vấn trong app, so với tập kết quả kỳ vọng; chuyển dần 31 bài `self_check` của `sql-30-days` sang chấm tự động (ADR-07) | MVP-Full |
+| F21 | Bảng xếp hạng opt-in theo học kỳ/đợt: reset mỗi kỳ, xếp theo số bài hoàn thành (`self_check` trọng số thấp hơn), không theo tốc độ, top 10 + hạng của mình, không xếp hạng toàn thời gian (ADR-08) | MVP-Full |
+| F22 | Thông báo Web Push trên trình duyệt (bài được review, yêu cầu review mới cho mentor, track mới publish); Discord là kênh thứ hai; iOS cần "Thêm vào Màn hình chính" | MVP-Full |
 
 ## 7. Yêu cầu chức năng (rút gọn)
 
@@ -108,6 +111,9 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | FR-14 | Xuất tiến độ (CSV) cho admin. | P2 |
 | FR-15 | Admin nhập/thay danh sách email được duyệt; chỉ admin xem được; mọi thay đổi ghi `audit_logs`; không xuất cho member. | MVP |
 | FR-16 | Hoàn thành track → cấp chứng nhận có link xác minh công khai (F19). | P2 |
+| FR-17 | Bài SQL chấm bằng `sql-checker`: truy vấn chạy read-only với timeout, kết quả ghi `test_runs`; so có thứ tự khi đề yêu cầu `ORDER BY` (F20). | MVP-Full |
+| FR-18 | Bảng xếp hạng chỉ gồm thành viên đã opt-in (`users.leaderboard_opt_in`), tính bằng truy vấn/view theo kỳ, không lưu điểm (F21). | MVP-Full |
+| FR-19 | Thành viên bật/tắt Web Push theo từng thiết bị; subscription hết hạn (404/410) tự xóa (F22). | MVP-Full |
 
 ## 8. Yêu cầu phi chức năng
 
@@ -147,13 +153,13 @@ Dựng content repo, import SQL Challenge, chạy một đợt với ≥ 20 thà
 **Đã chốt (16/11/2026): có chạy Phase 0.** Khung app (E1–E3) đã dựng từ trước; trong Phase 0 chưa thêm tính năng app mới.
 
 ### MVP (8–12 tuần, nhóm 3–5 sinh viên bán thời gian; chia **MVP-Lite** trước, **MVP-Full** sau — xem MVP-BACKLOG)
-F1–F10, FR-01…FR-13. Nội dung đầu tiên: track **SQL 30 ngày** (import) + một track **Git & GitHub** (viết mới từ Study Jam) làm bài `code` mẫu. Mục tiêu hạ rào cản: track "làm quen GitHub" dùng quiz + `self_check` trước khi nộp PR.
+F1–F10, FR-01…FR-13; **MVP-Full** thêm F20–F22 (checker SQL ngay sau MVP-Lite, bảng xếp hạng opt-in, Web Push — quyết định 16/11/2026, DECISIONS ADR-07/ADR-08). Nội dung đầu tiên: track **SQL 30 ngày** (import) + một track **Git & GitHub** (viết mới từ Study Jam) làm bài `code` mẫu. Mục tiêu hạ rào cản: track "làm quen GitHub" dùng quiz + `self_check` trước khi nộp PR.
 
 ### Phase 2
 F11–F16, F19 (chứng nhận hoàn thành track), xuất CSV, thông báo in-app/email, Redis + BullMQ nếu cần retry/queue, MinIO nếu cho upload file.
 
 ### Future
-F17–F18, runner sandbox, cohort, tích hợp dữ liệu từ `HCMUTE-DSC-be`/`management-service` nếu được xác nhận. Quy đổi chứng nhận sang điểm rèn luyện của trường: **ngoài phạm vi** (chưa xác nhận).
+F17–F18, runner sandbox nhiều ngôn ngữ (VPS riêng), cohort, tích hợp dữ liệu từ `HCMUTE-DSC-be`/`management-service` nếu được xác nhận. Quy đổi chứng nhận sang điểm rèn luyện của trường: **ngoài phạm vi** (chưa xác nhận).
 
 ## 11. Chỉ số thành công
 

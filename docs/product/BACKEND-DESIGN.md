@@ -26,6 +26,8 @@ learning-hub/                  # monorepo (pnpm workspace)
         integrations/
           github/              # OAuth, Octokit, webhook, ContentSource adapter
           discord/             # webhook sender (P2: bot discord.js)
+          webpush/             # [MVP-Full] WebPushChannel (VAPID, thư viện web-push)
+          sql-checker/         # [MVP-Full] HTTP client gọi service sql-checker qua mạng nội bộ
         common/                # guards, filters, pipes, decorators, errors, pagination
         infrastructure/        # prisma, config (zod env), logging, scheduler, clock
       prisma/
@@ -103,6 +105,7 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 - **Trách nhiệm:** tạo/cập nhật `test_runs`; chấm quiz trong app; xử lý kết quả CI nhận từ adapter; đối soát.
 - C: `QuizAttemptController` (`POST /exercises/{id}/quiz-attempts`). Webhook controller **ở `integrations/github`**, gọi `AssessmentsService.recordCiResult()` qua port `CiResultReceiver` do `assessments` sở hữu.
 - S: `QuizGradingService`, `CiResultService`, `ReconcileJob`. R: `TestRunRepository`.
+- [MVP-Full] Port `SqlChecker` (adapter `integrations/sql-checker`): gửi `{submissionId, exerciseUid, sql}` tới service `sql-checker`, ghi `test_runs` (`provider = sql_checker`) — DECISIONS ADR-07, ARCHITECTURE §7.
 - E: `TestRunFinished`. D: `submissions`, `catalog`.
 
 ### reviews
@@ -120,7 +123,7 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 
 ### notifications
 - **Trách nhiệm:** nhận domain event, chọn kênh/mẫu tin, gửi qua port `NotificationChannel`; (P2) lưu `notifications`.
-- C: (P2) `NotificationsController`. S: `NotificationDispatcher`. Port: `NotificationChannel`.
+- C: (P2) `NotificationsController`; [MVP-Full] `PushSubscriptionsController`. S: `NotificationDispatcher`. Port: `NotificationChannel` (adapter Discord + [MVP-Full] `WebPushChannel`, bảng `push_subscriptions`).
 - D: lắng nghe event, `users`.
 
 ### audit
@@ -225,6 +228,10 @@ Theo tinh thần RFC 9457 (problem+json):
 | `POST /integrations/github/webhook` | chữ ký HMAC | MVP | không dùng session |
 | `GET /me/achievements` | member | P2 | |
 | `GET /me/notifications` | member | P2 | |
+| `POST /me/push-subscriptions` | member | MVP-Full | `{endpoint, keys:{p256dh, auth}}`; upsert theo `endpoint`; 422 nếu host không thuộc danh sách push service |
+| `DELETE /me/push-subscriptions/{id}` | member | MVP-Full | chỉ subscription của mình |
+| `PATCH /me/settings` | member | MVP-Full | `{leaderboardOptIn}` |
+| `GET /leaderboard` | member | MVP-Full | `?term=&cohort=`; top 10 + dòng của người xem; chỉ người opt-in; từ view `v_leaderboard_term` |
 
 Ví dụ:
 

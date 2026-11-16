@@ -30,7 +30,10 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 | E9 | Thông báo Discord | Full (webhook đơn giản ở Lite) | S |
 | E10 | Quản trị & audit | Full | S |
 | E11 | Vận hành & bàn giao | Lite → Full | M |
-| E12 | Phase 2 (hint, huy hiệu, notification, Google, chứng nhận hoàn thành track, v.v.) | P2 | W (MVP) |
+| E12 | Phase 2 (hint, huy hiệu, notification in-app/email, Google, chứng nhận hoàn thành track, v.v.) | P2 | W (MVP) |
+| E13 | Chấm SQL trên VPS (`sql-checker`, "B-lite" — ADR-07) | Full (ngay sau MVP-Lite) | M |
+| E14 | Bảng xếp hạng opt-in theo học kỳ (ADR-08) | Full | M |
+| E15 | Thông báo Web Push (ADR-08) | Full | M |
 
 ## 2. Chi tiết
 
@@ -100,6 +103,29 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 | --- | --- | --- |
 | Gửi webhook | `NotificationChannel` + adapter; sự kiện: cần review, review xong, version published | Lỗi Discord không làm hỏng request (Lite: log; Full: `outbox_events` + retry) |
 
+### E13 — Chấm SQL trên VPS (`sql-checker`) (M, Full — làm ngay sau MVP-Lite) → E5, E6, E11
+Quyết định 16/11/2026 (DECISIONS ADR-07): phần lớn nội dung là SQL; 31 bài `self_check` của `sql-30-days` có thể chuyển sang chấm tự động. Thiết kế: ARCHITECTURE §7 (sql-checker), SECURITY §7.
+
+| Story | Task | Acceptance | Trạng thái |
+| --- | --- | --- | --- |
+| Service `sql-checker` | Container riêng (đề xuất `apps/sql-checker`) + PostgreSQL riêng nạp dataset DSC Shop; mạng Docker riêng chỉ `api` gọi được; không đường ra Internet; giới hạn CPU/bộ nhớ | `sql-checker` không kết nối được DB hub; không publish port; compose prod/local chạy được | Chưa làm |
+| Sandbox truy vấn | Role ít quyền (không superuser), `BEGIN READ ONLY … ROLLBACK` (schema/database dùng một lần cho bài sửa dữ liệu), `statement_timeout` 2–5 s, `idle_in_transaction_session_timeout`, giới hạn dòng/kích thước; cấm `COPY … PROGRAM`, `dblink`, extension untrusted | Bộ kiểm thử đối kháng (ghi dữ liệu, `pg_sleep`, `COPY … PROGRAM`, nhiều câu lệnh, `SET ROLE`) đều bị chặn | Chưa làm |
+| So sánh kết quả | So với tập kết quả kỳ vọng từ `learning-hub-checker` (riêng tư); có thứ tự khi đề yêu cầu `ORDER BY`; trả diff tóm tắt | Lời giải không lộ ra member; kết quả ≤ 5 s | Chưa làm |
+| Loại bài & nộp | Quyết định spec khi cài đặt (nghiêng về `code` + `runtime.language: sql` + `checker.kind: sql`); `submissions.source_type = sql_query`; port `SqlChecker` + adapter; ghi `test_runs` (`provider = sql_checker`) | Nộp truy vấn trong app → `passed`/`failed` hiển thị như bài `code` | Chưa làm |
+| Chuyển đổi nội dung | Chuyển dần bài `self_check` của `sql-30-days` sang chấm tự động (PR vào content repo + kết quả kỳ vọng vào checker repo) | ≥ 10 bài chuyển xong trong đợt đầu | Chưa làm |
+
+### E14 — Bảng xếp hạng opt-in (M, Full) → E5, E6
+| Story | Task | Acceptance | Trạng thái |
+| --- | --- | --- | --- |
+| Opt-in | Cột `users.leaderboard_opt_in` (mặc định `false`); bật/tắt trong cài đặt hồ sơ | Chưa bật thì không xuất hiện; tắt là biến mất ngay | Chưa làm |
+| Bảng xếp hạng theo kỳ | View/truy vấn `v_leaderboard_term` (không lưu điểm): đếm bài hoàn thành trong kỳ (`approved` hoặc tự động `passed`), `self_check` trọng số thấp hơn; lọc theo kỳ/đợt (`cohort`); trang `/leaderboard` | Top 10 + hạng của người xem; không theo tốc độ; không có xếp hạng toàn thời gian; sang kỳ mới tự reset | Chưa làm |
+
+### E15 — Thông báo Web Push (M, Full) → E9
+| Story | Task | Acceptance | Trạng thái |
+| --- | --- | --- | --- |
+| Đăng ký thiết bị | Service worker + web app manifest; bảng `push_subscriptions`; endpoint đăng ký/hủy; trang cài đặt thông báo; hướng dẫn iOS "Thêm vào Màn hình chính" | Bật/tắt theo thiết bị; `endpoint` ngoài danh sách push service bị từ chối | Chưa làm |
+| Gửi thông báo | Khóa VAPID (P-256) trong secret; adapter `WebPushChannel` qua `outbox_events`; sự kiện: bài được review, yêu cầu review mới (mentor), track mới publish | Subscription 404/410 tự xóa; lỗi push không làm hỏng request; Discord vẫn gửi song song | Chưa làm |
+
 ### E10 — Quản trị & audit (S) → E2, E3
 | Story | Task | Acceptance |
 | --- | --- | --- |
@@ -119,7 +145,7 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 
 | M (bắt buộc) | S (nên có) | C (có thể) | W (không ở MVP) |
 | --- | --- | --- | --- |
-| E1, E2, E3, E4, E5, E6 (1 loại bài), E7, E11 | E8, E9, E10, đối soát test | Tìm kiếm Postgres FTS, xuất CSV, dark mode tinh chỉnh | Online judge/runner, bot Discord, huy hiệu, hint/solution, notification in-app, Google OAuth, upload, Redis/BullMQ, cohort đầy đủ, i18n en |
+| E1, E2, E3, E4, E5, E6 (1 loại bài), E7, E11; Full: E13, E14, E15 | E8, E9, E10, đối soát test | Tìm kiếm Postgres FTS, xuất CSV, dark mode tinh chỉnh | Online judge/runner nhiều ngôn ngữ (Judge0/Piston), bot Discord, huy hiệu, hint/solution, notification in-app, Google OAuth, upload, Redis/BullMQ, cohort đầy đủ, i18n en |
 
 ## 4. Trình tự thực hiện (đề xuất)
 
@@ -141,10 +167,12 @@ gantt
   E7 Mentor review                      :e7, after e6, 1w
   Triển khai + đợt thử có app           :e11, after e7, 1w
   section MVP-Full
+  E13 sql-checker                       :e13, after e11, 2w
   E8 Mentorship + E9 Discord            :e8, after e11, 2w
-  E10 Admin/Audit + đối soát            :e10, after e8, 2w
+  E14 Bảng xếp hạng + E15 Web Push      :e14, after e8, 2w
+  E10 Admin/Audit + đối soát            :e10, after e13, 2w
 ```
-Sau MVP-Full, Phase 2 gồm **chứng nhận hoàn thành track** do hub cấp (PRD F19; không quy đổi điểm rèn luyện). Ngày chỉ minh họa; Ban chủ nhiệm đặt lịch thật theo học kỳ. Nên phát hành nội bộ cho một nhóm nhỏ ở cuối MVP-Lite và nhận phản hồi trước khi làm Full.
+MVP-Full chạy hai nhánh song song (E13 ‖ E8/E9 → E14/E15) để giữ ≈ 4–6 tuần. Sau MVP-Full, Phase 2 gồm **chứng nhận hoàn thành track** do hub cấp (PRD F19; không quy đổi điểm rèn luyện). Ngày chỉ minh họa; Ban chủ nhiệm đặt lịch thật theo học kỳ. Nên phát hành nội bộ cho một nhóm nhỏ ở cuối MVP-Lite và nhận phản hồi trước khi làm Full.
 
 ## 5. Ước lượng & đội hình khuyến nghị
 

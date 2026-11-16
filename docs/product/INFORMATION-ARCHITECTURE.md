@@ -6,10 +6,10 @@
 
 | Vị trí | Mục | Hiển thị cho |
 | --- | --- | --- |
-| Sidebar (desktop) / thanh dưới (mobile) | **Bảng điều khiển** · **Lộ trình** (tracks) · **Bài nộp của tôi** · **Mentor** | member |
+| Sidebar (desktop) / thanh dưới (mobile) | **Bảng điều khiển** · **Lộ trình** (tracks) · **Bài nộp của tôi** · **Mentor** · **Bảng xếp hạng** [MVP-Full] | member |
 | Sidebar | **Hàng đợi review** | mentor |
 | Sidebar | **Quản trị** (Người dùng, Mentoring, Nội dung, Nhật ký) | admin; mục **Nội dung** cho cả content_maintainer |
-| Topbar | Tìm kiếm [P2], thông báo [P2], menu hồ sơ (hồ sơ, theme, đăng xuất) | tất cả |
+| Topbar | Tìm kiếm [P2], hộp thông báo trong app [P2], menu hồ sơ (hồ sơ, **cài đặt** — thông báo push & bảng xếp hạng [MVP-Full], theme, đăng xuất) | tất cả |
 | Footer / Topbar phụ | Liên kết: Site CLB, Mentoring Program, Discord, GitHub org, Đóng góp nội dung | tất cả |
 
 ## 2. Sitemap
@@ -29,6 +29,8 @@ flowchart TD
   MySubs["me/submissions"]
   MyMentor["me/mentorship"]
   Profile["me/profile"]
+  Settings["me/settings"]
+  Leader["leaderboard"]
   Review["review"]
   ReviewOne["review/submissionId"]
   Mentees["mentor/mentees"]
@@ -44,7 +46,8 @@ flowchart TD
   Module --> Exercise --> Sub
   Dash --> MySubs
   Dash --> MyMentor
-  Dash --> Profile
+  Dash --> Profile --> Settings
+  Dash --> Leader
   Dash --> Review --> ReviewOne
   Review --> Mentees
   Dash --> AdminUsers
@@ -125,3 +128,11 @@ Bố cục hai cột (desktop):
 ## 10. Trang đóng góp `/contribute` [MVP đơn giản]
 
 Giải thích 5 bước đóng góp nội dung, liên kết tới `learning-hub-content`, hướng dẫn validate cục bộ, danh sách việc "good first content" (do maintainer gắn nhãn).
+
+## 11. Bảng xếp hạng & cài đặt thông báo [MVP-Full]
+
+**Bảng xếp hạng** (`/leaderboard`, DECISIONS ADR-08): bộ chọn kỳ/đợt (mặc định kỳ hiện tại) · bảng **top 10** (hạng, tên hiển thị, avatar, số bài hoàn thành có trọng số) · dòng **"Hạng của bạn"** · ghi chú cách tính (chỉ người đã opt-in, `self_check` trọng số thấp hơn, không tính tốc độ, reset mỗi kỳ). Người chưa opt-in thấy lời mời bật tại cài đặt. Không có xếp hạng toàn thời gian.
+
+**Cài đặt** (`/me/settings`):
+- **Thông báo:** công tắc Web Push cho thiết bị hiện tại; danh sách thiết bị đã bật (tên trình duyệt, lần dùng cuối, nút gỡ); sự kiện nhận: bài được review, yêu cầu review mới (mentor), track mới publish; hướng dẫn iOS "Thêm vào Màn hình chính". Discord vẫn là kênh thứ hai.
+- **Bảng xếp hạng:** "Hiện tôi trên bảng xếp hạng" (mặc định tắt).

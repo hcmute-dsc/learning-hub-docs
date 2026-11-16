@@ -1,6 +1,6 @@
 # ARCHITECTURE — Kiến trúc hệ thống
 
-> Nguyên tắc: **đơn giản đủ để sinh viên bảo trì**. Modular monolith, 1 database, 3 tiến trình ở MVP (`web`, `api`, `postgres`). Redis/BullMQ/MinIO **không** có ở MVP (điều kiện thêm ở §8, §9).
+> Nguyên tắc: **đơn giản đủ để sinh viên bảo trì**. Modular monolith, 1 database, 3 tiến trình ở MVP-Lite (`web`, `api`, `postgres`); MVP-Full thêm `sql-checker` + PostgreSQL riêng của nó (§7, ADR-07). Redis/BullMQ/MinIO **không** có ở MVP (điều kiện thêm ở §8, §9).
 
 ## 1. Bối cảnh hệ thống
 
@@ -40,7 +40,7 @@ flowchart TB
     Biz[Business modules<br/>identity · users · catalog · learning · submissions ·<br/>assessments · reviews · mentorship · content · notifications]
     Ports[Ports - interfaces]
     Infra[Infrastructure<br/>prisma · config · logging · scheduler]
-    Integ[Integrations adapters<br/>github · discord]
+    Integ[Integrations adapters<br/>github · discord · webpush · sql-checker]
     Presentation --> Biz --> Ports
     Integ -. implements .-> Ports
     Biz --> Infra
@@ -48,6 +48,9 @@ flowchart TB
   API --> PG[(PostgreSQL)]
   Integ <--> GH[GitHub]
   Integ --> DC[Discord webhook/bot]
+  Integ --> WP[Push service của trình duyệt<br/>Web Push · MVP-Full]
+  Integ -->|mạng nội bộ · MVP-Full| SQLC[sql-checker]
+  SQLC --> SPG[(PostgreSQL riêng<br/>dataset DSC Shop)]
 ```
 
 ## 3. Ranh giới module backend
@@ -123,6 +126,17 @@ Cô lập trong `integrations/github`, chỉ lộ ra các port:
   4. Workflow của CLB checkout `repo@sha` vào thư mục riêng, chạy test ẩn (không secret, `permissions: contents: read`, timeout), ghi tóm tắt vào **check run/job summary**.
   5. Webhook `workflow_run.completed` **chỉ từ `learning-hub-checker`** (kiểm tra `repository.full_name`) → `CiResultReceiver` ghi `test_run`. Đọc `conclusion` + tóm tắt có giới hạn kích thước, không tải artifact tùy ý.
 
+### Chấm SQL trên VPS — `sql-checker` (MVP-Full, ngay sau MVP-Lite; ADR-07)
+
+Phần lớn nội dung là SQL (31 bài `self_check` của `sql-30-days` có thể chuyển thành chấm tự động), nên bài SQL được chấm trên VPS thay vì GitHub Actions — phản hồi trong vài giây, thành viên không cần repo/PR.
+
+- **Thành phần:** service/container `sql-checker` riêng (đề xuất mã ở `apps/sql-checker` trong monorepo) + **một instance PostgreSQL riêng** nạp dataset DSC Shop. **Không** dùng DB của hub; `sql-checker` không có thông tin kết nối DB hub.
+- **Giao tiếp:** API gọi `sql-checker` qua mạng Docker **nội bộ** (không publish port, không qua Caddy) bằng port `SqlChecker` (module `assessments`), adapter trong `integrations/sql-checker`. Đầu vào `{submissionId, exerciseUid, sql}`; đầu ra `{status, rowCount, diff tóm tắt, durationMs}` → API ghi `test_runs` (`provider = sql_checker`).
+- **Chạy truy vấn:** role ít quyền (không superuser, chỉ `SELECT` trên schema bài) trong `BEGIN READ ONLY … ROLLBACK`; bài cần sửa dữ liệu chạy trên schema/database dùng một lần rồi xóa. Có `statement_timeout` (2–5 s), `idle_in_transaction_session_timeout`, giới hạn số dòng/kích thước kết quả. Yêu cầu sandbox đầy đủ: SECURITY §7.
+- **So sánh kết quả:** so với tập kết quả kỳ vọng (tên/số cột, giá trị); so **có thứ tự** khi đề yêu cầu `ORDER BY`, ngược lại so như multiset. Kết quả kỳ vọng/lời giải nằm trong `learning-hub-checker` (riêng tư), được nạp vào `sql-checker` lúc deploy — không nằm trong content repo công khai.
+- **Loại bài:** `code` với `runtime.language: sql` + `checker.kind: sql` (biến thể spec mới) hoặc type `sql` riêng — quyết khi cài đặt, nghiêng về biến thể trong `code`. Nộp bằng câu truy vấn dán trong app (`submissions.source_type = sql_query`).
+- Judge0/Piston nhiều ngôn ngữ **không** đặt ở đây: chỉ Future, trên VPS riêng (§14).
+
 ## 8. Background jobs
 
 MVP **không dùng Redis/BullMQ**. Việc nền chạy trong tiến trình API bằng `@nestjs/schedule` (cron) và bảng `outbox`/trạng thái trong DB:
@@ -131,7 +145,7 @@ MVP **không dùng Redis/BullMQ**. Việc nền chạy trong tiến trình API b
 | --- | --- | --- |
 | `reconcile-test-runs` | 5 phút | Tìm submission `testing` quá 5 phút, hỏi GitHub API lấy kết quả; quá 15 phút → `errored`. |
 | `content-sync-poll` (tuỳ chọn) | 15 phút | Nếu webhook push bị lỡ. |
-| `discord-outbox-flush` | 1 phút | Gửi lại thông báo Discord thất bại (bảng `outbox_events`). |
+| `discord-outbox-flush` | 1 phút | Gửi lại thông báo Discord thất bại (bảng `outbox_events`); từ MVP-Full gửi cả Web Push (xóa `push_subscriptions` khi push service trả 404/410). |
 
 **Điều kiện thêm Redis + BullMQ (Phase 2):** (a) cần chạy nhiều instance API (job trùng), (b) job > vài giây (import hàng loạt, email digest), (c) cần retry/backoff/giám sát hàng đợi. Khi đó: Redis một node, BullMQ queue `notifications`, `content-sync`, `reconcile`.
 
@@ -144,6 +158,12 @@ MVP: không cho upload file (bài nộp là liên kết GitHub, nội dung nằm
 - Một chiều (MVP): **Incoming Webhook** gửi embed vào kênh: `#review-queue` (bài cần review), `#hub-announcements` (publish track mới). Mentee nhận thông báo cá nhân bằng DM chỉ khi đã liên kết Discord (P2).
 - P2: bot `discord.js` đọc lệnh `/progress`, `/mydaily`; liên kết tài khoản bằng mã một lần. Discord **không** là nguồn sự thật: mọi trạng thái nằm ở DB.
 - Adapter implement port `NotificationChannel` trong `integrations/discord`; lỗi Discord không làm hỏng giao dịch chính (ghi lỗi + retry).
+
+**Web Push (MVP-Full, ADR-08).** Kênh chính cho thông báo cá nhân; Discord là kênh thứ hai.
+- Trình duyệt: service worker (`/sw.js`) + Push API; người dùng bật trong trang cài đặt thông báo → gửi subscription (`endpoint`, khóa `p256dh`, `auth`) lên API, lưu bảng `push_subscriptions` (một dòng mỗi thiết bị).
+- Server: thư viện `web-push`, xác thực bằng cặp khóa **VAPID** (ECDSA P-256); khóa công khai cấp cho web qua env, khóa riêng là secret (SECURITY §8). Adapter `WebPushChannel` implement `NotificationChannel` trong `integrations/webpush`; gửi qua `outbox_events` để retry.
+- Sự kiện: bài nộp được review (`ReviewCompleted` → member), có yêu cầu review mới (`SubmissionAwaitingReview` → mentor), track mới được publish (`ContentVersionPublished` → thành viên đã bật). Payload chỉ gồm tiêu đề + đường dẫn nội bộ, không chứa nội dung bài nộp.
+- iOS/iPadOS: Web Push chỉ hoạt động khi người dùng **"Thêm vào Màn hình chính"** (cần web app manifest); UI hướng dẫn việc này.
 
 ## 11. Logging & giám sát
 
@@ -161,7 +181,7 @@ MVP: không cho upload file (bài nộp là liên kết GitHub, nội dung nằm
 
 ## 13. Bảo mật (tóm tắt)
 
-Chi tiết trong SECURITY.md. Điểm kiến trúc: không chạy code thành viên trong API; secrets qua biến môi trường/secret manager; HMAC cho webhook; quyền tối thiểu cho GitHub App; CSP, CSRF, rate limit ở reverse proxy + Nest throttler.
+Chi tiết trong SECURITY.md. Điểm kiến trúc: không chạy code thành viên trong API (truy vấn SQL của thành viên chỉ chạy trong `sql-checker` với DB riêng — §7; Judge0/Piston không bao giờ chung VPS với hub); secrets qua biến môi trường/secret manager; HMAC cho webhook; quyền tối thiểu cho GitHub App; CSP, CSRF, rate limit ở reverse proxy + Nest throttler.
 
 ## 14. Triển khai
 
@@ -175,6 +195,8 @@ flowchart LR
     Caddy --> api
     api --> db[(postgres)]
     db --- Vol[(volume + pg_dump hằng ngày)]
+    api -->|mạng nội bộ riêng · MVP-Full| sqlc[sql-checker]
+    sqlc --> sqldb[(postgres riêng<br/>DSC Shop)]
   end
   Deploy --> VM
 ```
@@ -185,13 +207,13 @@ flowchart LR
 | Staging (tuỳ chọn) | Một compose nhỏ, content repo nhánh `staging`. |
 | Production | 1 VPS được tài trợ (2 vCPU/4 GB đủ), Caddy (TLS tự động), Compose; backup `pg_dump` sang storage rẻ; image gắn tag theo commit SHA. |
 
-**Đã chốt (16/11/2026):** production chạy trên **1 VPS** do Chủ nhiệm CLB đương nhiệm (GitHub `TienNHM`) tài trợ; người này cũng giữ GitHub App/OAuth app, domain và secret. Docker Compose như sơ đồ trên. Để giảm bus factor, runbook bàn giao (MVP-BACKLOG E11) liệt kê mọi tài khoản/secret theo chức danh (không chứa giá trị) để chuyển quyền sở hữu cho Chủ nhiệm kế tiếp. Kiến trúc vẫn không phụ thuộc nhà cung cấp.
+**Đã chốt (16/11/2026):** production chạy trên **1 VPS** do Chủ nhiệm CLB đương nhiệm (GitHub `TienNHM`) tài trợ; người này cũng giữ GitHub App/OAuth app, domain và secret. Docker Compose như sơ đồ trên. Từ MVP-Full, `sql-checker` và PostgreSQL riêng của nó chạy trên cùng VPS nhưng ở **mạng Docker riêng** (chỉ `api` nối vào; `db` của hub không thuộc mạng này), có giới hạn CPU/bộ nhớ và không có đường ra Internet (SECURITY §7). **Judge0/Piston (nếu có ở Future) không bao giờ chạy trên VPS này** — chúng cần container đặc quyền, thoát sandbox sẽ chạm DB và secret của hub; khi cần thì dùng một VPS nhỏ riêng. Để giảm bus factor, runbook bàn giao (MVP-BACKLOG E11) liệt kê mọi tài khoản/secret theo chức danh (không chứa giá trị) để chuyển quyền sở hữu cho Chủ nhiệm kế tiếp. Kiến trúc vẫn không phụ thuộc nhà cung cấp.
 
 ## 15. Đánh đổi & phương án thay thế
 
 | Quyết định | Vì sao | Khi nào xem lại |
 | --- | --- | --- |
-| Modular monolith | 1 repo, 1 deploy, dễ debug | Khi có đội > 15 dev hoặc runner cần tách (đã tách sẵn là service riêng) |
+| Modular monolith | 1 repo, 1 deploy, dễ debug | Khi có đội > 15 dev; `sql-checker` (MVP-Full) và runner tương lai đã là service riêng |
 | Không Redis ở MVP | Ít thành phần phải vận hành | Điều kiện §8 |
 | REST + OpenAPI thay vì GraphQL | Đơn giản, công cụ sinh client, dễ dạy | Nếu UI cần query phức tạp |
 | Session trong DB | Thu hồi được, không phụ thuộc JWT | Nếu scale ngang lớn |

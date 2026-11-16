@@ -1,7 +1,7 @@
 # DATABASE — Thiết kế PostgreSQL
 
-> PostgreSQL 16 + Prisma. Quy ước: bảng `snake_case` số nhiều, cột `snake_case` (Prisma map bằng `@map`). Khóa chính `uuid` (v7 sinh ở ứng dụng, để sắp xếp theo thời gian). Thời gian `timestamptz` (UTC). Nhãn: **[MVP]** hoặc **[P2]**.
-> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). Các bảng P2 chỉ mô tả ngắn, chưa tạo migration.
+> PostgreSQL 16 + Prisma. Quy ước: bảng `snake_case` số nhiều, cột `snake_case` (Prisma map bằng `@map`). Khóa chính `uuid` (v7 sinh ở ứng dụng, để sắp xếp theo thời gian). Thời gian `timestamptz` (UTC). Nhãn: **[MVP]**, **[MVP-Full]** (thuộc MVP, làm sau MVP-Lite) hoặc **[P2]**.
+> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng view, không lưu điểm. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration.
 
 ## 1. Phân loại dữ liệu
 
@@ -12,6 +12,7 @@
 | Học tập | `enrollments`, `lesson_progress`, `submissions`, `test_runs` | DB |
 | Mentoring | `mentor_assignments`, `reviews`, `review_comments` | DB |
 | Vận hành | `audit_logs` | DB |
+| Thông báo (MVP-Full) | `push_subscriptions` | DB |
 | Phase 2 | `achievements`, `user_achievements`, `notifications` | DB |
 
 ## 2. ERD
@@ -42,6 +43,7 @@ erDiagram
   users ||--o{ mentor_assignments : "mentor"
   tracks |o--o{ mentor_assignments : "scoped to"
   users ||--o{ audit_logs : acts
+  users ||--o{ push_subscriptions : "subscribes (MVP-Full)"
 ```
 
 Ghi chú: `exercise_prerequisites` là quan hệ tự tham chiếu `exercises`↔`exercises`. Mentor/mentee đều là `users` (hai FK trong `mentor_assignments`).
@@ -63,6 +65,7 @@ Ký hiệu: PK, FK, UQ (unique), IX (index). Mọi bảng có `created_at timest
 | avatar_url | text | null |
 | status | text | `pending` (chờ duyệt) \| `active` \| `suspended`; default `pending`, tự thành `active` nếu có email đã xác minh trên GitHub khớp `approved_emails` (hoặc là admin bootstrap) |
 | last_login_at | timestamptz | null |
+| leaderboard_opt_in | boolean | not null default false — [MVP-Full] chỉ người tự bật mới xuất hiện trên bảng xếp hạng (ADR-08) |
 | updated_at, deleted_at | timestamptz | `deleted_at` = xóa mềm |
 
 Quan hệ: 1–N `user_roles`, `enrollments`, `submissions`, …
@@ -216,7 +219,7 @@ Tiến độ **exercise** không có bảng riêng: suy ra từ `submissions` (c
 | exercise_id | uuid | FK → exercises |
 | content_version_id | uuid | FK → content_versions — đề tại thời điểm nộp |
 | attempt | int | not null; UQ `(user_id, exercise_id, attempt)` |
-| source_type | text | `github_pr` \| `github_commit` \| `quiz_answers` \| `self_check` \| `link` (bài `project` chỉ nộp URL, review thủ công) |
+| source_type | text | `github_pr` \| `github_commit` \| `quiz_answers` \| `self_check` \| `link` (bài `project` chỉ nộp URL, review thủ công) \| `sql_query` ([MVP-Full] câu truy vấn chấm bằng `sql-checker`, lưu ở `answers.sql`) |
 | repo_full_name | text | vd `linh/dsc-git-ex1` |
 | pr_number, head_sha | int, char(40) | null theo source_type |
 | source_url | text | |
@@ -234,7 +237,7 @@ Quy tắc: submission **bất biến** về nội dung bài nộp; chỉ `status
 | --- | --- | --- |
 | id | uuid | PK |
 | submission_id | uuid | FK → submissions, cascade |
-| provider | text | `github_checker` (repo `learning-hub-checker`) \| `internal_quiz` (tương lai: `runner`) |
+| provider | text | `github_checker` (repo `learning-hub-checker`) \| `internal_quiz` \| `sql_checker` ([MVP-Full], ADR-07) (tương lai: `runner`) |
 | external_run_id | bigint | null; UQ `(provider, external_run_id)` — chống webhook trùng |
 | status | text | `queued`, `running`, `passed`, `failed`, `errored` |
 | summary | jsonb | số test pass/fail, thời lượng, thông báo ngắn (≤ 8 KB, đã lọc) |
@@ -302,9 +305,25 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 | `webhook_deliveries` | `delivery_id` (text) PK — `X-GitHub-Delivery`, `event`, `received_at`, `processed_at` null | chống xử lý trùng; dọn sau 30 ngày |
 | `outbox_events` | `id` bigint identity PK, `type`, `payload jsonb`, `status` (`pending`\|`sent`\|`failed`), `attempts` int, `next_attempt_at`, `last_error` | IX `(status, next_attempt_at)`; dùng cho gửi Discord có retry |
 
+### 3.16c `push_subscriptions` [MVP-Full]
+**Mục đích:** subscription Web Push của từng thiết bị/trình duyệt (DECISIONS ADR-08, ARCHITECTURE §10).
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| id | uuid | PK |
+| user_id | uuid | FK → users, on delete cascade; IX |
+| endpoint | text | not null, UQ — URL push service (chỉ host trong danh sách cho phép, SECURITY §5) |
+| p256dh | text | not null — khóa công khai P-256 của trình duyệt (base64url) |
+| auth | text | not null — auth secret của subscription (base64url) |
+| user_agent | text | null — hiển thị "thiết bị" trong cài đặt (rút gọn) |
+| created_at | timestamptz | |
+| last_used_at | timestamptz | null — lần gửi thành công gần nhất |
+
+Quy tắc: đăng ký lại cùng `endpoint` → upsert; push service trả 404/410 → xóa dòng; người dùng tắt trên thiết bị → xóa dòng.
+
 ### 3.17 Phase 2 (chưa migrate)
 - `achievements(id, code uq, title, description, criteria jsonb)`, `user_achievements(user_id, achievement_id, awarded_at; PK cả hai)`.
-- `notifications(id, user_id, type, payload jsonb, read_at, created_at)`; IX `(user_id, read_at, created_at desc)`.
+- `notifications(id, user_id, type, payload jsonb, read_at, created_at)`; IX `(user_id, read_at, created_at desc)` — hộp thông báo trong app (P2). Web Push không cần bảng này (§3.16c, MVP-Full).
 
 ## 4. Ràng buộc quan trọng (tóm tắt)
 
@@ -334,6 +353,7 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 
 - `v_exercise_progress(user_id, exercise_id, state)` — `completed` nếu có submission `approved`, hoặc `passed` khi `requires_review = false`; ngược lại `attempted`/`not_started`.
 - `v_track_progress(user_id, track_id, completed, total)` — đếm lesson hoàn thành + exercise completed.
+- `v_leaderboard_term(term, cohort, user_id, score, rank)` [MVP-Full] — chỉ user `active` có `leaderboard_opt_in = true`; đếm exercise hoàn thành lần đầu **trong kỳ** (submission `approved`, hoặc `passed` khi `requires_review = false`), trọng số theo loại: `self_check` thấp hơn bài chấm tự động/mentor duyệt (vd 1 và 3; cấu hình, chốt theo học kỳ); `rank` = `dense_rank()` theo `score`, **không** dùng thời gian/tốc độ để phân hạng. Kỳ lấy từ cấu hình học kỳ (ngày bắt đầu/kết thúc), lọc thêm theo `enrollments.cohort` nếu có. API chỉ trả top 10 + dòng của người xem. Không bảng điểm lưu trữ, không xếp hạng toàn thời gian.
 
 ## 7. Chiến lược migration
 
@@ -353,6 +373,7 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 | submissions, test_runs, reviews, review_comments | Không xóa mềm lẻ; bất biến. Xóa chỉ khi hết thời hạn lưu giữ. |
 | enrollments | `status = 'dropped'` thay vì xóa. |
 | approved_emails | Xóa cứng khi admin gỡ hoặc thay danh sách (thay đổi đã ghi `audit_logs`). Gỡ email không tự khóa tài khoản đã `active`. |
+| push_subscriptions | Xóa cứng khi người dùng tắt, push service báo hết hạn (404/410) hoặc user bị xóa/ẩn danh. |
 | audit_logs | Append-only, không xóa trước hạn. |
 
 Mọi truy vấn mặc định lọc `deleted_at is null` qua Prisma middleware/extension; ngoại lệ phải tường minh.
@@ -367,3 +388,4 @@ Mọi truy vấn mặc định lọc `deleted_at is null` qua Prisma middleware/
 | audit_logs | 24 tháng |
 | content_versions | Giữ vô thời hạn (nhỏ) |
 | approved_emails | Đến khi người đó rời CLB; admin rà soát danh sách mỗi học kỳ |
+| push_subscriptions | Đến khi tắt/hết hạn; xóa nếu `last_used_at` (hoặc `created_at`) quá 90 ngày |

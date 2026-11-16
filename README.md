@@ -2,7 +2,7 @@
 
 Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student Club**, lấy cảm hứng từ [Exercism](https://exercism.org/): học bằng cách làm, có bài tập, có mentor review. **Không phải SaaS** — một nền tảng cho một CLB, thiết kế để các thế hệ sinh viên kế tiếp bảo trì được.
 
-> Trạng thái: **tài liệu thiết kế v0.1 (nháp, chờ Ban chủ nhiệm duyệt)** · Mã ứng dụng đang dựng trong monorepo `learning-hub` (E3 đang làm) · Ngày audit repo: 2026-11-16.
+> Trạng thái: **tài liệu thiết kế v0.1** (ADR-01…ADR-09 đã chốt 16/11/2026) · Mã ứng dụng đang dựng trong monorepo `learning-hub` (E3 đang làm) · Ngày audit repo: 2026-11-16.
 > Ngôn ngữ: tiếng Việt (thuật ngữ kỹ thuật giữ tiếng Anh).
 
 ## Đọc theo thứ tự nào?
@@ -18,7 +18,7 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 | Tài liệu | Nội dung |
 | --- | --- |
 | [REPOSITORY-AUDIT.md](docs/product/REPOSITORY-AUDIT.md) | Kiểm kê repo org `hcmute-dsc`, mức chắc chắn, đề xuất KEEP/INTEGRATE/… |
-| [DECISIONS.md](docs/product/DECISIONS.md) | 9 quyết định kiến trúc: options, ưu/nhược, đề xuất |
+| [DECISIONS.md](docs/product/DECISIONS.md) | 9 quyết định kiến trúc: options, ưu/nhược, quyết định (đã chốt 16/11/2026) |
 | [CRITIQUE.md](docs/product/CRITIQUE.md) | **Phản biện** thiết kế cho bối cảnh CLB học thuật; lỗi đã phát hiện; Phase 0 |
 | [PRD.md](docs/product/PRD.md) | Tầm nhìn, persona, vai trò, yêu cầu, user stories, MVP/P2/Future, chỉ số, rủi ro |
 | [USER-FLOWS.md](docs/product/USER-FLOWS.md) | Hành trình người dùng (Mermaid) |
@@ -36,13 +36,13 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 1. **Hệ sinh thái hiện có.** 19 repo public + 4 private. Nội dung học rải rác (sql-challenge/VitePress, html-css/React data, mentoring-program/bản đồ TS); hai stack song song (Java/Spring cũ, TS/React mới); chưa có theo dõi tiến độ, bài nộp, review. Hoạt động gần đây tập trung vào site tĩnh. *(REPOSITORY-AUDIT §2)*
 2. **Audit & tái sử dụng.** study-jam-api → INTEGRATE/DEPRECATE; study-jam-ui → KEEP; mentoring-program → KEEP+INTEGRATE; Course-DSC → DEPRECATE; **sql-challenge → INTEGRATE (nội dung đầu tiên)**; html-css → INTEGRATE dữ liệu; .github → REFACTOR. Repo private: Unknown/cần xác nhận. *(REPOSITORY-AUDIT §3–4)*
 3. **Tầm nhìn & MVP.** Tracks → Modules → Lessons/Exercises; 4 loại bài (`code`, `quiz`, `self_check`, `project`); nộp qua GitHub; mentor review; nội dung từ Git. MVP chia Lite/Full, **bắt đầu bằng Phase 0** (đã chốt: content repo + import SQL Challenge + một đợt thử bằng công cụ sẵn có; khung app E1–E3 đã có). *(PRD §10, CRITIQUE)*
-4. **Kiến trúc.** Modular monolith NestJS + Next.js + PostgreSQL; 3 tiến trình ở MVP; không Redis/MinIO/microservice; adapter GitHub/Discord cô lập sau các port. *(ARCHITECTURE)*
-5. **Database.** 18 bảng domain (gồm `approved_emails`) + 3 bảng hạ tầng; ràng buộc idempotency, 1 version published, 1 review mở/submission. *(DATABASE)*
+4. **Kiến trúc.** Modular monolith NestJS + Next.js + PostgreSQL; 3 tiến trình ở MVP-Lite (MVP-Full thêm `sql-checker` + PostgreSQL riêng); không Redis/MinIO/microservice; adapter GitHub/Discord cô lập sau các port. *(ARCHITECTURE)*
+5. **Database.** 18 bảng domain (gồm `approved_emails`) + 3 bảng hạ tầng; MVP-Full thêm `push_subscriptions` + `users.leaderboard_opt_in`; ràng buộc idempotency, 1 version published, 1 review mở/submission. *(DATABASE)*
 6. **API.** `/api/v1`, cursor pagination, lỗi `problem+json`, `Idempotency-Key`, OpenAPI → client sinh tự động. *(BACKEND-DESIGN §3–4)*
 7. **Nội dung.** Repo `learning-hub-content`; `uid` ổn định (UUID v7); schema Zod + validator `@hub/content` chạy trong CI; sync tạo version `draft`, publish mới ghi catalog (1 version = 1 commit SHA); trừu tượng `ContentSource`. *(CONTENT-SPECIFICATION)*
-8. **Chiến lược repo.** `learning-hub` (monorepo), `learning-hub-content` (công khai), `learning-hub-checker` (riêng tư, test ẩn), `learning-hub-docs`; `learning-hub-runner` chỉ tương lai. Đã tạo (công khai, 16/11/2026): `learning-hub`, `learning-hub-docs`, `learning-hub-content` (track `sql-30-days`). Chưa tạo: `learning-hub-checker`. *(DECISIONS ADR-09)*
-9. **Bảo mật.** GitHub OAuth + duyệt thành viên bằng danh sách email của CLB, session DB, RBAC + policy tài nguyên, HMAC webhook, **CI chấm do CLB sở hữu** (không tin workflow của thành viên), sandbox riêng cho tương lai. *(SECURITY)*
-10. **Lộ trình.** Phase 0 (4–6 tuần) → MVP-Lite (~8 tuần) → MVP-Full (~4 tuần), nhóm 3–6 sinh viên; Phase 2 có chứng nhận hoàn thành track. *(MVP-BACKLOG §4)*
+8. **Chiến lược repo.** `learning-hub` (monorepo), `learning-hub-content` (công khai), `learning-hub-checker` (riêng tư, test ẩn), `learning-hub-docs`; `learning-hub-runner` (Judge0/Piston) chỉ tương lai và trên VPS riêng. Đã tạo (công khai, 16/11/2026): `learning-hub`, `learning-hub-docs`, `learning-hub-content` (track `sql-30-days`). Chưa tạo: `learning-hub-checker`. *(DECISIONS ADR-09)*
+9. **Bảo mật.** GitHub OAuth + duyệt thành viên bằng danh sách email của CLB, session DB, RBAC + policy tài nguyên, HMAC webhook, **CI chấm do CLB sở hữu** (không tin workflow của thành viên), `sql-checker` cô lập (DB riêng, read-only, timeout) ở MVP-Full, sandbox nhiều ngôn ngữ chỉ tương lai trên VPS riêng. *(SECURITY)*
+10. **Lộ trình.** Phase 0 (4–6 tuần) → MVP-Lite (~8 tuần) → MVP-Full (~4–6 tuần: `sql-checker` ngay sau MVP-Lite, bảng xếp hạng opt-in, Web Push, …), nhóm 3–6 sinh viên; Phase 2 có chứng nhận hoàn thành track. *(MVP-BACKLOG §4)*
 11. **Quyết định & câu hỏi mở.** Xem bên dưới.
 
 ## Quyết định đã chốt (16/11/2026)
@@ -56,6 +56,9 @@ Do Chủ nhiệm CLB quyết định; chi tiết ở CRITIQUE §8 và các tài 
 5. **Giấy phép nội dung** (giao tech lead): nội dung import giữ giấy phép gốc (SQL Challenge MIT → track `sql-30-days` dùng MIT, giữ tác giả + link nguồn); nội dung mới CC BY-SA 4.0 (văn bản) + MIT (code mẫu); người import xác nhận nguồn/tác giả trong mô tả PR. *(CONTENT-SPECIFICATION §10)*
 6. **Chứng nhận:** hub tự cấp chứng nhận hoàn thành mỗi track (trang/link xác minh được: tên, track, ngày hoàn thành, phiên bản nội dung) ở **P2**. Quy đổi điểm rèn luyện: ngoài phạm vi, chưa xác nhận. *(PRD F19)*
 7. **Review:** kết luận (`approved`/`changes_requested`) ghi ở hub; thảo luận chi tiết ở cả hub và GitHub. *(USER-FLOWS §8)*
+8. **ADR-01…ADR-09 đã chốt:** ứng dụng mới NestJS + Next.js; bản đồ mentoring độc lập, tác vụ mentoring trong hub; import SQL Challenge (đã xong), Course-DSC deprecate; monorepo pnpm + content repo riêng; Git là nguồn sự thật; GitHub là chính (Google P2). *(DECISIONS)*
+9. **Chấm bài (ADR-07):** A + D ở MVP; ngay sau MVP-Lite thêm `sql-checker` chỉ cho SQL trên VPS (PostgreSQL riêng, read-only, timeout); Judge0/Piston chỉ Future, không bao giờ chung VPS với hub. *(ARCHITECTURE §7, SECURITY §7, MVP-BACKLOG E13)*
+10. **Bảng xếp hạng & push (ADR-08):** giữ ở MVP-Full — bảng xếp hạng opt-in theo học kỳ (top 10 + hạng của mình, không theo tốc độ, không toàn thời gian) và Web Push (Discord là kênh thứ hai). *(CRITIQUE §3.4, MVP-BACKLOG E14–E15)*
 
 ## Câu hỏi còn mở
 

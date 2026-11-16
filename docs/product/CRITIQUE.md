@@ -21,7 +21,7 @@ Exercism sống nhờ hàng nghìn tình nguyện viên; CLB có thể chỉ có
 Bản nháp có 11 module Nest, 20 bảng, GitHub App, Discord, content sync, checker repo. Một học kỳ khó làm hết.
 **Hành động:** MVP chia hai mức trong MVP-BACKLOG:
 - **MVP-Lite (≈ 6–8 tuần):** đăng nhập GitHub, catalog đọc từ Git (sync thủ công bằng lệnh/endpoint admin), enroll + lesson progress, nộp bài `quiz` và `self_check`, **một** loại bài `code` qua checker repo, review của mentor. Không Discord bot, không outbox (gửi webhook Discord đơn giản, lỗi chỉ log).
-- **MVP-Full:** phần còn lại (mentorship UI đầy đủ, dashboard admin, reconcile job, audit UI).
+- **MVP-Full:** phần còn lại (mentorship UI đầy đủ, dashboard admin, reconcile job, audit UI) + theo quyết định 16/11/2026: `sql-checker` (làm ngay sau MVP-Lite), bảng xếp hạng opt-in, Web Push (DECISIONS ADR-07, ADR-08).
 Gộp module khi cài đặt để giảm ma sát: `catalog + content + learning` có thể ở cùng một Nest module "learning" ban đầu (giữ **thư mục con** theo ranh giới để tách sau). Quy tắc ranh giới vẫn giữ, chỉ giảm số `*.module.ts`.
 
 ### 2.2 🟠 Bus factor và kế nhiệm
@@ -60,7 +60,13 @@ CLB quen chạy theo đợt (SQL Challenge 30 ngày, Study Jam, Gen mới): cả
 **Hành động:** thêm cột nhẹ `enrollments.cohort` (text, null) ở MVP để gắn nhãn đợt ("sql-2027-spring") và lọc tiến độ theo đợt; cohort đầy đủ (lịch, deadline) ở P2.
 
 ### 3.4 🟡 Văn hóa "học, không chấm điểm"
-Cho CLB học thuật, tiến độ nên khuyến khích chứ không xếp hạng. Giữ: không leaderboard; huy hiệu tắt được; hiển thị **tiến độ cá nhân** và "đang học cùng bạn" (số người cùng đợt) thay vì xếp hạng. P2: xem lời giải cộng đồng **sau khi tự hoàn thành** (giống Exercism) để học lẫn nhau.
+Cho CLB học thuật, tiến độ nên khuyến khích chứ không xếp hạng. Bản nháp đề xuất: không leaderboard; huy hiệu tắt được; hiển thị **tiến độ cá nhân** và "đang học cùng bạn" (số người cùng đợt) thay vì xếp hạng. P2: xem lời giải cộng đồng **sau khi tự hoàn thành** (giống Exercism) để học lẫn nhau.
+**Đã chốt (16/11/2026):** Chủ nhiệm CLB chọn **giữ bảng xếp hạng ở MVP-Full** (DECISIONS ADR-08) với "thiết kế an toàn" để giảm các rủi ro trên:
+- **Opt-in:** mặc định ẩn (`users.leaderboard_opt_in = false`); chỉ người tự bật mới xuất hiện, tắt là biến mất ngay; chỉ thành viên đã đăng nhập xem được.
+- **Theo học kỳ/đợt, reset mỗi kỳ;** không có xếp hạng toàn thời gian.
+- **Xếp theo số bài hoàn thành** (`approved` hoặc tự động `passed`); `self_check` có trọng số thấp hơn bài chấm tự động hoặc mentor duyệt; **không bao giờ** xếp theo tốc độ.
+- **Chỉ hiện top 10 + hạng của chính người xem;** điểm tính bằng truy vấn/view, không lưu.
+Tiến độ cá nhân và "đang học cùng bạn" vẫn là hiển thị chính; huy hiệu vẫn tắt được (P2).
 
 ### 3.5 🟡 Phạm vi chủ đề
 CLB gồm cả CTF, AI, phỏng vấn (InterviewPrep101), không chỉ lập trình web. Schema nội dung đã không phụ thuộc ngôn ngữ; nhưng loại bài hiện có thiên về code. Để cho track "phỏng vấn/soft skill" dùng được: `project` + `self_check` + `quiz` đã đủ. Không thêm loại mới ở MVP.
@@ -82,8 +88,8 @@ Phân định rõ: mentor góp ý, **không** có trách nhiệm học thuật c
 | Dữ liệu sinh viên | Có tên, email, GitHub, bài làm — dữ liệu cá nhân | Thu thập tối thiểu; quy trình xóa/ẩn danh (DATABASE §8); chính sách riêng tư ngắn bằng tiếng Việt; Open Question: có cần đăng ký với nhà trường? |
 | Bản quyền nội dung | it-quiz, html-css, tài liệu sưu tầm | Mỗi bài ghi `license`, `authors`, `source`; người import xác nhận nguồn/tác giả trong mô tả PR trước khi import (CONTENT-SPECIFICATION §10) |
 | Giấy phép nội dung | SQL Challenge là MIT | **Đã chốt (16/11/2026):** nội dung import giữ giấy phép gốc (track `sql-30-days` dùng MIT, giữ ghi nhận tác giả + link nguồn); nội dung mới mặc định CC BY-SA 4.0 cho văn bản + MIT cho code mẫu (CONTENT-SPECIFICATION §10) |
-| Đạo văn / sao chép | Không có điểm số → rủi ro thấp; nhưng test ẩn dễ bị đoán | Test ẩn + đa dạng dữ liệu; mentor hỏi lại khi nghi ngờ; không cấm thảo luận |
-| Chạy code thành viên | Dù trên runner GitHub-hosted, vẫn là code không tin cậy | Không secret trong checker repo; token chỉ đọc; timeout; chỉ repo công khai |
+| Đạo văn / sao chép | Không có điểm số → rủi ro thấp; bảng xếp hạng opt-in (MVP-Full) tạo thêm động cơ nhỏ; test ẩn dễ bị đoán | Test ẩn + đa dạng dữ liệu; `self_check` trọng số thấp, không xếp theo tốc độ (§3.4); mentor hỏi lại khi nghi ngờ; không cấm thảo luận |
+| Chạy code thành viên | Dù trên runner GitHub-hosted, vẫn là code không tin cậy; truy vấn SQL trên `sql-checker` (MVP-Full) chạy trên VPS của CLB | Không secret trong checker repo; token chỉ đọc; timeout; chỉ repo công khai. `sql-checker`: PostgreSQL riêng, role ít quyền, read-only, timeout, không mạng ra; Judge0/Piston không bao giờ chung VPS với hub (SECURITY §7) |
 
 ## 6. Tiêu chí "đi / không đi" sau Phase 0 (đề xuất)
 
@@ -110,3 +116,4 @@ Mục tiêu bản nháp (40% weekly active, 25% hoàn thành SQL) có vẻ **l�
 5. Giấy phép nội dung và quy trình xác nhận bản quyền khi import. → **Giao tech lead**; ghi nhận: nội dung import giữ giấy phép gốc (SQL Challenge MIT), nội dung mới CC BY-SA 4.0 (văn bản) + MIT (code mẫu), người import xác nhận nguồn/tác giả trong mô tả PR (CONTENT-SPECIFICATION §10).
 6. Có cần liên kết điểm rèn luyện/chứng nhận hoạt động của trường không? → Hub cấp **chứng nhận hoàn thành riêng** cho mỗi track (trang/link xác minh được) ở **P2** (PRD F19). Quy đổi điểm rèn luyện: **ngoài phạm vi**, chưa xác nhận với trường.
 7. Review ghi ở hub hay GitHub? → **Kết luận** (`approved`/`changes_requested`) ghi ở hub; thảo luận chi tiết ở cả hub và GitHub (USER-FLOWS §8).
+8. Các quyết định kiến trúc (DECISIONS) → **Đã chốt toàn bộ ADR-01…ADR-09.** ADR-01 = B (ứng dụng mới NestJS + Next.js); ADR-02 = C; ADR-03 = B (SQL Challenge đã import, HTML/CSS sau, Course-DSC deprecate); ADR-04 = A (monorepo pnpm, content repo riêng); ADR-05 = C; ADR-06 = C (Google/email trường ở P2); ADR-09 chấp nhận. **ADR-07:** A + D ở MVP; ngay sau MVP-Lite thêm `sql-checker` chỉ cho SQL trên VPS (PostgreSQL riêng, read-only, timeout); Judge0/Piston nhiều ngôn ngữ chỉ Future và không bao giờ chung VPS với hub. **ADR-08:** giữ **bảng xếp hạng opt-in theo học kỳ** (§3.4) và **Web Push** ở MVP-Full; các mục loại khác giữ nguyên.

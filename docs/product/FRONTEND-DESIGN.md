@@ -51,6 +51,8 @@ Khớp INFORMATION-ARCHITECTURE. Đường dẫn dùng `slug` (đọc được) 
 | `/exercises/[id]` | Đề + trạng thái + nộp bài | hybrid |
 | `/submissions/[id]` | Chi tiết bài nộp, test run, review | dynamic, polling |
 | `/me/submissions`, `/me/mentorship` | Lịch sử, mentor của tôi | dynamic |
+| `/me/settings` | Cài đặt: thông báo (Web Push theo thiết bị), hiện mình trên bảng xếp hạng (opt-in) — MVP-Full | dynamic |
+| `/leaderboard` | Bảng xếp hạng theo kỳ/đợt: top 10 + hạng của mình — MVP-Full | dynamic |
 | `/review`, `/review/[submissionId]` | Hàng đợi, màn hình review | dynamic (mentor) |
 | `/admin/...` | Users, mentorship, content versions, audit | dynamic (admin) |
 
@@ -122,6 +124,14 @@ Giao diện tiếng Việt trước; chuỗi tách ra `messages/vi.json` (next-i
 
 Lesson/track render server + cache; tách code theo route; ảnh dùng `next/image` (nguồn từ content, kích thước giới hạn); không gọi GitHub từ trình duyệt; font tự host. Mục tiêu LCP < 2,5 s trên 4G.
 
-## 13. Gamification nhẹ (P2, tắt được)
+## 13. Gamification nhẹ (tắt được) & thông báo push
 
-Chỉ: vòng tiến độ, "streak" tuỳ chọn, huy hiệu mốc (hoàn thành track, review đầu tiên). Không điểm xếp hạng công khai. Cài đặt trong hồ sơ: "Ẩn huy hiệu/streak".
+**P2:** vòng tiến độ, "streak" tuỳ chọn, huy hiệu mốc (hoàn thành track, review đầu tiên). Cài đặt trong hồ sơ: "Ẩn huy hiệu/streak".
+
+**Bảng xếp hạng opt-in (MVP-Full, DECISIONS ADR-08).** Trang `/leaderboard`, chỉ thành viên đã đăng nhập:
+- Chỉ hiện người đã bật "Hiện tôi trên bảng xếp hạng" ở `/me/settings` (mặc định **tắt**); người chưa bật thấy lời mời bật kèm giải thích ngắn.
+- Theo học kỳ/đợt (bộ chọn kỳ/`cohort`, mặc định kỳ hiện tại), reset mỗi kỳ; **không** có tab "mọi thời đại".
+- Xếp theo số bài hoàn thành có trọng số (`self_check` thấp hơn bài chấm tự động/mentor duyệt); **không** hiển thị thời gian hay tốc độ; đồng hạng hiển thị cùng hạng.
+- Hiện **top 10** + một dòng "Hạng của bạn" (nếu đã bật). Không dùng màu/hiệu ứng "thua cuộc"; có liên kết về tiến độ cá nhân.
+
+**Web Push (MVP-Full).** `/me/settings` có công tắc "Nhận thông báo trên thiết bị này" (xin quyền `Notification` chỉ khi người dùng bấm, không hỏi lúc tải trang); service worker `public/sw.js` + `manifest.webmanifest`. Trên iOS/iPadOS hiển thị hướng dẫn "Thêm vào Màn hình chính" trước khi bật. Bấm thông báo mở đúng trang (submission, hàng đợi review, track).

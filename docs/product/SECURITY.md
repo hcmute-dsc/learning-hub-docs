@@ -44,10 +44,10 @@ Quy tắc bắt buộc:
 | Mối đe dọa | Biện pháp |
 | --- | --- |
 | CSRF | Cookie `SameSite=Lax`; request thay đổi dữ liệu phải có header `X-CSRF-Token` (double-submit) và `Origin` khớp; không dùng GET để thay đổi trạng thái. |
-| XSS | React escape mặc định; sanitize Markdown; **CSP** nghiêm (`default-src 'self'`; `script-src 'self'` + nonce; `img-src 'self' data: https://avatars.githubusercontent.com`; `frame-ancestors 'none'`); không `dangerouslySetInnerHTML` trừ trình render đã sanitize; cookie httpOnly; header `X-Content-Type-Options`, `Referrer-Policy`, HSTS. |
+| XSS | React escape mặc định; sanitize Markdown; **CSP** nghiêm (`default-src 'self'`; `script-src 'self'` + nonce; `img-src 'self' data: https://avatars.githubusercontent.com`; `frame-ancestors 'none'`; `worker-src 'self'` cho service worker Web Push); không `dangerouslySetInnerHTML` trừ trình render đã sanitize; cookie httpOnly; header `X-Content-Type-Options`, `Referrer-Policy`, HSTS. |
 | SQL injection | Prisma (tham số hóa); cấm `$queryRawUnsafe`; mọi raw query dùng tagged template `Prisma.sql`; lint rule cấm. |
 | IDOR | Policy theo tài nguyên (§2) + test. |
-| SSRF | Không có tính năng fetch URL tùy ý từ server ngoài GitHub API đã định; host GitHub cố định. |
+| SSRF | Không có tính năng fetch URL tùy ý từ server ngoài GitHub API đã định; host GitHub cố định. Web Push (MVP-Full): `endpoint` do trình duyệt cung cấp → chỉ nhận `https` và host thuộc danh sách push service đã biết (vd `fcm.googleapis.com`, `updates.push.services.mozilla.com`, `*.push.apple.com`, `*.notify.windows.com`); từ chối IP/host nội bộ. |
 | Open redirect | `next=` chỉ nhận đường dẫn nội bộ (bắt đầu bằng `/` và không `//`). |
 
 ## 6. Upload file
@@ -67,8 +67,23 @@ MVP: **không có upload** (bài nộp là liên kết). Ảnh trong lesson đ�
 - Test ẩn/lời giải ở repo riêng tư; log công khai của job **không in** test ẩn.
 - Nhận biết gian lận hiển nhiên: so khớp `sha`, `repo` với submission; hash file nộp; mentor review lại các bài `project`.
 
-### Tương lai — `learning-hub-runner` (chỉ khi cần phản hồi tức thì)
-Dịch vụ **riêng**, không chung mạng/DB với API. Yêu cầu sandbox tối thiểu:
+### MVP-Full — `sql-checker` (chỉ SQL, trên VPS của CLB; ADR-07)
+Chạy **truy vấn SQL** của thành viên (không chạy code ngôn ngữ khác), nên chấp nhận được trên cùng VPS với hub nếu tuân thủ đủ các yêu cầu sau. Thiết kế: ARCHITECTURE §7 (sql-checker).
+
+| Hạng mục | Yêu cầu |
+| --- | --- |
+| Cô lập DB | **PostgreSQL riêng** cho `sql-checker`, chỉ chứa dataset DSC Shop; không chung instance/volume/mật khẩu với DB hub; `sql-checker` không biết `DATABASE_URL` của hub |
+| Mạng | Mạng Docker riêng, chỉ `api` gọi được; không publish port; container `sql-checker` và DB của nó **không có đường ra Internet** |
+| Role | Truy vấn chạy bằng role ít quyền: không superuser, không `CREATEROLE`/`CREATEDB`, chỉ `SELECT` trên schema bài; không quyền trên `pg_catalog` ngoài mặc định |
+| Giao dịch | `BEGIN READ ONLY` … `ROLLBACK` cho mọi bài đọc; bài sửa dữ liệu chạy trên schema/database dùng một lần, xóa sau khi chấm; chỉ một câu lệnh mỗi lần nộp (từ chối nhiều câu, `SET ROLE`, `SET SESSION AUTHORIZATION`) |
+| Thời gian | `statement_timeout` 2–5 s, `idle_in_transaction_session_timeout`, `lock_timeout`; hủy kết nối khi quá hạn |
+| Kết quả | Giới hạn số dòng (vd 1.000) và kích thước kết quả (vd 1 MB); cắt bớt thông báo lỗi trả về |
+| Tính năng nguy hiểm | Cấm `COPY … PROGRAM`, `COPY` ra/vào file, `dblink`, `postgres_fdw`, ngôn ngữ untrusted (`plpython3u`, …), `lo_import/lo_export`; chỉ cài extension trong danh sách cho phép |
+| Tài nguyên | Giới hạn CPU/bộ nhớ container (`cpus`, `mem_limit`), `pids-limit`; giới hạn kết nối đồng thời; rate limit nộp theo user (§4) |
+| Dữ liệu chấm | Kết quả kỳ vọng/lời giải lấy từ `learning-hub-checker` (riêng tư), không trả về cho member; log không in lời giải |
+
+### Tương lai — `learning-hub-runner` (chỉ khi cần chấm nhiều ngôn ngữ)
+Dịch vụ **riêng**, không chung mạng/DB với API, và **không bao giờ chạy trên cùng VPS với hub**: Judge0/Piston cần container đặc quyền (privileged), một lần thoát sandbox sẽ chạm tới DB và secret của hub → nếu cần thì dùng một VPS nhỏ riêng. Yêu cầu sandbox tối thiểu:
 
 | Hạng mục | Yêu cầu |
 | --- | --- |
@@ -81,15 +96,15 @@ Dịch vụ **riêng**, không chung mạng/DB với API. Yêu cầu sandbox t�
 | Tiến trình | giới hạn số process (`pids-limit`, chống fork bomb), số file mở, kích thước output (cắt log ≤ 64 KB) |
 | Dữ liệu | không secret/biến môi trường nhạy cảm; test và dữ liệu đưa vào chỉ đọc |
 | Giao tiếp | Hàng đợi một chiều từ API; kết quả trả bằng callback ký HMAC; runner không có quyền vào DB |
-| Vận hành | Máy chủ riêng/VM riêng, cập nhật vá, giám sát, quota theo user |
+| Vận hành | Máy chủ riêng/VM riêng (không phải VPS của hub), cập nhật vá, giám sát, quota theo user |
 
-Chưa xây ở MVP (ADR-07, ADR-08).
+Runner nhiều ngôn ngữ: chỉ Future, chưa xây ở MVP (ADR-07, ADR-08).
 
 ## 8. Quản lý secret
 
 - Không commit secret; `.env.example` chỉ có tên biến. `gitleaks` trong CI cả hai repo (code và content).
 - Production: biến môi trường qua trình quản lý chung của CLB (vd GitHub Actions Secrets/Environments cho deploy, file `.env` quyền 600 trên VPS hoặc Docker secrets). Danh sách secret & chủ sở hữu (ghi theo **chức danh**; hiện do Chủ nhiệm CLB giữ, xem ARCHITECTURE §14) nằm trong runbook bàn giao (không chứa giá trị).
-- Secret chính: `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_OAUTH_CLIENT_SECRET`, `SESSION/ENCRYPTION_KEY`, `DATABASE_URL`, `DISCORD_WEBHOOK_URL`.
+- Secret chính: `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_OAUTH_CLIENT_SECRET`, `SESSION/ENCRYPTION_KEY`, `DATABASE_URL`, `DISCORD_WEBHOOK_URL`; từ MVP-Full: `VAPID_PRIVATE_KEY` (Web Push; `VAPID_PUBLIC_KEY` không bí mật) và mật khẩu DB của `sql-checker`.
 - Xoay vòng: khi đổi người giữ/hằng năm/khi nghi ngờ lộ; quy trình thu hồi ghi sẵn trong runbook.
 - Log không chứa secret/token (redaction Pino).
 
@@ -122,7 +137,7 @@ Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường 
 
 ## 13. Riêng tư & tuân thủ
 
-Thu thập tối thiểu (tên hiển thị, GitHub id/login, email nếu cần, avatar). Trang chính sách riêng tư bằng tiếng Việt ngắn gọn; thành viên có thể yêu cầu xóa/ẩn danh (DATABASE §8). Không bán/chia sẻ dữ liệu. Danh sách email được duyệt chỉ admin truy cập, không xuất cho member. **Cần xác nhận** với nhà trường nếu có quy định riêng cho CLB.
+Thu thập tối thiểu (tên hiển thị, GitHub id/login, email nếu cần, avatar). Trang chính sách riêng tư bằng tiếng Việt ngắn gọn; thành viên có thể yêu cầu xóa/ẩn danh (DATABASE §8). Không bán/chia sẻ dữ liệu. Danh sách email được duyệt chỉ admin truy cập, không xuất cho member. **Bảng xếp hạng (MVP-Full): chỉ opt-in** — `users.leaderboard_opt_in` mặc định `false`, chỉ người đã bật mới xuất hiện; tắt là biến mất ngay; chỉ thành viên đã đăng nhập xem được, không có trang công khai ra Internet; không xếp hạng toàn thời gian. Subscription Web Push là dữ liệu thiết bị: xóa khi người dùng tắt, đăng xuất khỏi thiết bị đó hoặc bị xóa tài khoản. **Cần xác nhận** với nhà trường nếu có quy định riêng cho CLB.
 
 ## 14. Quản lý sự cố
 
