@@ -60,15 +60,19 @@ Do Chủ nhiệm CLB quyết định; chi tiết ở CRITIQUE §8 và các tài 
 9. **Chấm bài (ADR-07):** A + D ở MVP; ngay sau MVP-Lite thêm `sql-checker` chỉ cho SQL trên VPS (PostgreSQL riêng, read-only, timeout); Judge0/Piston chỉ Future, không bao giờ chung VPS với hub. *(ARCHITECTURE §7, SECURITY §7, MVP-BACKLOG E13)*
 10. **Bảng xếp hạng & push (ADR-08):** giữ ở MVP-Full — bảng xếp hạng opt-in theo học kỳ (top 10 + hạng của mình, không theo tốc độ, không toàn thời gian) và Web Push (Discord là kênh thứ hai). *(CRITIQUE §3.4, MVP-BACKLOG E14–E15)*
 
+### Chốt thêm (16/11/2026)
+
+- **Tech lead:** TienNHM. Ban chủ nhiệm CLB thay **mỗi năm một lần** → bàn giao (runbook, tài khoản, secret theo vai trò) diễn ra hằng năm, cùng kỳ đổi Ban chủ nhiệm. *(CRITIQUE §2.2, MVP-BACKLOG E11)*
+- **Mentor:** onboarding có điều khoản "mentor góp ý, **không** chịu trách nhiệm học thuật chính thức". *(CRITIQUE §4.2)*
+- **Dữ liệu thành viên** (kể cả danh sách email): **không** cần đăng ký với nhà trường; lưu **riêng tư** (chỉ admin truy cập, không công khai, không chia sẻ). *(CRITIQUE §5, SECURITY §13)*
+
 ## Câu hỏi còn mở
 
 1. study-jam-api / study-jam-ui còn chạy production không? Chi phí AWS hiện tại? *(AUDIT)*
 2. Ai sở hữu `management-service`, `HCMUTE-DSC-be`? Có dữ liệu thành viên cần dùng lại?
-3. Ai là tech lead và người kế nhiệm? Chu kỳ bàn giao mỗi nhiệm kỳ?
-4. Course-DSC và các repo legacy: có đồng ý archive?
-5. Ngoại lệ tạm `CONTENT_GITHUB_TOKEN` (PAT fine-grained, read-only, tuỳ chọn — SECURITY §10): có dùng ở MVP-Lite không, và tài khoản nào tạo/giữ token cho tới khi có GitHub App?
-6. Điều khoản "mentor góp ý, không chịu trách nhiệm học thuật chính thức" trong onboarding? *(CRITIQUE §4.2)*
-7. Dữ liệu thành viên (kể cả danh sách email) có cần đăng ký/tuân theo quy định riêng của nhà trường không? *(CRITIQUE §5, SECURITY §13)*
+3. Course-DSC và các repo legacy: có đồng ý archive?
+4. Ngoại lệ tạm `CONTENT_GITHUB_TOKEN` (PAT fine-grained, read-only, tuỳ chọn — SECURITY §10): có dùng ở MVP-Lite không, và tài khoản nào tạo/giữ token cho tới khi có GitHub App?
+5. Người kế nhiệm tech lead: chưa chỉ định (nên chọn trước kỳ bàn giao Ban chủ nhiệm hằng năm).
 
 ## Quy ước
 

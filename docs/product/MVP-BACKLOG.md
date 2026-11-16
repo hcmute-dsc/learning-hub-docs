@@ -176,7 +176,7 @@ MVP-Full chạy hai nhánh song song (E13 ‖ E8/E9 → E14/E15) để giữ ≈
 
 ## 5. Ước lượng & đội hình khuyến nghị
 
-- 1 tech lead (kế nhiệm được chỉ định sớm), 2 backend, 2 frontend/nội dung, 1 người phụ trách content + mentor liaison (không bắt buộc là dev).
+- 1 tech lead (hiện tại: TienNHM; người kế nhiệm cần chỉ định trước kỳ đổi Ban chủ nhiệm hằng năm), 2 backend, 2 frontend/nội dung, 1 người phụ trách content + mentor liaison (không bắt buộc là dev).
 - Quy tắc: mỗi module có **2 người** hiểu (chống bus factor); mỗi PR có review; 1 buổi demo/2 tuần.
 - Rủi ro lịch: ngày thi/học kỳ — dự trữ 30% thời gian dự phòng.
 

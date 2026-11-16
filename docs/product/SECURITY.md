@@ -137,7 +137,7 @@ Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường 
 
 ## 13. Riêng tư & tuân thủ
 
-Thu thập tối thiểu (tên hiển thị, GitHub id/login, email nếu cần, avatar). Trang chính sách riêng tư bằng tiếng Việt ngắn gọn; thành viên có thể yêu cầu xóa/ẩn danh (DATABASE §8). Không bán/chia sẻ dữ liệu. Danh sách email được duyệt chỉ admin truy cập, không xuất cho member. **Bảng xếp hạng (MVP-Full): chỉ opt-in** — `users.leaderboard_opt_in` mặc định `false`, chỉ người đã bật mới xuất hiện; tắt là biến mất ngay; chỉ thành viên đã đăng nhập xem được, không có trang công khai ra Internet; không xếp hạng toàn thời gian. Subscription Web Push là dữ liệu thiết bị: xóa khi người dùng tắt, đăng xuất khỏi thiết bị đó hoặc bị xóa tài khoản. **Cần xác nhận** với nhà trường nếu có quy định riêng cho CLB.
+Thu thập tối thiểu (tên hiển thị, GitHub id/login, email nếu cần, avatar). Trang chính sách riêng tư bằng tiếng Việt ngắn gọn; thành viên có thể yêu cầu xóa/ẩn danh (DATABASE §8). Không bán/chia sẻ dữ liệu. Danh sách email được duyệt chỉ admin truy cập, không xuất cho member. **Bảng xếp hạng (MVP-Full): chỉ opt-in** — `users.leaderboard_opt_in` mặc định `false`, chỉ người đã bật mới xuất hiện; tắt là biến mất ngay; chỉ thành viên đã đăng nhập xem được, không có trang công khai ra Internet; không xếp hạng toàn thời gian. Subscription Web Push là dữ liệu thiết bị: xóa khi người dùng tắt, đăng xuất khỏi thiết bị đó hoặc bị xóa tài khoản. **Đã chốt (16/11/2026):** không cần đăng ký với nhà trường; dữ liệu thành viên lưu riêng tư (chỉ admin truy cập, không công khai, không chia sẻ ra ngoài).
 
 ## 14. Quản lý sự cố
 

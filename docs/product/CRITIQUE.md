@@ -79,13 +79,13 @@ CLB gồm cả CTF, AI, phỏng vấn (InterviewPrep101), không chỉ lập tr�
 - Ghi nhận mentor (huy hiệu, chứng nhận hoạt động) như phần thưởng chính — đừng để mentor quá tải mà không được thấy giá trị.
 
 ### 4.2 🟡 Mentor là người chịu trách nhiệm?
-Phân định rõ: mentor góp ý, **không** có trách nhiệm học thuật chính thức. Điều khoản ngắn trong onboarding (Open Question cho Ban chủ nhiệm).
+Phân định rõ: mentor góp ý, **không** có trách nhiệm học thuật chính thức. Điều khoản ngắn trong onboarding. **Đã chốt (16/11/2026): có điều khoản này.**
 
 ## 5. An toàn, pháp lý, riêng tư (bối cảnh trường học)
 
 | Mối quan tâm | Nhận định | Hành động |
 | --- | --- | --- |
-| Dữ liệu sinh viên | Có tên, email, GitHub, bài làm — dữ liệu cá nhân | Thu thập tối thiểu; quy trình xóa/ẩn danh (DATABASE §8); chính sách riêng tư ngắn bằng tiếng Việt; Open Question: có cần đăng ký với nhà trường? |
+| Dữ liệu sinh viên | Có tên, email, GitHub, bài làm — dữ liệu cá nhân | Thu thập tối thiểu; quy trình xóa/ẩn danh (DATABASE §8); chính sách riêng tư ngắn bằng tiếng Việt; **Đã chốt (16/11/2026): không cần đăng ký với nhà trường; dữ liệu lưu riêng tư, chỉ admin truy cập.** |
 | Bản quyền nội dung | it-quiz, html-css, tài liệu sưu tầm | Mỗi bài ghi `license`, `authors`, `source`; người import xác nhận nguồn/tác giả trong mô tả PR trước khi import (CONTENT-SPECIFICATION §10) |
 | Giấy phép nội dung | SQL Challenge là MIT | **Đã chốt (16/11/2026):** nội dung import giữ giấy phép gốc (track `sql-30-days` dùng MIT, giữ ghi nhận tác giả + link nguồn); nội dung mới mặc định CC BY-SA 4.0 cho văn bản + MIT cho code mẫu (CONTENT-SPECIFICATION §10) |
 | Đạo văn / sao chép | Không có điểm số → rủi ro thấp; bảng xếp hạng opt-in (MVP-Full) tạo thêm động cơ nhỏ; test ẩn dễ bị đoán | Test ẩn + đa dạng dữ liệu; `self_check` trọng số thấp, không xếp theo tốc độ (§3.4); mentor hỏi lại khi nghi ngờ; không cấm thảo luận |
