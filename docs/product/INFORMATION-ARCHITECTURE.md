@@ -97,7 +97,7 @@ Trang **Module**: danh sách xen kẽ lesson/exercise theo thứ tự đề xu�
 Bố cục hai cột (desktop):
 - **Trái:** đề bài (`statement.md`), ví dụ, tiêu chí hoàn thành, hint [P2].
 - **Phải:** khung hành động theo `type`:
-  - `code`: bước 1 "Tạo repo từ template" (nút), bước 2 "Làm bài và mở PR", bước 3 "Dán URL PR" → Nộp.
+  - `code`: bước 1 "Tạo repo của track từ template" (nút, chỉ hiện nếu bạn chưa có repo cho track này), bước 2 "Làm bài trong thư mục `<starterPath>` và mở PR", bước 3 "Dán URL PR" → Nộp.
   - `quiz`: câu hỏi, nút Kiểm tra, kết quả + giải thích ngay.
   - `self_check`: checklist + đáp án gập + "Tôi đã hoàn thành".
   - `project`: yêu cầu + rubric + dán URL repo/PR.

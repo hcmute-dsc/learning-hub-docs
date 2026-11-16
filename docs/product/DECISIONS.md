@@ -97,6 +97,6 @@
 | `learning-hub-docs` | Bộ tài liệu này; có thể chuyển vào `learning-hub/docs` nếu muốn một repo | Đã tạo (16/11/2026) |
 | `learning-hub-checker` | Workflow + test ẩn chấm bài `code` trên GitHub Actions (ADR-07 A); kết quả kỳ vọng/lời giải cho `sql-checker` (MVP-Full); chỉ Ban kỹ thuật có quyền ghi | Cùng lúc với bài `code` đầu tiên |
 | `learning-hub-runner` | Sandbox chạy code nhiều ngôn ngữ (Judge0/Piston, **tương lai**); chạy trên VPS riêng, không chung VPS với hub | Chỉ khi cần B tổng quát (ADR-07 mục 4) |
-| `learning-hub-exercises-*` (tùy chọn) | Template repo cho exercise cần starter code | Khi có bài `code` |
+| `<track>-exercises` (vd `git-github-exercises`) | **Một** template repo cho mỗi track có bài `code`, mỗi bài là một thư mục (đã chốt 16/11/2026). Thành viên tạo **một** repo trong tài khoản cá nhân cho cả track; bài nộp không bao giờ tạo repo trong org | Khi track có bài `code` đầu tiên |
 
 Chuyển đổi: (1) tạo content repo, import sql-challenge, giữ site cũ; (2) dựng hub; (3) ngừng cập nhật Course-DSC/study-jam-*; (4) cập nhật `.github` profile và website CLB. Không có repo nào bị xóa; chỉ archive sau khi owner đồng ý.

@@ -120,7 +120,7 @@ Cô lập trong `integrations/github`, chỉ lộ ra các port:
 - Webhook endpoint `/api/v1/integrations/github/webhook`: kiểm tra chữ ký, ghi `delivery_id` để chống xử lý trùng, trả 2xx nhanh, xử lý ngắn (ghi test_run); nặng hơn thì đẩy vào job nội bộ.
 - Rate limit: cache ETag, ưu tiên webhook thay vì polling; đối soát định kỳ thưa (§8).
 - Cách chấm bài `code` (**repo chấm do CLB sở hữu**, không tin workflow trong repo thành viên):
-  1. Exercise khai báo trong `spec`: `starterTemplate` (repo template để thành viên bắt đầu), `checker` (tên workflow + thư mục test ẩn trong `learning-hub-checker`).
+  1. Track khai báo `starterRepo` (**một** repo mẫu cho cả track); exercise khai báo `starterPath` (thư mục của bài trong repo đó) và `checker` (tên workflow + thư mục test ẩn trong `learning-hub-checker`). Repo bài làm luôn nằm trong tài khoản cá nhân của thành viên, không tạo repo trong org.
   2. Thành viên làm bài trong repo **công khai** của mình, rồi nộp URL PR/commit.
   3. API xác minh nguồn (repo thuộc đúng tài khoản GitHub của người nộp) → GitHub App gửi `workflow_dispatch` tới `learning-hub-checker` với input `{repo, sha, exerciseSlug, submissionId}`.
   4. Workflow của CLB checkout `repo@sha` vào thư mục riêng, chạy test ẩn (không secret, `permissions: contents: read`, timeout), ghi tóm tắt vào **check run/job summary**.

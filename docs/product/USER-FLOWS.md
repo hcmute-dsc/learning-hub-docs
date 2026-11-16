@@ -80,7 +80,7 @@ flowchart TD
   A[Mở exercise] --> B{Prerequisite đã đạt?}
   B -- Chưa --> C[Hiển thị khóa + liên kết tới bài cần làm trước]
   B -- Rồi --> D{Loại exercise}
-  D -- code --> E[Đọc đề + repo template/hướng dẫn<br/>làm trên GitHub của bạn]
+  D -- code --> E[Đọc đề; lần đầu tạo repo của track từ template<br/>làm bài trong thư mục của bài, trên GitHub của bạn]
   D -- self_check --> S[Làm theo checklist, tự đối chiếu đáp án gập<br/>bấm Tôi đã hoàn thành]
   D -- quiz --> F[Làm quiz trong app]
   D -- project --> G[Đọc yêu cầu + tiêu chí review]

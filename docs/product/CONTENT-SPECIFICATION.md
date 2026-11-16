@@ -58,6 +58,7 @@ outcomes:                            # *  "sau khi học xong bạn có thể…
   - Viết truy vấn SELECT/JOIN/GROUP BY đúng và đọc được kế hoạch thực thi cơ bản
 maintainers: [github:tiennhm]        # * ít nhất 1 (xem Ownership)
 license: CC-BY-SA-4.0                # *  nội dung
+starterRepo: hcmute-dsc/git-github-exercises  # bắt buộc nếu track có bài `code`: MỘT template repo cho cả track
 source:                              # nếu import
   repo: hcmute-dsc/sql-challenge
   commit: 0123abc…
@@ -125,13 +126,15 @@ spec:                      # *  tuỳ theo type, xem 3.5
 **`code`** (chấm bằng `learning-hub-checker`):
 ```yaml
 spec:
-  starterTemplate: hcmute-dsc/sql-select-where-template   # repo template (công khai)
+  starterPath: select-where-basic       # thư mục của bài này trong `starterRepo` của track
   checker:
     workflow: check-exercise.yml            # workflow trong learning-hub-checker
     tests: exercises/sql-30-days/select-where-basic   # thư mục test ẩn trong checker repo
   runtime: { language: sql, timeoutSeconds: 120 }               # timeoutSeconds ≤ 600, mặc định 120
   submit: { kind: github_pr, allowedPaths: ["solution.sql"] }   # kind: github_pr | github_commit; allowedPaths: file thành viên được sửa
 ```
+
+**Repo mẫu theo track (đã chốt 16/11/2026):** mỗi track có bài `code` khai báo **một** `starterRepo` trong `track.yaml` (vd `hcmute-dsc/git-github-exercises`), mỗi bài `code` là một thư mục `starterPath` trong repo đó. Thành viên bấm "Use this template" **một lần** cho cả track, repo nằm trong **tài khoản cá nhân** (công khai), làm từng bài trong thư mục của bài và mở PR. Org CLB chỉ chứa repo mẫu, nên số repo trong org không tăng theo số bài nộp. `submit.allowedPaths` tính từ `starterPath`. Validator báo lỗi nếu track có bài `code` mà thiếu `starterRepo`.
 
 **`quiz`**:
 ```yaml
@@ -260,7 +263,7 @@ Thay đổi cấu trúc thư mục chỉ ảnh hưởng parser + schema trong `@
 
 | Nguồn | Cách import | Việc cần làm | Trạng thái |
 | --- | --- | --- | --- |
-| `sql-challenge/lessons/*.md` (30 bài + 3 ôn tập) | Script `tools/import-sql-challenge`: mỗi file → `lessons/NN-slug.md` giữ nguyên Markdown, tự sinh front-matter (`title` từ H1, `objectives` từ "Sau bài này bạn có thể", `prerequisites` từ "Cần biết trước"); ngày ôn tập → module riêng | Tách bài tập ở cuối mỗi bài thành `exercise.yaml` (`self_check` trước, `code` cho một số bài chọn lọc); chuyển ảnh `lessons/img` vào `assets/`; dataset DSC Shop dùng `setup/init` làm `starterTemplate` | Verified (cấu trúc bài); phần bài tập cần đọc từng bài |
+| `sql-challenge/lessons/*.md` (30 bài + 3 ôn tập) | Script `tools/import-sql-challenge`: mỗi file → `lessons/NN-slug.md` giữ nguyên Markdown, tự sinh front-matter (`title` từ H1, `objectives` từ "Sau bài này bạn có thể", `prerequisites` từ "Cần biết trước"); ngày ôn tập → module riêng | Tách bài tập ở cuối mỗi bài thành `exercise.yaml` (`self_check` trước, `code` cho một số bài chọn lọc); chuyển ảnh `lessons/img` vào `assets/`; dataset DSC Shop nằm ở `tracks/sql-30-days/setup` (bài SQL không cần repo nộp bài) | Verified (cấu trúc bài); phần bài tập cần đọc từng bài |
 | `html-css/src/data/exercises.json` | Script convert → `exercise.yaml` | Cần đọc file để ánh xạ trường; xác nhận nguồn/tác giả trong mô tả PR (§10) | Partially verified |
 | `mentoring-program/src/diagrams/*.ts` | Giữ nguyên ở MVP; P2 chuyển roadmap thành YAML | — | Verified |
 | `it-quiz` | Ánh xạ ngân hàng câu hỏi → `quiz` | Xác nhận định dạng; xác nhận nguồn/tác giả trong mô tả PR (§10) | Unknown |
