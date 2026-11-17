@@ -11,6 +11,7 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 | --- | --- |
 | Ban chủ nhiệm | README này → [CRITIQUE](docs/product/CRITIQUE.md) → [DECISIONS](docs/product/DECISIONS.md) → [PRD](docs/product/PRD.md) |
 | Mentor / người viết nội dung | [USER-FLOWS](docs/product/USER-FLOWS.md) → [CONTENT-SPECIFICATION](docs/product/CONTENT-SPECIFICATION.md) |
+| Tech lead / người trực web | [DEPLOYMENT](docs/ops/DEPLOYMENT.md) |
 | Dev | [ARCHITECTURE](docs/product/ARCHITECTURE.md) → [DATABASE](docs/product/DATABASE.md) → [BACKEND-DESIGN](docs/product/BACKEND-DESIGN.md) → [FRONTEND-DESIGN](docs/product/FRONTEND-DESIGN.md) → [SECURITY](docs/product/SECURITY.md) → [MVP-BACKLOG](docs/product/MVP-BACKLOG.md) |
 
 ## Mục lục tài liệu (`docs/product/`)
@@ -30,6 +31,12 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 | [CONTENT-SPECIFICATION.md](docs/product/CONTENT-SPECIFICATION.md) | Nội dung bằng Git: schema YAML/Markdown, validate, version theo SHA, import |
 | [SECURITY.md](docs/product/SECURITY.md) | Xác thực, RBAC, webhook, sandbox, secret, audit |
 | [MVP-BACKLOG.md](docs/product/MVP-BACKLOG.md) | Epic → story → task, MoSCoW, lịch thực hiện |
+
+## Vận hành (`docs/ops/`)
+
+| Tài liệu | Nội dung |
+| --- | --- |
+| [DEPLOYMENT.md](docs/ops/DEPLOYMENT.md) | Hiện trạng production, auto deploy bằng GitHub Actions, cài lại từ đầu (user `learnhub`, SSH key, secret, sao lưu, Discord), lỗi đã gặp, bàn giao |
 
 ## Tóm tắt (11 mục theo yêu cầu)
 

@@ -185,6 +185,8 @@ Chi tiết trong SECURITY.md. Điểm kiến trúc: không chạy code thành vi
 
 ## 14. Triển khai
 
+> **Thực tế (17/11/2026):** production dùng **Traefik có sẵn** trên VPS thay cho Caddy, và deploy bằng **SSH từ GitHub Actions** (không dùng watchtower). Chi tiết cách chạy, secret và cách cài lại: [ops/DEPLOYMENT.md](../ops/DEPLOYMENT.md).
+
 ```mermaid
 flowchart LR
   Dev[Dev push/PR] --> CI[GitHub Actions: lint, test, build, prisma migrate check]
