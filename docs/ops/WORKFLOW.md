@@ -81,7 +81,19 @@ Chỉ làm một lần, hoặc khi tạo lại project. Ai có quyền admin pro
 
 Đã cấu hình và kiểm tra trên web ngày 18/11/2026: cả 11 workflow bật, giá trị như bảng trên.
 
-**Giới hạn của gói Free:** mỗi workflow auto-add chỉ chọn được **1 repo**, và org gói Free chỉ có **1** workflow auto-add (nút *Duplicate workflow* báo "Maximum number of auto add workflows reached"). Vì vậy issue của `learning-hub-content` và `learning-hub-docs` phải thêm vào project bằng tay: ở khung **Projects** bên phải issue, chọn DSC Learning Hub. Cách khác, nếu cần tự động: dùng GitHub Action `actions/add-to-project` trong 2 repo đó. Cách này cần một token có quyền `project` lưu trong secret của repo.
+**Giới hạn của gói Free:** mỗi workflow auto-add chỉ chọn được **1 repo**, và org gói Free chỉ có **1** workflow auto-add (nút *Duplicate workflow* báo "Maximum number of auto add workflows reached"). Vì vậy `learning-hub-content` và `learning-hub-docs` dùng GitHub Action riêng: `.github/workflows/add-to-project.yml` (dùng `actions/add-to-project`, đã ghim theo commit). Nó thêm mọi issue/PR mới vào project. Khi chưa có token, job chỉ ghi chú và bỏ qua, không báo đỏ.
+
+**Cài token (một lần, người giữ quyền admin org làm):**
+1. Tạo **token (classic)** tại https://github.com/settings/tokens/new: Note `learning-hub add-to-project`, Expiration 1 năm, chỉ tick scope **`project`** (2 repo đều public nên không cần `repo`).
+2. Lưu thành **secret của org**, chỉ chia cho 2 repo. Chạy trên máy mình rồi dán token khi được hỏi (không dán vào chat hay issue):
+
+   ```bash
+   gh secret set ADD_TO_PROJECT_PAT --org hcmute-dsc --repos learning-hub-content,learning-hub-docs
+   ```
+
+3. Kiểm tra: tạo thử 1 issue trong `learning-hub-docs`. Tab Actions → *Add to project* phải xanh, và issue xuất hiện trong project với Status = Backlog. Xong thì đóng issue thử.
+
+Token gắn với tài khoản người tạo. Khi bàn giao, người mới tạo token của họ rồi chạy lại bước 2. Token hết hạn thì workflow đỏ: tạo token mới, chạy lại bước 2. Nếu cần thêm việc thủ công: khung **Projects** bên phải issue → DSC Learning Hub.
 
 **Quyền** (⋯ → Settings → Manage access): thêm team `mentors` / Ban chủ nhiệm với quyền *Write*. Thành viên chỉ cần *Read*.
 
