@@ -306,6 +306,7 @@ Mỗi lần khôi phục database, quay về bản cũ hay site sập lâu, ghi 
 
 ## 8. Bàn giao cho tech lead mới
 
+0. Người mới cài và đăng nhập `gh` bằng tài khoản của họ: [GH-CLI.md](GH-CLI.md).
 1. Người mới tạo **SSH key của riêng họ**. Thêm vào VPS (user cá nhân của họ để quản trị, và `learnhub` nếu cần). Không chia sẻ khóa cũ.
 2. Chuyển quyền admin repo/org GitHub, quyền Cloudflare (DNS) và quyền quản trị VPS.
 3. Chuyển OAuth app sang org hoặc tạo lại, rồi sửa `GITHUB_CLIENT_*` trong `.env` và chạy lại Deploy.

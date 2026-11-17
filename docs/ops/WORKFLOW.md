@@ -102,7 +102,7 @@ Token gắn với tài khoản người tạo. Khi bàn giao, người mới t�
 
 ## 5. Tạo lại bằng `gh` (khi cần)
 
-Cần quyền `project` cho `gh`: `gh auth refresh -s project`.
+Cần quyền `project` cho `gh`: `gh auth refresh -s project` (cách cài và các quyền khác: [GH-CLI.md](GH-CLI.md)).
 
 ```bash
 gh project create --owner hcmute-dsc --title "DSC Learning Hub"
