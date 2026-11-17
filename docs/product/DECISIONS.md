@@ -99,4 +99,8 @@
 | `learning-hub-runner` | Sandbox chạy code nhiều ngôn ngữ (Judge0/Piston, **tương lai**); chạy trên VPS riêng, không chung VPS với hub | Chỉ khi cần B tổng quát (ADR-07 mục 4) |
 | `<track>-exercises` (vd `git-github-exercises`) | **Một** template repo cho mỗi track có bài `code`, mỗi bài là một thư mục (đã chốt 16/11/2026). Thành viên tạo **một** repo trong tài khoản cá nhân cho cả track; bài nộp không bao giờ tạo repo trong org | Khi track có bài `code` đầu tiên |
 
+**`learning-hub-content` giữ public (đã chốt 17/11/2026).** Lý do: repo không chứa đáp án (đáp án và test ẩn chỉ nằm ở `learning-hub-checker`, private); app tải ảnh bài học thẳng từ `raw.githubusercontent.com` và đồng bộ nội dung không cần token; 28 bài hướng dẫn thành viên clone repo để lấy dữ liệu thực hành (`setup/`); nội dung mang giấy phép mở (CC BY-SA / MIT). Nếu sau này cần giấu một phần (đáp án, đề thi), tách phần đó sang repo private riêng thay vì đổi repo này. Đổi repo này sang private đòi hỏi trước: token chỉ-đọc `CONTENT_GITHUB_TOKEN`, API tự tải ảnh bằng token, và chuyển `setup/` ra repo public.
+
+Thêm thành viên CLB vào org `hcmute-dsc` (chưa làm): trước khi mời đại trà, đổi base permission từ **Read** sang **No permission** (hiện mọi thành viên org đọc được 5 repo private) và tắt "Members can create repositories"; cấp quyền qua team. Khi đó có thể bật `GITHUB_ORG=hcmute-dsc` để duyệt tài khoản tự động.
+
 Chuyển đổi: (1) tạo content repo, import sql-challenge, giữ site cũ; (2) dựng hub; (3) ngừng cập nhật Course-DSC/study-jam-*; (4) cập nhật `.github` profile và website CLB. Không có repo nào bị xóa; chỉ archive sau khi owner đồng ý.
