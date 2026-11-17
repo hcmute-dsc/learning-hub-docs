@@ -85,11 +85,14 @@ Chỉ làm một lần, hoặc khi tạo lại project. Ai có quyền admin pro
 
 **Cài token (một lần, người giữ quyền admin org làm):**
 1. Tạo **token (classic)** tại https://github.com/settings/tokens/new: Note `learning-hub add-to-project`, Expiration 1 năm, chỉ tick scope **`project`** (2 repo đều public nên không cần `repo`).
-2. Lưu thành **secret của org**, chỉ chia cho 2 repo. Chạy trên máy mình rồi dán token khi được hỏi (không dán vào chat hay issue):
+2. Lưu thành **secret của từng repo**. Chạy trên máy mình, mỗi lệnh dán token một lần khi được hỏi (không dán vào chat hay issue):
 
    ```bash
-   gh secret set ADD_TO_PROJECT_PAT --org hcmute-dsc --repos learning-hub-content,learning-hub-docs
+   gh secret set ADD_TO_PROJECT_PAT --repo hcmute-dsc/learning-hub-content
+   gh secret set ADD_TO_PROJECT_PAT --repo hcmute-dsc/learning-hub-docs
    ```
+
+   (Cũng có thể lưu thành secret của org bằng `--org hcmute-dsc --repos learning-hub-content,learning-hub-docs`. Cách này cần `gh` có quyền `admin:org`, nếu thiếu sẽ báo lỗi `HTTP 403 … needs the "admin:org" scope`. Secret theo repo chỉ cần quyền `repo` sẵn có, nên dùng cách trên.)
 
 3. Kiểm tra: tạo thử 1 issue trong `learning-hub-docs`. Tab Actions → *Add to project* phải xanh, và issue xuất hiện trong project với Status = Backlog. Xong thì đóng issue thử.
 
