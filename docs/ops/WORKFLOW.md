@@ -68,12 +68,20 @@ Chỉ làm một lần, hoặc khi tạo lại project. Ai có quyền admin pro
 | Workflow | Cấu hình |
 | --- | --- |
 | Item added to project | Status = Backlog |
-| Item reopened | Status = Backlog |
+| Item reopened | Status = Ready |
 | Pull request linked to issue | Status = In review |
+| Code changes requested | Status = In progress (người làm sửa tiếp) |
+| Code review approved | Status = In review (chờ merge) |
 | Item closed | Status = Done |
 | Pull request merged | Status = Done |
 | Auto-close issue | khi Status = Done thì đóng issue |
-| Auto-add to project | chọn repo `learning-hub`, filter **`is:issue,pr is:open`** (xóa `label:bug` mặc định). Gói Free của org chỉ cho **1** workflow auto-add: issue của `learning-hub-content` và `learning-hub-docs` thì thêm vào project bằng tay (khung Projects bên phải issue). |
+| Auto-archive items | `is:issue is:closed updated:<@today-2w`: việc xong quá 2 tuần được lưu trữ (xem lại ở ⋯ → Archived items) |
+| Auto-add sub-issues | bật, để sub-issue tự vào project |
+| Auto-add to project | repo `learning-hub`, filter **`is:issue,pr is:open`** (xóa `label:bug` mặc định) |
+
+Đã cấu hình và kiểm tra trên web ngày 18/11/2026: cả 11 workflow bật, giá trị như bảng trên.
+
+**Giới hạn của gói Free:** mỗi workflow auto-add chỉ chọn được **1 repo**, và org gói Free chỉ có **1** workflow auto-add (nút *Duplicate workflow* báo "Maximum number of auto add workflows reached"). Vì vậy issue của `learning-hub-content` và `learning-hub-docs` phải thêm vào project bằng tay: ở khung **Projects** bên phải issue, chọn DSC Learning Hub. Cách khác, nếu cần tự động: dùng GitHub Action `actions/add-to-project` trong 2 repo đó. Cách này cần một token có quyền `project` lưu trong secret của repo.
 
 **Quyền** (⋯ → Settings → Manage access): thêm team `mentors` / Ban chủ nhiệm với quyền *Write*. Thành viên chỉ cần *Read*.
 
