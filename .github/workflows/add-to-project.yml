@@ -1,0 +1,33 @@
+name: Add to project
+
+# Adds every new issue and pull request of this repo to the "DSC Learning Hub" project
+# (https://github.com/orgs/hcmute-dsc/projects/1). The project's own "Auto-add" workflow
+# only covers learning-hub: the org's Free plan allows one auto-add workflow with one
+# repo. How to set the token: learning-hub-docs, docs/ops/WORKFLOW.md.
+#
+# pull_request_target (not pull_request) so PRs from forks also get added: the job never
+# checks out or runs code from the PR, it only calls the GitHub API with the PR's URL.
+on:
+  issues:
+    types: [opened, reopened, transferred]
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions: {}
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Classic token with the `project` scope, stored as an org secret shared with this repo
+      ADD_TO_PROJECT_PAT: ${{ secrets.ADD_TO_PROJECT_PAT }}
+    steps:
+      - name: Skip when the token is not set yet
+        if: env.ADD_TO_PROJECT_PAT == ''
+        run: echo "::notice::ADD_TO_PROJECT_PAT is not set, so nothing was added to the project"
+      - uses: actions/add-to-project@f2c1f1fa649a891be84948ea89b5dfba1526ef05 # v2.0.1
+        if: env.ADD_TO_PROJECT_PAT != ''
+        with:
+          project-url: https://github.com/orgs/hcmute-dsc/projects/1
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
