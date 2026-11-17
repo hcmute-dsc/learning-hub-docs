@@ -3,6 +3,8 @@
 > Ưu tiên MoSCoW: **M**ust · **S**hould · **C**ould · **W**on't (cho MVP). Mức: Lite = MVP-Lite (≈ 6–8 tuần), Full = MVP-Full. Ước lượng theo "người-tuần" cho sinh viên bán thời gian (~8 giờ/tuần); chỉ mang tính định hướng.
 > Phụ thuộc: `→ E2` nghĩa là cần epic E2 trước.
 
+> **Theo dõi tiến độ:** từ 18/11/2026, việc cần làm và trạng thái nằm trên [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1) (cách dùng: [WORKFLOW](../ops/WORKFLOW.md)). Tài liệu này giữ phần thiết kế: story, task, acceptance.
+
 ## 0. Phase 0 — xác thực nhu cầu (trước khi viết app) — **Must**
 
 **Đã chốt (16/11/2026): chạy Phase 0.** Khung app E1–E3 đã dựng từ trước; trong Phase 0 chưa thêm tính năng app mới, chỉ làm P0-1…P0-4.

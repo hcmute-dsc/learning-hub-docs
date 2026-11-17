@@ -11,7 +11,8 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 | --- | --- |
 | Ban chủ nhiệm | README này → [CRITIQUE](docs/product/CRITIQUE.md) → [DECISIONS](docs/product/DECISIONS.md) → [PRD](docs/product/PRD.md) |
 | Mentor / người viết nội dung | [USER-FLOWS](docs/product/USER-FLOWS.md) → [CONTENT-SPECIFICATION](docs/product/CONTENT-SPECIFICATION.md) |
-| Tech lead / người trực web | [DEPLOYMENT](docs/ops/DEPLOYMENT.md) |
+| Tech lead / người trực web | [DEPLOYMENT](docs/ops/DEPLOYMENT.md) → [WORKFLOW](docs/ops/WORKFLOW.md) |
+| Người muốn đóng góp | [WORKFLOW](docs/ops/WORKFLOW.md) → [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1) |
 | Dev | [ARCHITECTURE](docs/product/ARCHITECTURE.md) → [DATABASE](docs/product/DATABASE.md) → [BACKEND-DESIGN](docs/product/BACKEND-DESIGN.md) → [FRONTEND-DESIGN](docs/product/FRONTEND-DESIGN.md) → [SECURITY](docs/product/SECURITY.md) → [MVP-BACKLOG](docs/product/MVP-BACKLOG.md) |
 
 ## Mục lục tài liệu (`docs/product/`)
@@ -37,6 +38,7 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 | Tài liệu | Nội dung |
 | --- | --- |
 | [DEPLOYMENT.md](docs/ops/DEPLOYMENT.md) | Hiện trạng production, auto deploy bằng GitHub Actions, cài lại từ đầu (user `learnhub`, SSH key, secret, sao lưu, Discord), lỗi đã gặp, bàn giao |
+| [WORKFLOW.md](docs/ops/WORKFLOW.md) | Quy trình làm việc với [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1): field, vòng đời issue/PR, họp sprint |
 
 ## Tóm tắt (11 mục theo yêu cầu)
 
