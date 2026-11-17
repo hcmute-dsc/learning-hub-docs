@@ -63,10 +63,17 @@ Chỉ làm một lần, hoặc khi tạo lại project. Ai có quyền admin pro
 | Sprint hiện tại | Table hoặc Board | Filter: `sprint:@current` |
 | Roadmap | Roadmap | Date field: Sprint; Group by: Epic |
 
-**Workflows** (⋯ → Workflows):
-- *Item closed* và *Pull request merged* → Status = Done: bật sẵn, kiểm tra lại cho chắc.
-- *Auto-add to project*: bật cho từng repo (`learning-hub`, `learning-hub-content`, `learning-hub-docs`), filter `is:issue,pr is:open`, để issue mới tự vào project.
-- *Item added to project* → Status = Backlog.
+**Workflows** (nút **Workflows** góc phải trên của project). Status đã được đổi tên thành Backlog/Ready/…, nên các workflow mặc định trỏ vào option cũ (Todo/In Progress) và hiện **dấu ! đỏ**. Mở từng cái, bấm **Edit**, chọn lại giá trị, rồi **Save and turn on workflow**:
+
+| Workflow | Cấu hình |
+| --- | --- |
+| Item added to project | Status = Backlog |
+| Item reopened | Status = Backlog |
+| Pull request linked to issue | Status = In review |
+| Item closed | Status = Done |
+| Pull request merged | Status = Done |
+| Auto-close issue | khi Status = Done thì đóng issue |
+| Auto-add to project | chọn repo `learning-hub`, filter **`is:issue,pr is:open`** (xóa `label:bug` mặc định). Gói Free của org chỉ cho **1** workflow auto-add: issue của `learning-hub-content` và `learning-hub-docs` thì thêm vào project bằng tay (khung Projects bên phải issue). |
 
 **Quyền** (⋯ → Settings → Manage access): thêm team `mentors` / Ban chủ nhiệm với quyền *Write*. Thành viên chỉ cần *Read*.
 
