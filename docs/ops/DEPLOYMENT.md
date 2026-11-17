@@ -20,7 +20,7 @@ Cập nhật lần cuối: 17/11/2026.
 | Container | `db` (PostgreSQL 16, riêng của Learning Hub), `migrate` (chạy xong thì thoát), `api` (alias `learning-hub-api`), `web` (nằm trong mạng `edge`) |
 | User deploy | `learnhub`: nhóm `docker`, **không** `sudo`, chỉ đăng nhập bằng SSH key |
 | Deploy | tự động mỗi lần CI xanh trên `main` (workflow `Deploy`) |
-| Sao lưu | cron của `learnhub` lúc 19:30 UTC (2:30 sáng giờ VN), giữ 14 ngày, thư mục `700`, file `600` |
+| Sao lưu | cron của `learnhub` lúc 19:30 UTC (2:30 sáng giờ VN), giữ 14 ngày; kiểm tra khôi phục mỗi tháng (mục 5) |
 | Giám sát | workflow `Uptime` mỗi 15 phút; cảnh báo lỗi 500 vào kênh Discord vận hành |
 | Discord | bật 17/11/2026: kênh CLB + kênh vận hành riêng tư |
 
@@ -153,7 +153,7 @@ sudo -u learnhub crontab -e
 30 19 * * * /opt/learning-hub/backup.sh >> /opt/learning-hub/backups/backup.log 2>&1
 ```
 
-Chạy thử: `sudo -u learnhub /opt/learning-hub/backup.sh`. Bản sao lưu chứa email thành viên, chỉ `learnhub` đọc được. Nên định kỳ chép một bản về máy khác: hỏng VPS là mất cả dữ liệu lẫn bản sao lưu.
+Chạy thử: `sudo -u learnhub /opt/learning-hub/backup.sh`. Kiểm tra: `sudo -u learnhub crontab -l` phải thấy dòng `backup.sh`. Bản sao lưu chứa email thành viên, nên chỉ `learnhub` đọc được. Xem, chép về máy, kiểm tra và khôi phục: [mục 5](#5-sao-lưu-và-khôi-phục-database).
 
 ### 3.8. Discord
 1. Trong Discord: chuột phải vào kênh → **Edit Channel → Integrations → Webhooks → New Webhook → Copy Webhook URL**. Làm cho 2 kênh: kênh CLB và kênh vận hành **riêng tư**.
@@ -184,9 +184,101 @@ URL webhook lộ ra thì vào lại chỗ tạo, **Delete Webhook** rồi tạo 
 | Quay về phiên bản cũ | revert commit lỗi trên `main` (migration không tự quay ngược: cần thì khôi phục DB từ bản sao lưu) |
 | Tạm tắt auto deploy | `gh variable set DEPLOY_ENABLED --repo hcmute-dsc/learning-hub --body false` |
 
-Lệnh khôi phục database và quay về image cũ bằng tay: xem runbook trong repo code.
+Lệnh quay về image cũ bằng tay: xem runbook trong repo code.
 
-## 5. Lỗi đã gặp khi cài (17/11/2026)
+## 5. Sao lưu và khôi phục database
+
+Mọi lệnh chạy trên VPS bằng `learnhub` (`ssh learnhub`), trong `/opt/learning-hub`.
+
+### 5.1. Cơ chế
+
+| | |
+| --- | --- |
+| Script | `backup.sh` (trong repo code `deploy/`, workflow Deploy chép lên VPS) |
+| Lịch | cron của `learnhub`, 19:30 UTC = 2:30 sáng giờ VN |
+| Cách làm | `pg_dump` database `learning_hub` (SQL, không kèm owner) → nén gzip → `backups/learning_hub-YYYYMMDD-HHMMSS.sql.gz` |
+| Giữ | 14 ngày (biến `KEEP_DAYS`), file cũ hơn tự xóa |
+| Quyền | thư mục `700`, file `600`: chỉ `learnhub` đọc được, vì có email thành viên |
+| Dung lượng | khoảng 360 KB/bản (17/11/2026). Đĩa VPS còn nhiều, nhưng nên xem lại khi số thành viên tăng mạnh |
+
+**Có trong bản sao lưu:** tài khoản và email, bài nộp, review, phiên bản nội dung, nhật ký quản trị.
+**Không có:**
+- `.env` (secret): giữ riêng, mất thì tạo lại.
+- Bài học gốc: nằm trên GitHub.
+
+| Việc | Lệnh |
+| --- | --- |
+| Xem các bản sao lưu | `ls -lh backups/` |
+| Cron có chạy không | `tail backups/backup.log` (mỗi đêm một dòng `backup ok`) |
+| Sao lưu ngay | `./backup.sh`, chạy trước mọi thao tác nguy hiểm với DB |
+
+### 5.2. Chép về máy khác (mỗi tuần)
+
+Bản sao lưu chỉ nằm trên VPS, nên hỏng VPS là mất cả hai. Trên máy bạn (có `Host learnhub` trong `~/.ssh/config`, mục 3.3):
+
+```bash
+mkdir -p ~/learning-hub-backups
+scp "learnhub:/opt/learning-hub/backups/learning_hub-*.sql.gz" ~/learning-hub-backups/
+```
+
+Để trong thư mục riêng của bạn. Không đưa lên Drive công khai, không gửi qua chat, không commit.
+
+### 5.3. Kiểm tra bản sao lưu (mỗi tháng)
+
+Nạp bản mới nhất vào một Postgres **tạm, không nối mạng**, rồi so số dòng với production. Không đụng database thật:
+
+```bash
+cd /opt/learning-hub
+f=$(ls -t backups/learning_hub-*.sql.gz | head -1); echo "Kiểm tra $f"
+gunzip -t "$f" && echo "gzip OK"
+docker run -d --rm --name lh-restore-test --network none \
+  -e POSTGRES_PASSWORD=test -e POSTGRES_USER=hub -e POSTGRES_DB=learning_hub postgres:16
+sleep 10
+gunzip -c "$f" | docker exec -i lh-restore-test psql -q -v ON_ERROR_STOP=1 -U hub -d learning_hub >/dev/null && echo "Khôi phục OK"
+Q="select (select count(*) from users), (select count(*) from submissions), (select count(*) from _prisma_migrations)"
+docker exec lh-restore-test psql -U hub -d learning_hub -At -c "$Q"
+docker compose -f docker-compose.prod.yml exec -T db psql -U hub -d learning_hub -At -c "$Q"
+docker rm -f lh-restore-test
+```
+
+Kết quả đúng: thấy `Khôi phục OK`, và 2 dòng số gần bằng nhau (production có thể hơn một chút).
+
+| Ngày | Kết quả |
+| --- | --- |
+| 17/11/2026 | bản `learning_hub-20261117-163728`: khôi phục OK, khớp production (3 tài khoản, 7 migration) |
+
+Thêm một dòng vào bảng này mỗi lần kiểm tra.
+
+### 5.4. Khôi phục production
+
+Mọi dữ liệu **sau** thời điểm sao lưu sẽ mất. Báo trước trên Discord CLB, vì site tắt vài phút.
+
+```bash
+cd /opt/learning-hub
+ls -lh backups/                                                  # 1. chọn file
+./backup.sh                                                      # 2. sao lưu hiện trạng, phòng khi chọn nhầm
+docker compose -f docker-compose.prod.yml stop web api           # 3. tắt site
+docker compose -f docker-compose.prod.yml exec -T db psql -U hub -d postgres \
+  -c "DROP DATABASE learning_hub WITH (FORCE);" -c "CREATE DATABASE learning_hub OWNER hub;"   # 4. làm rỗng DB
+gunzip -c backups/learning_hub-YYYYMMDD-HHMMSS.sql.gz | \
+  docker compose -f docker-compose.prod.yml exec -T db psql -q -v ON_ERROR_STOP=1 -U hub -d learning_hub   # 5. nạp lại
+docker compose -f docker-compose.prod.yml up -d --wait           # 6. bật lại, migrate chạy trước api
+docker compose -f docker-compose.prod.yml ps                     # 7. kiểm tra
+```
+
+- Bước 5 lỗi thì **đừng bật site**: làm lại từ bước 4 với file khác.
+- Bản sao lưu cũ hơn code đang chạy: ở bước 6, `migrate` tự áp các migration còn thiếu.
+- Khôi phục vì một bản deploy làm hỏng DB: quay `IMAGE_TAG` về bản cũ **trước**, nếu không migration lỗi sẽ chạy lại.
+- Xong thì đăng nhập, xem **Quản trị → Thành viên** đủ tài khoản, rồi ghi sự cố vào [mục 7](#7-nhật-ký-sự-cố).
+
+### 5.5. Chuyển sang VPS mới
+
+1. Làm mục 3 trên VPS mới đến khi Deploy xanh.
+2. `scp learning_hub-….sql.gz learnhub@VPS_MỚI:/opt/learning-hub/backups/`.
+3. Khôi phục theo mục 5.4, từ bước 3.
+4. Đổi bản ghi DNS `learn` sang IP mới, cập nhật secret `VPS_HOST` và `VPS_KNOWN_HOSTS`.
+
+## 6. Lỗi đã gặp khi cài (17/11/2026)
 
 | Hiện tượng | Nguyên nhân | Cách sửa |
 | --- | --- | --- |
@@ -204,11 +296,20 @@ Lệnh khôi phục database và quay về image cũ bằng tay: xem runbook tro
 
 Bảng lỗi đầy đủ (Traefik, HTTPS, OAuth, cookie, Discord): mục "Lỗi thường gặp" trong runbook.
 
-## 6. Bàn giao cho tech lead mới
+## 7. Nhật ký sự cố
+
+Mỗi lần khôi phục database, quay về bản cũ hay site sập lâu, ghi một dòng ở đây.
+
+| Ngày | Chuyện gì | Đã làm gì | Mất dữ liệu? |
+| --- | --- | --- | --- |
+| — | chưa có sự cố | | |
+
+## 8. Bàn giao cho tech lead mới
 
 1. Người mới tạo **SSH key của riêng họ**. Thêm vào VPS (user cá nhân của họ để quản trị, và `learnhub` nếu cần). Không chia sẻ khóa cũ.
 2. Chuyển quyền admin repo/org GitHub, quyền Cloudflare (DNS) và quyền quản trị VPS.
 3. Chuyển OAuth app sang org hoặc tạo lại, rồi sửa `GITHUB_CLIENT_*` trong `.env` và chạy lại Deploy.
 4. Tạo key deploy mới (mục 3.3, 3.5), xóa khóa cũ khỏi `authorized_keys`, cập nhật `VPS_SSH_KEY`.
 5. Kiểm tra lại webhook Discord (mục 3.8). Người cũ rời server thì tạo webhook mới.
-6. Cập nhật bảng "Hiện trạng production" ở mục 1 và ngày "Cập nhật lần cuối".
+6. Người mới tự chạy kiểm tra bản sao lưu (mục 5.3) một lần, để chắc họ biết cách khôi phục. Người cũ xóa các bản sao lưu đã chép về máy mình (mục 5.2).
+7. Cập nhật bảng "Hiện trạng production" ở mục 1 và ngày "Cập nhật lần cuối".
