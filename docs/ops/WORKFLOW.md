@@ -263,7 +263,7 @@ Một việc chỉ chuyển sang Done khi đủ cả 4 điều:
 
 ### 7.5 Cài đặt repo để ép quy trình (admin làm, mỗi repo một lần)
 
-Chưa bật tại thời điểm viết (18/11/2026). Dùng `gh` với tài khoản admin repo (quyền `repo` là đủ, [GH-CLI.md](GH-CLI.md)).
+**Đã bật ngày 18/11/2026** cho cả 3 repo ([docs#6](https://github.com/hcmute-dsc/learning-hub-docs/issues/6)). Các lệnh dưới đây để kiểm tra lại hoặc làm lại khi tạo repo mới. Dùng `gh` với tài khoản admin repo (quyền `repo` là đủ, [GH-CLI.md](GH-CLI.md)).
 
 Chỉ cho squash merge và tự xóa nhánh sau merge:
 
@@ -275,24 +275,26 @@ for r in learning-hub learning-hub-content learning-hub-docs; do
 done
 ```
 
-Bảo vệ nhánh `main` (bắt buộc PR, CI phải xanh, cấm force push và xóa nhánh). Check bắt buộc: `build-test` cho `learning-hub`, `validate` cho `learning-hub-content`; `learning-hub-docs` chưa có CI nên để trống:
+Bảo vệ nhánh `main` (bắt buộc PR, CI phải xanh, cấm force push và xóa nhánh). Check bắt buộc: `build-test`, `secrets` (gitleaks) và `check` (tên PR) cho `learning-hub`, `validate` cho `learning-hub-content`; `learning-hub-docs` chưa có CI nên để trống:
 
 ```bash
-protect() { # protect <repo> [check]
-  checks='null'; [ -n "$2" ] && checks="{\"strict\":true,\"contexts\":[\"$2\"]}"
-  gh api -X PUT repos/hcmute-dsc/$1/branches/main/protection --input - <<JSON
+protect() { # protect <repo> [check ...]
+  r=$1; shift; checks='null'
+  if [ $# -gt 0 ]; then c=$(printf '"%s",' "$@"); checks="{\"strict\":true,\"contexts\":[${c%,}]}"; fi
+  gh api -X PUT repos/hcmute-dsc/$r/branches/main/protection --input - <<JSON
 {"required_status_checks":$checks,"enforce_admins":false,
  "required_pull_request_reviews":{"required_approving_review_count":0},
  "restrictions":null,"allow_force_pushes":false,"allow_deletions":false,
  "required_conversation_resolution":true}
 JSON
 }
-protect learning-hub build-test
+protect learning-hub build-test secrets check
 protect learning-hub-content validate
 protect learning-hub-docs
 ```
 
 - `required_approving_review_count` để `0` khi chỉ có 1 maintainer, vì GitHub không cho tự approve PR của mình. Khi có maintainer thứ hai thì đổi thành `1`.
+- `strict: true`: nhánh PR phải cập nhật theo `main` mới nhất trước khi merge (nút "Update branch" hoặc rebase). Nhờ vậy migration Prisma của các PR chạy song song vẫn đúng thứ tự.
 - `enforce_admins: false` để admin còn xử lý được sự cố. Dùng quyền này chỉ khi khẩn cấp và ghi vào nhật ký sự cố.
 
 Kiểm tra: `gh api repos/hcmute-dsc/learning-hub/branches/main/protection -q '.required_status_checks.contexts'`.
