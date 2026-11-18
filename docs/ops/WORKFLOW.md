@@ -15,7 +15,7 @@ Mọi việc của Learning Hub (code, nội dung, tài liệu, vận hành, vi�
 | **Status** | Backlog → Ready → In progress → In review → Done | biết việc đang ở đâu |
 | **Priority** | P0 - Gấp · P1 - Cao · P2 - Bình thường | chọn việc làm trước |
 | **Area** | Backend · Frontend · Content · Ops · Docs · Club | ai phù hợp nhận việc |
-| **Epic** | E6 Chấm tự động · E8 Mentorship · E13 SQL checker · E14 Bảng xếp hạng · E15 Web Push · Phase 0 · Vận hành | nhóm việc theo [MVP-BACKLOG](../product/MVP-BACKLOG.md) |
+| **Epic** | Phase 0 · E1 Nền tảng & DevEx · E2 Danh tính & quyền · E3 Nội dung từ Git · E4 Catalog & học · E5 Bài tập & nộp bài · E6 Chấm tự động · E7 Mentor review · E8 Mentorship · E9 Thông báo Discord · E10 Quản trị & audit · E12 Phase 2 · E13 SQL checker · E14 Bảng xếp hạng · E15 Web Push · Vận hành (= E11 Vận hành & bàn giao) | nhóm việc theo [MVP-BACKLOG](../product/MVP-BACKLOG.md) §1 |
 | **Size** | S (≤ 1 buổi) · M (vài buổi) · L (cả sprint, nên tách nhỏ) | ước lượng |
 | **Sprint** | 2 tuần, bắt đầu thứ Hai (Sprint 1: 16/11/2026) | lên kế hoạch theo đợt |
 
@@ -29,7 +29,7 @@ Mọi việc của Learning Hub (code, nội dung, tài liệu, vận hành, vi�
 | In review | đã mở PR, chờ review |
 | Done | PR đã merge hoặc việc đã xong (đóng issue) |
 
-Thêm Epic mới: Project → ⚙ Settings → Epic → thêm option. Khi thêm epic vào MVP-BACKLOG thì thêm luôn ở đây.
+Thêm Epic mới: Project → ⚙ Settings → Epic → thêm option. Khi thêm epic vào MVP-BACKLOG thì thêm luôn ở đây. Nếu sửa bằng GraphQL `updateProjectV2Field`, phải gửi lại **mọi** option cũ kèm `id` của chúng, nếu không các issue đang dùng option cũ sẽ mất giá trị Epic.
 
 ### 1.1 Thông tin bắt buộc trên mỗi issue
 
