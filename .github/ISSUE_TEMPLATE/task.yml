@@ -1,0 +1,23 @@
+name: Việc (tài liệu, vận hành, CLB)
+description: Tài liệu, vận hành, việc của CLB
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Bối cảnh
+    validations:
+      required: true
+  - type: textarea
+    id: todo
+    attributes:
+      label: Việc cần làm
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Hoàn thành khi
+    validations:
+      required: true
