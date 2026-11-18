@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Lỗi hoặc tính năng của trang web
+    url: https://github.com/hcmute-dsc/learning-hub/issues/new/choose
+    about: Repo code learning-hub.
+  - name: Lỗi trong bài học hoặc bài tập
+    url: https://github.com/hcmute-dsc/learning-hub-content/issues/new/choose
+    about: Repo nội dung learning-hub-content.

@@ -33,13 +33,16 @@ Thêm Epic mới: Project → ⚙ Settings → Epic → thêm option. Khi thêm 
 
 ## 2. Vòng đời một việc
 
-1. **Tạo issue** trong repo đúng chỗ: code → `learning-hub`, bài học → `learning-hub-content`, tài liệu và việc của CLB → `learning-hub-docs`.
+**Không có issue thì không làm.** Mọi yêu cầu, kể cả sửa nhỏ hay lỗi phát hiện rồi sửa ngay, đều có issue trên project. Chi tiết về nhánh, commit, PR, review ở [§7](#7-tiêu-chuẩn-nhánh-commit-pr-review-bug).
+
+1. **Tạo issue** trong repo đúng chỗ, bằng mẫu có sẵn (issue trống bị tắt): code → `learning-hub`, bài học → `learning-hub-content`, tài liệu và việc của CLB → `learning-hub-docs`. Tìm issue cũ trước khi tạo mới.
    - Tiêu đề có tiền tố: `[E13] …`, `[Content] …`, `[Ops] …`, `[Org] …`, `[Phase 0] …`, `[Bug] …`.
    - Thân issue có: bối cảnh (link tài liệu), checklist việc cần làm, **"Hoàn thành khi: …"**.
-2. **Thêm vào project** (khung bên phải issue → Projects → DSC Learning Hub), điền Priority, Area, Epic, Size. Status = Backlog hoặc Ready.
-3. **Nhận việc:** tự gán mình vào Assignees, chuyển Status = In progress, đặt Sprint.
-4. **Mở PR:** trong mô tả ghi `Closes hcmute-dsc/<repo>#<số>` (hoặc `Closes #<số>` nếu cùng repo), rồi chuyển Status = In review.
-5. **Merge:** issue tự đóng và tự sang Done (workflow có sẵn của project).
+2. **Vào project:** issue mới tự vào project với Status = Backlog. Điền Priority, Area, Epic, Size. Đủ thông tin thì chuyển Ready.
+3. **Nhận việc:** tự gán mình vào Assignees, chuyển Status = In progress, đặt Sprint. Tạo nhánh theo §7.
+4. **Mở PR** theo mẫu, dòng đầu `Closes #<số>` (khác repo: `Closes hcmute-dsc/<repo>#<số>`). Project tự chuyển sang In review.
+5. **Review rồi squash merge:** issue tự đóng và tự sang Done.
+6. **Kiểm tra trên production** sau khi Deploy xanh (code) hoặc sau khi publish (nội dung). Có lỗi thì mở lại issue.
 
 Việc lớn (Size L) thì tách thành nhiều issue nhỏ, hoặc dùng checklist trong issue và tách dần.
 
@@ -132,3 +135,118 @@ gh project link <số> --owner hcmute-dsc --repo hcmute-dsc/learning-hub-docs
 | [hub#7](https://github.com/hcmute-dsc/learning-hub/issues/7) E8 mentorship | P2 | |
 
 Từ nay, project là nơi theo dõi tiến độ. MVP-BACKLOG giữ phần thiết kế (story, acceptance).
+
+## 7. Tiêu chuẩn: nhánh, commit, PR, review, bug
+
+Áp dụng từ 18/11/2026 cho cả 3 repo. Bản đầy đủ cho repo code: [CONTRIBUTING của learning-hub](https://github.com/hcmute-dsc/learning-hub/blob/main/CONTRIBUTING.md); cho repo nội dung: [CONTRIBUTING của learning-hub-content](https://github.com/hcmute-dsc/learning-hub-content/blob/main/CONTRIBUTING.md).
+
+### 7.1 Nhánh, commit, PR
+
+| Mục | Quy ước | Ví dụ |
+| --- | --- | --- |
+| Nhánh | `<loại>/<số issue>-<mô-tả-ngắn>`, tách từ `main` mới nhất. Loại: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`. Issue ở repo khác thì thêm tên repo | `fix/8-track-source-commit`, `chore/docs-4-work-standards` |
+| Commit (code, tài liệu) | `Phần: tóm tắt dạng mệnh lệnh` (≤ 72 ký tự). Thân ghi **vì sao**, dòng cuối `Refs #<số>` | `Catalog: show the published commit on the track page` |
+| Commit (nội dung) | `<track>: <tóm tắt>` | `sql-30-days: sửa đáp án bài 3 Ngày 10` |
+| PR | Theo mẫu; dòng đầu `Closes …`; một chủ đề; nên dưới ~400 dòng; đang làm thì mở **draft** | |
+| Merge | **Squash merge** sau khi CI xanh và review xong; xóa nhánh | |
+
+**Không đẩy thẳng lên `main`**, kể cả sửa gấp trên production: vẫn mở PR. Nếu không có người review kịp, tác giả merge khi CI xanh và nhờ review sau ngay trong PR.
+
+### 7.2 Review
+
+Người review xem theo thứ tự:
+1. Đúng yêu cầu của issue chưa.
+2. Bảo mật: phân quyền, kiểm tra đầu vào, không lộ dữ liệu cá nhân hay secret.
+3. Thiết kế: theo quy tắc trong CONTRIBUTING.
+4. Có test.
+5. Dễ đọc cho người sau.
+6. Tài liệu đã cập nhật.
+
+Cách góp ý:
+- Góp ý bắt buộc sửa ghi `must:`, góp ý tùy chọn ghi `nit:`.
+- Approve khi không còn `must:`.
+- Tác giả trả lời hoặc resolve từng thread trước khi merge.
+
+Repo nội dung còn xem thêm: kiến thức đúng, câu lệnh chạy được, văn phong dễ hiểu, có ghi nguồn.
+
+Hiện chỉ có 1 maintainer, nên PR do Claude Code soạn sẽ được người giữ repo review rồi merge. Khi có thêm maintainer thì bật "1 approval" (§7.5).
+
+### 7.3 Vòng đời bug
+
+1. **Ghi nhận:** issue nhãn `bug` theo mẫu: các bước tái hiện, mong đợi, thực tế, mức ảnh hưởng → Priority (P0 site sập, mất hoặc lộ dữ liệu; P1 chức năng chính hỏng; P2 sai hiển thị).
+2. **Xử lý:**
+   - P0 làm ngay, ghi thêm vào [nhật ký sự cố DEPLOYMENT §7](DEPLOYMENT.md#7-nhật-ký-sự-cố).
+   - P1 vào sprint hiện tại.
+   - P2 xếp theo sprint.
+3. **Sửa:** PR có mục **Nguyên nhân gốc** (vì sao xảy ra, không chỉ triệu chứng). Kèm test thất bại khi chưa sửa; không viết được test thì ghi lý do.
+4. **Đóng:** khi đóng issue, ghi lại:
+   - nguyên nhân gốc;
+   - cách sửa (PR hoặc commit);
+   - cách đã kiểm tra (test, và production sau deploy).
+
+   Ví dụ mẫu: [learning-hub#8](https://github.com/hcmute-dsc/learning-hub/issues/8).
+5. Lỗi không tái hiện được hoặc không sửa: đóng với lý do `not planned` và giải thích. Không đóng im lặng.
+
+### 7.4 Definition of Done
+
+Một việc chỉ chuyển sang Done khi đủ cả 4 điều:
+- PR đã merge, CI xanh.
+- Đã lên production: Deploy xanh với code; đã publish với nội dung.
+- Đã kiểm tra trên production nếu người dùng thấy được thay đổi.
+- Tài liệu liên quan đã cập nhật: thiết kế, `DATABASE.md`, runbook, hướng dẫn cài đặt (ghi ở cả `deploy/README.md` và `docs/ops/`).
+
+### 7.5 Cài đặt repo để ép quy trình (admin làm, mỗi repo một lần)
+
+Chưa bật tại thời điểm viết (18/11/2026). Dùng `gh` với tài khoản admin repo (quyền `repo` là đủ, [GH-CLI.md](GH-CLI.md)).
+
+Chỉ cho squash merge và tự xóa nhánh sau merge:
+
+```bash
+for r in learning-hub learning-hub-content learning-hub-docs; do
+  gh api -X PATCH repos/hcmute-dsc/$r \
+    -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=false \
+    -F delete_branch_on_merge=true -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=COMMIT_MESSAGES >/dev/null
+done
+```
+
+Bảo vệ nhánh `main` (bắt buộc PR, CI phải xanh, cấm force push và xóa nhánh). Check bắt buộc: `build-test` cho `learning-hub`, `validate` cho `learning-hub-content`; `learning-hub-docs` chưa có CI nên để trống:
+
+```bash
+protect() { # protect <repo> [check]
+  checks='null'; [ -n "$2" ] && checks="{\"strict\":true,\"contexts\":[\"$2\"]}"
+  gh api -X PUT repos/hcmute-dsc/$1/branches/main/protection --input - <<JSON
+{"required_status_checks":$checks,"enforce_admins":false,
+ "required_pull_request_reviews":{"required_approving_review_count":0},
+ "restrictions":null,"allow_force_pushes":false,"allow_deletions":false,
+ "required_conversation_resolution":true}
+JSON
+}
+protect learning-hub build-test
+protect learning-hub-content validate
+protect learning-hub-docs
+```
+
+- `required_approving_review_count` để `0` khi chỉ có 1 maintainer, vì GitHub không cho tự approve PR của mình. Khi có maintainer thứ hai thì đổi thành `1`.
+- `enforce_admins: false` để admin còn xử lý được sự cố. Dùng quyền này chỉ khi khẩn cấp và ghi vào nhật ký sự cố.
+
+Kiểm tra: `gh api repos/hcmute-dsc/learning-hub/branches/main/protection -q '.required_status_checks.contexts'`.
+
+### 7.6 Quy tắc cho AI agent (Claude Code, Codex, Cursor…)
+
+Agent làm theo đúng quy trình như người. Quy tắc nằm trong repo để ai mở repo bằng agent cũng nhận được:
+
+| Repo | File quy tắc | Skills (`.claude/skills/`) |
+| --- | --- | --- |
+| `learning-hub` | `AGENTS.md` (`CLAUDE.md` nạp file này) | `start-task` (issue → project → nhánh), `fix-bug` (vòng đời bug), `ship-pr` (commit → PR → CI → review → kiểm tra production), `review-pr` (checklist review) |
+| `learning-hub-content` | `AGENTS.md` | `content-change` (sửa/thêm bài), `publish-content` (đồng bộ và publish lên site) |
+| `learning-hub-docs` | `AGENTS.md` | dùng skills của `learning-hub` |
+
+Script `learning-hub/.claude/skills/start-task/project-item.sh` đưa issue/PR vào project và điền field theo tên. Ví dụ:
+
+```bash
+bash .claude/skills/start-task/project-item.sh <link issue> "Status=In progress" "Priority=P1 - Cao" Area=Backend Size=S
+```
+
+Agent không tự merge PR, không đổi cài đặt repo hay production, và không publish nội dung khi chưa có người đồng ý trong chat.
+
+Khi đổi quy trình ở §7, sửa luôn `AGENTS.md` và skills cho khớp, trong cùng đợt PR.
