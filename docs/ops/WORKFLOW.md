@@ -113,7 +113,7 @@ Chỉ làm một lần, hoặc khi tạo lại project. Ai có quyền admin pro
 
 Đã cấu hình và kiểm tra trên web ngày 18/11/2026: cả 11 workflow bật, giá trị như bảng trên.
 
-**Giới hạn của gói Free:** mỗi workflow auto-add chỉ chọn được **1 repo**, và org gói Free chỉ có **1** workflow auto-add (nút *Duplicate workflow* báo "Maximum number of auto add workflows reached"). Vì vậy `learning-hub-content` và `learning-hub-docs` dùng GitHub Action riêng: `.github/workflows/add-to-project.yml` (dùng `actions/add-to-project`, đã ghim theo commit). Nó thêm mọi issue/PR mới vào project. Khi chưa cài GitHub App, job chỉ ghi chú và bỏ qua, không báo đỏ.
+**Giới hạn của gói Free:** mỗi workflow auto-add chỉ chọn được **1 repo**, và org gói Free chỉ có **1** workflow auto-add (nút *Duplicate workflow* báo "Maximum number of auto add workflows reached"). Vì vậy `learning-hub-content`, `learning-hub-docs` và mọi repo track (`learning-hub-track-<slug>`, có sẵn từ template) dùng GitHub Action riêng: `.github/workflows/add-to-project.yml` (dùng `actions/add-to-project`, đã ghim theo commit). Nó thêm mọi issue/PR mới vào project. Khi chưa cài GitHub App, job chỉ ghi chú và bỏ qua, không báo đỏ.
 
 Action lấy token từ một **GitHub App của org**, không dùng token cá nhân. Trước đây job dùng token classic của một thành viên (`ADD_TO_PROJECT_PAT`), nên dùng chung giới hạn API với tài khoản đó: tài khoản gọi API nhiều thì job đỏ với lỗi `API rate limit already exceeded for user ID …` ([learning-hub-docs#8](https://github.com/hcmute-dsc/learning-hub-docs/issues/8)). GitHub App có giới hạn riêng, thuộc về org, không hết hạn và không phải tạo lại khi đổi người.
 
@@ -132,21 +132,23 @@ Action lấy token từ một **GitHub App của org**, không dùng token cá n
 2. Trên trang App vừa tạo:
    - Ghi lại **Client ID** (dạng `Iv23…`; không phải bí mật).
    - Kéo xuống **Private keys** → **Generate a private key**. Trình duyệt tải về file `.pem`. File này là bí mật: không gửi qua chat, issue hay commit.
-3. Menu trái **Install App** → **Install** cạnh `hcmute-dsc` → **Only select repositories**: `learning-hub-content`, `learning-hub-docs` → **Install**.
-4. Lưu vào **từng repo** (chạy trên máy mình; thay `<client-id>` và đường dẫn file `.pem`):
+3. Menu trái **Install App** → **Install** cạnh `hcmute-dsc` → **All repositories** → **Install**. Repo track mới tạo sau này tự được App phục vụ. Vì App cài cho mọi repo, **không thêm quyền nào khác cho App này**: quyền thêm vào sẽ áp dụng cho cả org. Cần quyền khác (ví dụ ghi code) thì tạo App riêng.
+4. Lưu Client ID và private key **ở cấp org**, chỉ cho các repo public (gói Free chỉ cho repo public dùng secret cấp org; mọi repo của Learning Hub đều public). Làm trên web, tại https://github.com/organizations/hcmute-dsc/settings/secrets/actions:
+   - tab **Variables → New organization variable**: `PROJECT_APP_CLIENT_ID` = Client ID, **Repository access: Public repositories**;
+   - tab **Secrets → New organization secret**: `PROJECT_APP_PRIVATE_KEY` = toàn bộ nội dung file `.pem`, **Repository access: Public repositories**.
+
+   Hoặc bằng `gh` trên máy mình (cần quyền `admin:org`: `gh auth refresh -h github.com -s admin:org`):
 
    ```bash
-   gh variable set PROJECT_APP_CLIENT_ID --repo hcmute-dsc/learning-hub-content --body "<client-id>"
-   gh variable set PROJECT_APP_CLIENT_ID --repo hcmute-dsc/learning-hub-docs --body "<client-id>"
-   gh secret set PROJECT_APP_PRIVATE_KEY --repo hcmute-dsc/learning-hub-content < ~/Downloads/<file>.pem
-   gh secret set PROJECT_APP_PRIVATE_KEY --repo hcmute-dsc/learning-hub-docs < ~/Downloads/<file>.pem
+   gh variable set PROJECT_APP_CLIENT_ID --org hcmute-dsc --visibility all     # lệnh hỏi giá trị
+   gh secret set PROJECT_APP_PRIVATE_KEY --org hcmute-dsc --visibility all < ~/Downloads/<file>.pem
    ```
 
-   Xong thì xóa file `.pem` khỏi máy (hoặc cất vào trình quản lý mật khẩu của CLB). Mất file thì chỉ cần tạo key mới ở bước 2 rồi chạy lại 2 lệnh `gh secret set`.
+   Xong thì xóa file `.pem` khỏi máy (hoặc cất vào trình quản lý mật khẩu của CLB). Mất file thì tạo key mới ở bước 2 rồi đặt lại secret cấp org.
 
-   (Cũng có thể lưu thành variable/secret của org bằng `--org hcmute-dsc --repos learning-hub-content,learning-hub-docs`. Cách này cần `gh` có quyền `admin:org`, nếu thiếu sẽ báo lỗi `HTTP 403 … needs the "admin:org" scope`. Lưu theo repo chỉ cần quyền `repo` sẵn có, nên dùng cách trên.)
+   Đã chuyển lên cấp org ngày 18/11/2026 ([learning-hub-docs#14](https://github.com/hcmute-dsc/learning-hub-docs/issues/14)); trước đó mỗi repo có bản riêng. Bản cấp repo (nếu có) **được ưu tiên hơn** bản cấp org, nên đừng tạo lại ở cấp repo, trừ khi repo đó là private.
 
-5. Kiểm tra: tạo thử 1 issue trong `learning-hub-docs`. Tab Actions → *Add to project* phải xanh (bước *Get a short-lived token from the GitHub App* chạy, không bị bỏ qua), và issue xuất hiện trong project với Status = Backlog. Xong thì đóng issue thử.
+5. Kiểm tra: tạo thử 1 issue trong một repo track (ví dụ `learning-hub-track-sql-30-days`). Tab Actions → *Add to project* phải xanh (bước *Get a short-lived token from the GitHub App* chạy, không bị bỏ qua), và issue xuất hiện trong project với Status = Backlog. Xong thì đóng issue thử.
 6. Gỡ token cũ, nếu còn:
 
    ```bash
@@ -156,7 +158,7 @@ Action lấy token từ một **GitHub App của org**, không dùng token cá n
 
    Rồi xóa token classic `learning-hub add-to-project` tại https://github.com/settings/tokens.
 
-**Bàn giao:** App thuộc org nên không phải làm gì khi đổi tech lead; người mới chỉ cần là owner của org để sửa App. Nghi lộ private key: trang App → **Private keys** → tạo key mới, chạy lại 2 lệnh `gh secret set` ở bước 4, rồi xóa key cũ. Nếu cần thêm việc thủ công: khung **Projects** bên phải issue → DSC Learning Hub.
+**Bàn giao:** App thuộc org nên không phải làm gì khi đổi tech lead; người mới chỉ cần là owner của org để sửa App. Nghi lộ private key: trang App → **Private keys** → tạo key mới, đặt lại secret cấp org ở bước 4, rồi xóa key cũ. Nếu cần thêm việc thủ công: khung **Projects** bên phải issue → DSC Learning Hub.
 
 **Quyền** (⋯ → Settings → Manage access): thêm team `mentors` / Ban chủ nhiệm với quyền *Write*. Thành viên chỉ cần *Read*.
 

@@ -44,7 +44,7 @@ gh api -X PUT repos/$R/collaborators/<mentor> -f permission=maintain
 
 - Repo phải **public**: site tải nội dung công khai, và CI của registry tải track bằng link công khai.
 - Quyền **Maintain** cho mentor: tự merge được PR trong repo track, nhưng không đổi được cài đặt quan trọng của repo. Mentor sẽ nhận email mời; cần bấm **Accept**.
-- **GitHub App** `hcmute-dsc-learning-hub` đã cài cho mọi repo của org. Để issue và PR mới tự lên Project #1, repo cần biến `PROJECT_APP_CLIENT_ID` và secret `PROJECT_APP_PRIVATE_KEY`. Khi docs#14 xong, hai giá trị này đặt ở cấp org nên không cần làm gì thêm. Trước đó, đặt cho từng repo theo [WORKFLOW §4](WORKFLOW.md#4-cài-đặt-làm-bằng-tay-trên-web-api-của-github-chưa-hỗ-trợ); không dán key vào chat hay issue.
+- **GitHub App** `hcmute-dsc-learning-hub` đã cài cho mọi repo của org, và `PROJECT_APP_CLIENT_ID` / `PROJECT_APP_PRIVATE_KEY` đặt ở cấp org cho mọi repo public (docs#14), nên issue và PR của repo mới tự lên Project #1, không cần làm gì thêm. Không tạo bản cấp repo cho hai giá trị này.
 - Không bật branch protection khi chưa được Ban chủ nhiệm đồng ý ([WORKFLOW §7.5](WORKFLOW.md#75-cài-đặt-repo-để-ép-quy-trình-admin-làm-mỗi-repo-một-lần)).
 
 Trả lời trong issue đề xuất: link repo, và nhắc mentor làm tiếp mục 3.
