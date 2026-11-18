@@ -195,7 +195,8 @@ docker compose -f docker-compose.prod.yml exec -T api node dist/cli/smtp-check.j
 Gỡ lỗi: thông báo và email đi qua bảng `outbox_events` (DATABASE §3.16d), thử lại tối đa 8 lần:
 
 ```bash
-docker compose -f docker-compose.prod.yml exec -T db psql -U hub -d learning_hub -c \n  "select id, type, status, attempts, last_error, created_at from outbox_events where status <> 'sent' order by id desc limit 20"
+docker compose -f docker-compose.prod.yml exec -T db psql -U hub -d learning_hub -c \
+  "select id, type, status, attempts, last_error, created_at from outbox_events where status <> 'sent' order by id desc limit 20"
 ```
 
 Mật khẩu SMTP lộ: thu hồi App password/SMTP key, tạo cái mới, sửa `.env`, Deploy lại.
