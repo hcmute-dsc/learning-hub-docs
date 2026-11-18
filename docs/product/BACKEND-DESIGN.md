@@ -209,7 +209,7 @@ Theo tinh thần RFC 9457 (problem+json):
 | `GET /exercises/{id}` | member | MVP | 403/409 nếu khóa |
 | `POST /exercises/{id}/submissions` | member | MVP | header Idempotency-Key |
 | `POST /exercises/{id}/quiz-attempts` | member | MVP | chấm tức thì |
-| `POST /exercises/{id}/hints/{position}` | member | P2 | mở một hint (F11): 201 lần đầu, 200 nếu đã mở; 409 nếu sai thứ tự, chưa đủ `cost` lần nộp hoặc bài đang khóa; 404 nếu không có hint đó. `GET /exercises/{id}` trả `hints` (chỉ hint đã mở) và `solution` (nội dung chỉ sau lần nộp đầu) |
+| `POST /exercises/{id}/hints/{position}` | member | P2 | mở một hint (F11): 201 lần đầu, 200 nếu đã mở; 409 nếu sai thứ tự, chưa đủ `cost` lần nộp hoặc bài đang khóa; 404 nếu không có hint đó. `GET /exercises/{id}` trả `hints` (chỉ hint đã mở) và `solution` (nội dung chỉ khi member đã hoàn thành bài) |
 | `GET /submissions/{id}` | chủ bài / mentor được giao / admin | MVP | + `testRuns[]`, `reviews[]` |
 | `GET /me/submissions?exerciseId=` | member | MVP | cursor |
 | `POST /mentorship/requests` | member | MVP | |

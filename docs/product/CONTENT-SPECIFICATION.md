@@ -216,7 +216,7 @@ Dùng `WHERE` để giữ lại các dòng có `city` đúng bằng chuỗi cầ
 Repo content là **công khai** (khuyến khích đóng góp) ⇒ lời giải và test ẩn **không** được đặt ở đây (validator báo lỗi nếu thấy `solution.md` hay thư mục `solution/` trong thư mục exercise). Chúng nằm ở `learning-hub-checker` (**riêng tư**): `exercises/<track-slug>/<exercise-slug>/{tests/, solution.md}`. Hai exercise cùng slug trong một track thì lời giải bị coi là mơ hồ (lỗi validate): đặt slug khác nhau.
 
 - API đọc lời giải lúc sync và publish, ở commit mới nhất của nhánh `SOLUTIONS_BRANCH` (commit ghi vào `content_versions.summary.solutionsFrom`). Repo checker không được ghim trong `tracks.yaml`, nên chỉ sửa lời giải thì lời giải mới lên site cùng lần publish nội dung kế tiếp.
-- Hub chỉ trả lời giải cho member **sau lần nộp đầu tiên** (đạt hay chưa), theo learning-hub#46 ("đã nộp hoặc hoàn thành"); mentor/admin luôn xem được (SECURITY §2). Không muốn có lời giải cho bài nào thì không tạo `solution.md` cho bài đó.
+- Hub chỉ trả lời giải cho member **khi đã hoàn thành bài** (trạng thái `completed`: bài đạt, hoặc được mentor duyệt nếu bài cần review). Nộp mà chưa đạt thì chưa thấy (CLB chốt trên learning-hub#53). Mentor/admin luôn xem được (SECURITY §2). Không muốn có lời giải cho bài nào thì không tạo `solution.md` cho bài đó.
 - Dev/test dùng `learning-hub/checker-example/` (cùng cấu trúc) với `SOLUTIONS_SOURCE=local`.
 
 Với `self_check`, đáp án gập cần hiển thị ngay nên nằm trong `statement.md` công khai (chấp nhận được vì không chấm điểm).

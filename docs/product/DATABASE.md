@@ -178,7 +178,7 @@ IX: `(status, position)`, GIN `(tags)`.
 | statement_md | text | đề bài |
 | spec | jsonb | cấu hình theo type: quiz (câu hỏi/đáp án), code (`starterPath` trong repo mẫu của track, workflow, ngôn ngữ) |
 | hints | jsonb | [P2] not null default `'[]'`; `[{position, cost, bodyMd}]` từ `hints/NN.md` (CONTENT-SPECIFICATION §3.7). API chỉ trả `bodyMd` của hint member đã mở (SECURITY §2) |
-| solution_md | text | [P2] null; lời giải tham khảo đọc từ repo checker **riêng tư** lúc publish (§3.8). API chỉ trả sau lần nộp đầu của member (SECURITY §2) |
+| solution_md | text | [P2] null; lời giải tham khảo đọc từ repo checker **riêng tư** lúc publish (§3.8). API chỉ trả khi member đã hoàn thành bài (SECURITY §2) |
 | requires_review | boolean | not null default false (project mặc định true) |
 | position | int | |
 | status, content_version_id, source_path, content_hash, updated_at | | |
