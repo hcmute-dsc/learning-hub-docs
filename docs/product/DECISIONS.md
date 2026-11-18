@@ -94,6 +94,7 @@
 | --- | --- | --- |
 | `learning-hub` | Monorepo code (`apps/api`, `apps/web`, `packages/shared`, `infra/`; MVP-Full thêm `apps/sql-checker` — đề xuất) | Đã tạo (16/11/2026) |
 | `learning-hub-content` | Track/module/lesson/exercise (YAML + Markdown), CI validate | Đã tạo (16/11/2026), đã import sql-challenge (`sql-30-days`) |
+| `learning-hub-track-<slug>` | Một track nội dung (YAML + Markdown), CI validate; `learning-hub-content` thành registry ghim commit (ADR-10) | Tạo từ `learning-hub-track-template` khi có track mới; `sql-30-days` chuyển sang từ 18/11/2026 |
 | `learning-hub-docs` | Bộ tài liệu này; có thể chuyển vào `learning-hub/docs` nếu muốn một repo | Đã tạo (16/11/2026) |
 | `learning-hub-checker` | Workflow + test ẩn chấm bài `code` trên GitHub Actions (ADR-07 A); kết quả kỳ vọng/lời giải cho `sql-checker` (MVP-Full); chỉ Ban kỹ thuật có quyền ghi | Cùng lúc với bài `code` đầu tiên |
 | `learning-hub-runner` | Sandbox chạy code nhiều ngôn ngữ (Judge0/Piston, **tương lai**); chạy trên VPS riêng, không chung VPS với hub | Chỉ khi cần B tổng quát (ADR-07 mục 4) |
@@ -104,3 +105,30 @@
 Thêm thành viên CLB vào org `hcmute-dsc` (chưa làm): trước khi mời đại trà, đổi base permission từ **Read** sang **No permission** (hiện mọi thành viên org đọc được 5 repo private) và tắt "Members can create repositories"; cấp quyền qua team. Khi đó có thể bật `GITHUB_ORG=hcmute-dsc` để duyệt tài khoản tự động.
 
 Chuyển đổi: (1) tạo content repo, import sql-challenge, giữ site cũ; (2) dựng hub; (3) ngừng cập nhật Course-DSC/study-jam-*; (4) cập nhật `.github` profile và website CLB. Không có repo nào bị xóa; chỉ archive sau khi owner đồng ý.
+
+## ADR-10 — Mỗi track một repo, `learning-hub-content` thành registry
+
+**Đã chốt (18/11/2026)** — epic hcmute-dsc/learning-hub#17.
+
+**Bối cảnh.** Track mới (C#, Java…) do mentor có nền tảng khác nhau viết. Với một repo nội dung chung, ai cũng phải clone toàn bộ track, quyền ghi và review chỉ chia được bằng `CODEOWNERS`, và lịch sử, issue của mọi track trộn vào nhau.
+
+**Các lựa chọn.**
+
+| | Cách | Vì sao không/có |
+| --- | --- | --- |
+| A | Giữ 1 repo, chia người phụ trách bằng `CODEOWNERS` | Ít việc nhất, nhưng mentor vẫn clone mọi thứ; quyền repo không chia theo track được |
+| B | Repo chung dùng git submodule trỏ tới repo track | API tarball/tree của GitHub không kèm submodule; submodule khó với người mới |
+| C | Mỗi track một repo, hub đọc thẳng nhánh `main` của từng repo | Mentor merge là lên site, không còn bước duyệt chung của Ban chủ nhiệm |
+| **D** | **Mỗi track một repo; `learning-hub-content` là registry ghim commit của từng track** | **Chọn** |
+
+**Quyết định (D).**
+- Mỗi track nằm trong `hcmute-dsc/learning-hub-track-<slug>`, tạo từ repo template `learning-hub-track-template`. Bên trong giữ đúng cấu trúc `tracks/<slug>/…` (CONTENT-SPECIFICATION §1), nên validator và parser không đổi.
+- `learning-hub-content` chỉ còn file `tracks.yaml`: mỗi track ở repo nào, **commit nào được publish**. Publish một track = PR đổi commit trong `tracks.yaml`; CI validate **mọi track cùng nhau**; Ban chủ nhiệm duyệt và merge.
+- Hub đọc registry qua `RegistryContentSource` (§8). Một `content_version` vẫn ứng với một commit của registry; mỗi track lưu thêm repo và commit nguồn của nó để footer, link "Sửa trên GitHub" và ảnh trỏ đúng repo track.
+- Workflow `validate` và `add-to-project` của repo track gọi workflow dùng chung (reusable workflow) trong `learning-hub`, để sửa một chỗ là mọi track được cập nhật.
+
+**Hệ quả.**
+- Mentor chỉ cần repo track của mình; quyền ghi cấp theo repo (team của track).
+- Thêm repo cần quản lý: GitHub App `hcmute-dsc-learning-hub` phải được cài vào mỗi repo track mới (WORKFLOW §4).
+- Slug/uid trùng giữa các track và prerequisite chéo track chỉ được kiểm tra ở CI của registry, không ở repo track.
+- Lịch sử commit của track SQL được giữ khi chuyển sang `learning-hub-track-sql-30-days`; `uid` không đổi nên tiến độ học không mất.

@@ -107,10 +107,11 @@ Danh mục vai trò (seed cố định): `member`, `mentor`, `content_maintainer
 | Cột | Kiểu | Ghi chú |
 | --- | --- | --- |
 | id | uuid | PK |
-| source_repo | text | not null, vd `hcmute-dsc/learning-hub-content` |
+| source_repo | text | not null, vd `hcmute-dsc/learning-hub-content` (với registry: repo registry, commit là commit của registry) |
 | commit_sha | char(40) | not null, check `~ '^[0-9a-f]{40}$'` |
 | status | text | `draft` (sync hợp lệ, chưa publish) \| `published` \| `superseded` (bị version publish sau thay) \| `rejected` (sync không qua validate) |
 | summary | jsonb | `draft`: diff theo loại (track/module/lesson/exercise: added/changed/removed/unchanged); `rejected`: danh sách lỗi `{path, message}` |
+| track_sources | jsonb | null; chỉ khi đọc qua registry (ADR-10): `{"<slug track>": {"repo": "owner/learning-hub-track-<slug>", "commitSha": "…"}}`, để footer, ảnh và link sửa bài trỏ tới repo của track (migration `20261118000100_track_sources`) |
 | synced_by, published_by | uuid | FK → users, null |
 | published_at | timestamptz | null |
 | UQ | (source_repo, commit_sha) | một commit = một version |
