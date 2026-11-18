@@ -32,7 +32,7 @@ Làm theo thứ tự. Ghi ngày làm xong (DD/MM/YYYY) vào cột cuối.
 | 6 | Tạo kênh Discord riêng cho đợt, ví dụ `#sql-dung-thu`, và một kênh/thread hỏi đáp | Ban chủ nhiệm | Kênh đã có | |
 | 7 | Đăng tin §3.1, nhận đăng ký tới khi đủ **≥ 20 người** | Ban chủ nhiệm | Số câu trả lời trong form | |
 | 8 | Dán email từ form vào **Quản trị → Thành viên → Danh sách email** (chọn "Thêm vào danh sách hiện có"; ô ghi chú ví dụ `Đợt thử SQL 11/2026`) | Admin app | Số "Danh sách email thành viên (N)" tăng đúng | |
-| 9 | Mời 1 tài khoản thử đi hết luồng: đăng nhập GitHub → tài khoản `active` → **Bắt đầu học** track → đánh dấu 1 bài học → nộp 1 bài tự đánh giá | Admin app | Tài khoản thử thấy tiến độ trên Dashboard | |
+| 9 | Đi thử hết luồng bằng một tài khoản có role `admin` hoặc `mentor` (truy vấn §5 bỏ qua hai role này, nên số liệu không bị lệch): đăng nhập GitHub → **Bắt đầu học** track → đánh dấu 1 bài học → nộp 1 bài tự đánh giá. Nếu dùng tài khoản thành viên thường để thử, nó sẽ bị tính vào M1 | Admin app | Tài khoản thử thấy tiến độ trên Dashboard | |
 | 10 | Tech lead chạy thử truy vấn §5.2 với tuần 0 (trước ngày bắt đầu) để chắc lệnh chạy được | Tech lead | Có bảng số, không lỗi | |
 | 11 | Ngày 1: đăng tin khai mạc (§3.2) | Ban chủ nhiệm | | |
 
