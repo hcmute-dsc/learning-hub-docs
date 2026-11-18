@@ -56,7 +56,7 @@ Trả lời trong issue đề xuất: link repo, và nhắc mentor làm tiếp m
 ```bash
 git clone https://github.com/hcmute-dsc/learning-hub-track-<slug>
 cd learning-hub-track-<slug>
-git switch -c feat/1-init-track
+git switch -c feat/content-<số issue đề xuất>-init-track
 node tools/init-track.mjs <slug> "<Tên track>" <tài-khoản-github-của-bạn>
 ```
 
