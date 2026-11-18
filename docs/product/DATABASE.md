@@ -28,6 +28,8 @@ erDiagram
   modules ||--o{ exercises : contains
   lessons |o--o{ exercises : "related to"
   exercises ||--o{ exercise_prerequisites : "requires"
+  users ||--o{ hint_unlocks : opens
+  exercises ||--o{ hint_unlocks : "hint opened"
   users ||--o{ enrollments : enrolls
   tracks ||--o{ enrollments : "enrolled by"
   users ||--o{ lesson_progress : tracks
@@ -111,6 +113,7 @@ Danh mục vai trò (seed cố định): `member`, `mentor`, `content_maintainer
 | commit_sha | char(40) | not null, check `~ '^[0-9a-f]{40}$'` |
 | status | text | `draft` (sync hợp lệ, chưa publish) \| `published` \| `superseded` (bị version publish sau thay) \| `rejected` (sync không qua validate) |
 | summary | jsonb | `draft`: diff theo loại (track/module/lesson/exercise: added/changed/removed/unchanged); `rejected`: danh sách lỗi `{path, message}` |
+| summary.solutionsFrom | (trong `summary`) | `{repo, commitSha}` của repo checker riêng tư mà lời giải tham khảo được đọc lúc sync/publish, `null` khi tắt (`SOLUTIONS_SOURCE=none`) — learning-hub#46 |
 | track_sources | jsonb | null; chỉ khi đọc qua registry (ADR-10): `{"<slug track>": {"repo": "owner/learning-hub-track-<slug>", "commitSha": "…"}}`, để footer, ảnh và link sửa bài trỏ tới repo của track (migration `20261118000100_track_sources`) |
 | synced_by, published_by | uuid | FK → users, null |
 | published_at | timestamptz | null |
@@ -173,12 +176,14 @@ IX: `(status, position)`, GIN `(tags)`.
 | type | text | `code` (CI chấm) \| `quiz` (chấm trong app) \| `project` (mentor review) \| `self_check` (tự đối chiếu, không chấm) |
 | difficulty | text | `easy` \| `medium` \| `hard` |
 | statement_md | text | đề bài |
-| spec | jsonb | cấu hình theo type: quiz (câu hỏi/đáp án), code (`starterPath` trong repo mẫu của track, workflow, ngôn ngữ), hints (P2), solution_ref (P2) |
+| spec | jsonb | cấu hình theo type: quiz (câu hỏi/đáp án), code (`starterPath` trong repo mẫu của track, workflow, ngôn ngữ) |
+| hints | jsonb | [P2] not null default `'[]'`; `[{position, cost, bodyMd}]` từ `hints/NN.md` (CONTENT-SPECIFICATION §3.7). API chỉ trả `bodyMd` của hint member đã mở (SECURITY §2) |
+| solution_md | text | [P2] null; lời giải tham khảo đọc từ repo checker **riêng tư** lúc publish (§3.8). API chỉ trả sau lần nộp đầu của member (SECURITY §2) |
 | requires_review | boolean | not null default false (project mặc định true) |
 | position | int | |
 | status, content_version_id, source_path, content_hash, updated_at | | |
 
-Check: `type in (...)`; `spec` được validate bằng Zod (`@hub/content`) khi sync và publish. Lời giải **không** lưu trong cột trả cho member (P2: bảng/khối riêng có quyền).
+Check: `type in (...)`; `spec` được validate bằng Zod (`@hub/content`) khi sync và publish. `hints` và `solution_md` không bao giờ được trả nguyên cho member: `exercise-view.ts` chỉ chọn phần member được xem (migration `20261119000100_exercise_hints`).
 
 ### 3.9 `exercise_prerequisites` [MVP]
 | Cột | Kiểu | Ghi chú |
@@ -189,6 +194,19 @@ Check: `type in (...)`; `spec` được validate bằng Zod (`@hub/content`) khi
 | check | `exercise_id <> required_exercise_id` | |
 
 Chống vòng: kiểm tra DAG trong bước validate content (không dùng trigger).
+
+### 3.9b `hint_unlocks` [P2]
+**Mục đích:** ghi ai mở hint nào của bài nào (PRD F11), để tính số liệu. Mở hint **không** trừ điểm.
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| user_id | uuid | FK → users |
+| exercise_id | uuid | FK → exercises (restrict) |
+| position | int | thứ tự hint, như `NN` của `hints/NN.md`; check `position >= 1` |
+| opened_at | timestamptz | default now() |
+| PK | (user_id, exercise_id, position) | mở lại cùng hint không thêm dòng |
+
+IX: `(exercise_id)` (thống kê theo bài). Hint mở **theo thứ tự**, và chỉ khi số lần nộp ≥ `cost` của hint (quy tắc ở `submissions/hints.ts`). Nếu nội dung đổi số hint, dòng có `position` lớn hơn số hint hiện có bị bỏ qua khi hiển thị. Migration `20261119000100_exercise_hints`.
 
 ### 3.10 `enrollments` [MVP]
 | Cột | Kiểu | Ghi chú |

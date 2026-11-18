@@ -199,11 +199,27 @@ spec:
 ### 3.6 Test cases (cho `code`)
 Test ẩn nằm trong `learning-hub-checker` (repo riêng, chỉ Ban kỹ thuật có quyền ghi) để thành viên không đọc/sửa được. Định dạng test do exercise quyết định (vd so sánh kết quả truy vấn với tập kỳ vọng); ví dụ test hiển thị công khai (2–3 ca) đặt trong `statement.md` hoặc `examples:` trong `exercise.yaml`. Tác giả content gửi test qua PR vào checker repo (review bởi CODEOWNERS), liên kết bằng `spec.checker.tests`.
 
-### 3.7 Hints (P2)
-`hints/NN.md`, mở dần: mỗi hint có `cost` mềm (số lần thử tối thiểu trước khi mở). MVP: không có.
+### 3.7 Hints (P2, learning-hub#46)
+Mỗi hint là một file `hints/NN.md` trong thư mục exercise: `01.md`, `02.md`… đánh số liên tục từ `01`, tối đa 10 hint. Thành viên mở **lần lượt** từng hint. Front matter không bắt buộc:
+
+```markdown
+---
+cost: 1        # số lần nộp tối thiểu trước khi mở được hint này; mặc định 0
+---
+
+Dùng `WHERE` để giữ lại các dòng có `city` đúng bằng chuỗi cần tìm.
+```
+
+`cost` là "mềm": mở hint **không** trừ điểm, hub chỉ ghi lại ai đã mở hint nào (DATABASE `hint_unlocks`). Hint theo cùng luật Markdown như bài học (§4). Ví dụ: `content-example/tracks/sql-sample/.../select-where-basic/hints/`.
 
 ### 3.8 Solutions (P2)
-Repo content là **công khai** (khuyến khích đóng góp) ⇒ lời giải và test ẩn **không** được đặt ở đây. Chúng nằm ở `learning-hub-checker` (**riêng tư**): `exercises/<track>/<exercise>/{tests/, solution.md}`. Hub chỉ trả lời giải cho member **sau khi** exercise `approved/passed` (và có thể tắt theo bài). Với `self_check`, đáp án gập cần hiển thị ngay nên nằm trong `statement.md` công khai (chấp nhận được vì không chấm điểm).
+Repo content là **công khai** (khuyến khích đóng góp) ⇒ lời giải và test ẩn **không** được đặt ở đây (validator báo lỗi nếu thấy `solution.md` hay thư mục `solution/` trong thư mục exercise). Chúng nằm ở `learning-hub-checker` (**riêng tư**): `exercises/<track-slug>/<exercise-slug>/{tests/, solution.md}`. Hai exercise cùng slug trong một track thì lời giải bị coi là mơ hồ (lỗi validate): đặt slug khác nhau.
+
+- API đọc lời giải lúc sync và publish, ở commit mới nhất của nhánh `SOLUTIONS_BRANCH` (commit ghi vào `content_versions.summary.solutionsFrom`). Repo checker không được ghim trong `tracks.yaml`, nên chỉ sửa lời giải thì lời giải mới lên site cùng lần publish nội dung kế tiếp.
+- Hub chỉ trả lời giải cho member **sau lần nộp đầu tiên** (đạt hay chưa), theo learning-hub#46 ("đã nộp hoặc hoàn thành"); mentor/admin luôn xem được (SECURITY §2). Không muốn có lời giải cho bài nào thì không tạo `solution.md` cho bài đó.
+- Dev/test dùng `learning-hub/checker-example/` (cùng cấu trúc) với `SOLUTIONS_SOURCE=local`.
+
+Với `self_check`, đáp án gập cần hiển thị ngay nên nằm trong `statement.md` công khai (chấp nhận được vì không chấm điểm).
 
 ### 3.9 Prerequisites
 Hai tầng: `lesson.prerequisites` (khuyến nghị, hiển thị; trỏ tới lesson **hoặc** exercise) và `exercise.prerequisites` (bắt buộc, khóa bài; **chỉ** trỏ tới exercise). Tham chiếu theo đường dẫn logic `<track>/<module>/<slug>` (slug, không phải tên thư mục). Đồ thị prerequisite của exercise phải là **DAG** (validator kiểm tra vòng).
@@ -228,6 +244,8 @@ Validator không dừng ở lỗi đầu tiên: trả về **toàn bộ** lỗi 
 | File | file mồ côi (module/lesson/exercise có trong thư mục nhưng không được liệt kê); exercise thiếu `statement.md` | Đã làm |
 | Nội dung | Markdown > 200 KB; `<script>`, `<iframe>`, `javascript:`, thuộc tính sự kiện inline **ngoài khối code** | Đã làm |
 | Quiz | `answer` ngoài phạm vi option, ít hơn 2 option, `id` câu hỏi trùng | Đã làm |
+| Hint | tên file không phải `NN.md`; số thứ tự có chỗ trống; quá 10 hint; hint rỗng; front matter sai (`cost` ngoài 0–100, trường lạ) | Đã làm |
+| Lời giải | `solution.md`/`solution/` nằm trong repo nội dung công khai; lời giải trong repo checker trùng hai exercise cùng slug; Markdown của lời giải vi phạm luật nội dung | Đã làm |
 | Khóa tự nhiên (lúc sync/publish, cần DB) | item mới dùng lại khóa tự nhiên (cha + slug, hoặc track slug) của bản ghi đang có với `id` khác ⇒ thường do `uid` bị sửa | Đã làm (API) |
 | Link | link nội bộ gãy; link ngoài (cảnh báo, không fail) | Dự kiến — bước CI của content repo |
 | Secret | secret lọt vào nội dung (gitleaks) | Dự kiến — bước CI của content repo |
