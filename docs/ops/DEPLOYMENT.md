@@ -24,6 +24,7 @@ Cập nhật lần cuối: 18/11/2026.
 | Bản sao ngoài VPS | chưa bật ([learning-hub#1](https://github.com/hcmute-dsc/learning-hub/issues/1)): mã hóa `age` mỗi tuần, kéo về máy tech lead (mục 5.2) |
 | Giám sát | workflow `Uptime` mỗi 15 phút; cảnh báo lỗi 500 vào kênh Discord vận hành |
 | Discord | bật 17/11/2026: kênh CLB + kênh vận hành riêng tư |
+| Email tóm tắt (SMTP) | chưa bật: `SMTP_*` trong `.env` còn trống (mục 3.9) |
 
 **Secret và biến trên GitHub** (repo `hcmute-dsc/learning-hub`):
 
@@ -33,7 +34,7 @@ Cập nhật lần cuối: 18/11/2026.
 | `DISCORD_ALERT_WEBHOOK_URL` | secret của repo | workflow Uptime báo site sập |
 | `DEPLOY_ENABLED` = `true` | biến của repo | bật bước SSH của Deploy (đặt `false` để tạm tắt) |
 
-**Secret trên VPS** (chỉ trong `/opt/learning-hub/.env`, quyền `600`): `POSTGRES_PASSWORD` / `DATABASE_URL`, `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` (OAuth app production), `BOOTSTRAP_ADMIN_GITHUB_LOGIN`, `WEB_ORIGIN`, `TRUST_PROXY_HOPS`, `DISCORD_WEBHOOK_URL`, `DISCORD_ALERT_WEBHOOK_URL`, `IMAGE_TAG` (workflow tự ghi).
+**Secret trên VPS** (chỉ trong `/opt/learning-hub/.env`, quyền `600`): `POSTGRES_PASSWORD` / `DATABASE_URL`, `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` (OAuth app production), `BOOTSTRAP_ADMIN_GITHUB_LOGIN`, `WEB_ORIGIN`, `TRUST_PROXY_HOPS`, `DISCORD_WEBHOOK_URL`, `DISCORD_ALERT_WEBHOOK_URL`, `SMTP_PASSWORD` (cùng `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_FROM`; tuỳ chọn), `IMAGE_TAG` (workflow tự ghi).
 
 ## 2. Luồng auto deploy
 
@@ -173,6 +174,31 @@ done
 ```
 
 URL webhook lộ ra thì vào lại chỗ tạo, **Delete Webhook** rồi tạo cái mới.
+
+### 3.9. Email tóm tắt qua SMTP (không bắt buộc)
+Chuông thông báo luôn chạy. Email tóm tắt hằng ngày chỉ gửi khi có SMTP **và** thành viên tự bật trong `/settings` (mặc định tắt). Thiếu `SMTP_HOST` hoặc `SMTP_FROM` thì không gửi gì, công tắc bị khoá kèm lời giải thích. Chi tiết đầy đủ: `deploy/README.md` Bước 13.
+
+1. Chọn tài khoản gửi của CLB (không dùng email cá nhân):
+   - Gmail/Google Workspace của CLB: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER` = địa chỉ Gmail, `SMTP_PASSWORD` = **App password** (cần bật xác minh 2 bước), `SMTP_FROM` = `DSC Learning Hub <chính địa chỉ đó>`. Khoảng 500 email/ngày.
+   - Hoặc dịch vụ gửi email (Brevo, Resend, Mailgun, SES…): host/cổng `587`/login/key theo trang SMTP của dịch vụ; xác minh tên miền gửi (SPF/DKIM) theo hướng dẫn của họ.
+2. SSH bằng `learnhub`, `nano /opt/learning-hub/.env`, điền 5 dòng `SMTP_*` (mẫu ở `deploy/.env.example`). Không dán mật khẩu vào chat, issue hay PR.
+3. Chạy lại Deploy để API đọc `.env`.
+4. Kiểm tra (gửi 1 email thử, không in mật khẩu):
+
+```bash
+cd /opt/learning-hub
+docker compose -f docker-compose.prod.yml exec -T api node dist/cli/smtp-check.js email-cua-ban@example.org
+```
+
+`SMTP OK` và email tới hộp thư (xem cả Spam) là xong; `SMTP is off` = thiếu biến hoặc chưa Deploy lại; `SMTP FAILED: …` = đọc câu lỗi (535 sai mật khẩu, timeout cổng bị chặn, 553 sai người gửi). Cổng `25` thường bị VPS chặn, đừng dùng.
+
+Gỡ lỗi: thông báo và email đi qua bảng `outbox_events` (DATABASE §3.16d), thử lại tối đa 8 lần:
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T db psql -U hub -d learning_hub -c \n  "select id, type, status, attempts, last_error, created_at from outbox_events where status <> 'sent' order by id desc limit 20"
+```
+
+Mật khẩu SMTP lộ: thu hồi App password/SMTP key, tạo cái mới, sửa `.env`, Deploy lại.
 
 ## 4. Việc thường ngày
 
@@ -334,7 +360,7 @@ Mỗi lần khôi phục database, quay về bản cũ hay site sập lâu, ghi 
 2. Chuyển quyền admin repo/org GitHub, quyền Cloudflare (DNS) và quyền quản trị VPS.
 3. Chuyển OAuth app sang org hoặc tạo lại, rồi sửa `GITHUB_CLIENT_*` trong `.env` và chạy lại Deploy.
 4. Tạo key deploy mới (mục 3.3, 3.5), xóa khóa cũ khỏi `authorized_keys`, cập nhật `VPS_SSH_KEY`.
-5. Kiểm tra lại webhook Discord (mục 3.8). Người cũ rời server thì tạo webhook mới.
+5. Kiểm tra lại webhook Discord (mục 3.8). Người cũ rời server thì tạo webhook mới. Nếu đã bật email tóm tắt (mục 3.9): đổi App password/SMTP key của tài khoản gửi và sửa `SMTP_PASSWORD`.
 6. Người mới làm phần cài đặt ở mục 5.2 với khóa `age` và SSH key của **họ**, thay dòng `age1…` trong `offsite-recipients.txt`, rồi tự chạy cả hai kiểm tra ở mục 5.3 một lần. Người cũ xóa dòng `learning-hub-backup-pull` của mình trong `authorized_keys`, gỡ task trong Task Scheduler, xóa các bản sao và khóa `age` trên máy mình.
 7. GitHub App `hcmute-dsc-learning-hub` (tự thêm issue/PR vào project) thuộc org, không cần tạo lại. Chỉ cần người mới là owner của org; nghi lộ private key thì đổi key theo [WORKFLOW §4](WORKFLOW.md#4-cài-đặt-làm-bằng-tay-trên-web-api-của-github-chưa-hỗ-trợ).
 8. Cập nhật bảng "Hiện trạng production" ở mục 1 và ngày "Cập nhật lần cuối".

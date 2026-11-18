@@ -25,6 +25,8 @@ Quy tắc bắt buộc:
 - Trả 404 thay vì 403 khi lộ sự tồn tại tài nguyên là nhạy cảm (bài nộp của người khác).
 - Hành động nhạy cảm (gán vai trò, publish content, đổi mentor, duyệt user, xóa/ẩn danh dữ liệu) ghi `audit_logs`; người thực hiện ≠ người bị tác động khi cấp `admin`.
 - Test tự động cho ma trận quyền (mỗi endpoint × vai trò) trong e2e.
+- Thông báo trong app (F13): mọi truy vấn lọc theo `user_id` của session; đánh dấu đã đọc id của người khác trả 404. Nội dung thông báo cho mentor không có tên hay email thành viên; `link` chỉ là đường dẫn trong site.
+- Link "Tắt email tóm tắt" là endpoint `@Public()` dùng `unsubscribe_token` 256 bit ngẫu nhiên làm thông tin xác thực; chỉ tắt được email, trả cùng một kết quả cho token không tồn tại. Trang web bắt bấm nút, vì trình quét mail tự mở link.
 
 ## 3. Validate input
 
@@ -104,7 +106,7 @@ Runner nhiều ngôn ngữ: chỉ Future, chưa xây ở MVP (ADR-07, ADR-08).
 
 - Không commit secret; `.env.example` chỉ có tên biến. `gitleaks` trong CI cả hai repo (code và content).
 - Production: biến môi trường qua trình quản lý chung của CLB (vd GitHub Actions Secrets/Environments cho deploy, file `.env` quyền 600 trên VPS hoặc Docker secrets). Danh sách secret & chủ sở hữu (ghi theo **chức danh**; hiện do Chủ nhiệm CLB giữ, xem ARCHITECTURE §14) nằm trong runbook bàn giao (không chứa giá trị).
-- Secret chính: `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_OAUTH_CLIENT_SECRET`, `SESSION/ENCRYPTION_KEY`, `DATABASE_URL`, `DISCORD_WEBHOOK_URL`; từ MVP-Full: `VAPID_PRIVATE_KEY` (Web Push; `VAPID_PUBLIC_KEY` không bí mật) và mật khẩu DB của `sql-checker`.
+- Secret chính: `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_OAUTH_CLIENT_SECRET`, `SESSION/ENCRYPTION_KEY`, `DATABASE_URL`, `DISCORD_WEBHOOK_URL`; từ MVP-Full: `VAPID_PRIVATE_KEY` (Web Push; `VAPID_PUBLIC_KEY` không bí mật) và mật khẩu DB của `sql-checker`; từ P2: `SMTP_PASSWORD` (email tóm tắt; `SMTP_HOST/PORT/USER/FROM` không bí mật). SMTP phải dùng TLS (cổng 465) hoặc STARTTLS bắt buộc (587).
 - Xoay vòng: khi đổi người giữ/hằng năm/khi nghi ngờ lộ; quy trình thu hồi ghi sẵn trong runbook.
 - Log không chứa secret/token (redaction Pino).
 
