@@ -301,8 +301,9 @@ Agent làm theo đúng quy trình như người. Quy tắc nằm trong repo đ�
 
 | Repo | File quy tắc | Skills (`.claude/skills/`) |
 | --- | --- | --- |
-| `learning-hub` | `AGENTS.md` (`CLAUDE.md` nạp file này) | `start-task` (issue → project → nhánh), `fix-bug` (vòng đời bug), `ship-pr` (commit → PR → CI → review → kiểm tra production), `review-pr` (checklist review) |
-| `learning-hub-content` | `AGENTS.md` | `content-change` (sửa/thêm bài), `publish-content` (đồng bộ và publish lên site) |
+| `learning-hub` | `AGENTS.md` (`CLAUDE.md` nạp file này) | `start-task` (issue → project → nhánh), `fix-bug` (vòng đời bug), `ship-pr` (commit → PR → CI → review → kiểm tra production), `review-pr` (checklist review, review tự động), `new-track` (phía Ban chủ nhiệm: tạo repo track, cấp quyền, đưa vào registry) |
+| `learning-hub-content` (registry) | `AGENTS.md` | `content-change` (sửa/thêm bài trong repo track), `publish-content` (ghim commit, đồng bộ và publish lên site) |
+| `learning-hub-track-<slug>` | `AGENTS.md` (từ template) | `new-track` trong repo template (phía mentor: khởi tạo, viết, PR, publish) |
 | `learning-hub-docs` | `AGENTS.md` | dùng skills của `learning-hub` |
 
 Script `learning-hub/.claude/skills/start-task/project-item.sh` đưa issue/PR vào project và điền đủ thông tin ở §1.1 theo tên. Ví dụ:
@@ -315,3 +316,16 @@ bash .claude/skills/start-task/project-item.sh <link issue> Type=Task "Status=In
 Agent không tự merge PR, không đổi cài đặt repo hay production, và không publish nội dung khi chưa có người đồng ý trong chat.
 
 Khi đổi quy trình ở §7, sửa luôn `AGENTS.md` và skills cho khớp, trong cùng đợt PR.
+
+### 7.7 Nội dung: mỗi track một repo
+
+Từ ADR-10, mỗi track nằm trong repo `hcmute-dsc/learning-hub-track-<slug>`; `learning-hub-content` chỉ còn là registry (`tracks.yaml`). Việc nào mở issue ở đâu, ai review:
+
+| Việc | Issue ở repo | Ai review và merge |
+| --- | --- | --- |
+| Sửa lỗi, thêm bài trong một track | Repo của track đó | Maintainer của track (`CODEOWNERS`, `maintainers` trong `track.yaml`) |
+| Đề xuất track mới | `learning-hub-content` (mẫu "Đề xuất") | Ban chủ nhiệm quyết định, tạo repo, duyệt PR đầu tiên |
+| Publish một track (đổi `commit` trong `tracks.yaml`) | `learning-hub-content` | Ban chủ nhiệm duyệt PR, admin sync và publish |
+| Lỗi của validator hay trang web | `learning-hub` | Tech lead |
+
+Mọi issue ở các repo này đều nằm trên Project #1 và điền đủ thông tin ở §1.1. Hướng dẫn đầy đủ cho mentor: [NEW-TRACK.md](NEW-TRACK.md).
