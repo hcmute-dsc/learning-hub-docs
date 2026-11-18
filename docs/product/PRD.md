@@ -117,7 +117,7 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 - Ngày tính theo giờ Việt Nam (UTC+7); một ngày "có học" khi có ít nhất một bài học hoàn thành hoặc một lần nộp bài.
 - Không phạt nặng: **được nghỉ xen kẽ 1 ngày**. Hai ngày có học cách nhau tối đa 2 ngày vẫn chung một chuỗi; nghỉ **2 ngày liền** thì chuỗi kết thúc.
 - Độ dài chuỗi = số ngày có học trong chuỗi (không tính ngày nghỉ).
-- Chuỗi hiện tại còn sống khi ngày học gần nhất là hôm nay, hôm qua hoặc hôm kia (hôm qua là ngày được nghỉ, học hôm nay là nối tiếp). Lưu cả chuỗi dài nhất.
+- Chuỗi hiện tại còn sống khi ngày học gần nhất là hôm nay, hôm qua hoặc hôm kia (hôm qua là ngày được nghỉ, học hôm nay là nối tiếp). Hồ sơ hiện thêm chuỗi dài nhất từng có.
 - Không lưu streak trong DB: tính lại từ `lesson_progress.completed_at` và `submissions.submitted_at`.
 
 **Tắt được**
