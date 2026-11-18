@@ -9,7 +9,7 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 
 | Bạn là… | Đọc |
 | --- | --- |
-| Ban chủ nhiệm | README này → [CRITIQUE](docs/product/CRITIQUE.md) → [DECISIONS](docs/product/DECISIONS.md) → [PRD](docs/product/PRD.md) |
+| Ban chủ nhiệm | README này → [CRITIQUE](docs/product/CRITIQUE.md) → [DECISIONS](docs/product/DECISIONS.md) → [PRD](docs/product/PRD.md) → [TRIAL-P0](docs/ops/TRIAL-P0.md) |
 | Mentor / người viết nội dung | [NEW-TRACK](docs/ops/NEW-TRACK.md) → [CONTENT-SPECIFICATION](docs/product/CONTENT-SPECIFICATION.md) → [USER-FLOWS](docs/product/USER-FLOWS.md) |
 | Tech lead / người trực web | [GH-CLI](docs/ops/GH-CLI.md) → [DEPLOYMENT](docs/ops/DEPLOYMENT.md) → [WORKFLOW](docs/ops/WORKFLOW.md) |
 | Người muốn đóng góp | [WORKFLOW](docs/ops/WORKFLOW.md) → [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1) |
@@ -40,6 +40,7 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 | [DEPLOYMENT.md](docs/ops/DEPLOYMENT.md) | Hiện trạng production, auto deploy bằng GitHub Actions, cài lại từ đầu (user `learnhub`, SSH key, secret, sao lưu, Discord), lỗi đã gặp, bàn giao |
 | [WORKFLOW.md](docs/ops/WORKFLOW.md) | Quy trình làm việc với [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1): field, vòng đời issue/PR, họp sprint |
 | [NEW-TRACK.md](docs/ops/NEW-TRACK.md) | Tạo track mới: đề xuất, tạo repo từ template, viết bài, review, ghim commit trong `tracks.yaml` và publish; lỗi thường gặp |
+| [TRIAL-P0.md](docs/ops/TRIAL-P0.md) | Đợt dùng thử Phase 0 (P0-3): checklist trước ngày 1, tin Discord soạn sẵn, số liệu mỗi tuần và truy vấn đọc, form phản hồi, mẫu báo cáo cho P0-4 |
 | [GH-CLI.md](docs/ops/GH-CLI.md) | Cài và cấu hình GitHub CLI: quyền (scope) cần cấp, lệnh vận hành hay dùng, lỗi đã gặp, bàn giao |
 
 ## Tóm tắt (11 mục theo yêu cầu)

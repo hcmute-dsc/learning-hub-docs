@@ -13,8 +13,8 @@
 | --- | --- | --- |
 | P0-1 Tạo `learning-hub-content`, schema, CI validate | Repo có CI chạy `hub-content-validate` (package `@hub/content` trong monorepo app) | Validate pass trên bản import mẫu — **Đã xong 16/11/2026**: [hcmute-dsc/learning-hub-content](https://github.com/hcmute-dsc/learning-hub-content), CI xanh |
 | P0-2 Import SQL Challenge (script + rà soát) | Track `sql-30-days` hợp lệ | 33 bài qua validate; maintainer duyệt — **Xong**: import 16/11/2026 (4 chặng, 32 bài học, 31 bài `self_check` + dự án cuối khóa), rà soát xong 18/11/2026 ([learning-hub-content#1](https://github.com/hcmute-dsc/learning-hub-content/issues/1)), thêm quiz tổng kết; từ 18/11/2026 nằm ở repo riêng [learning-hub-track-sql-30-days](https://github.com/hcmute-dsc/learning-hub-track-sql-30-days) |
-| P0-3 Chạy 1 đợt thử (4–6 tuần, ≥ 20 người) bằng site VitePress + PR/Issue + Discord | Số liệu & phản hồi | Báo cáo theo CRITIQUE §6 — [docs#1](https://github.com/hcmute-dsc/learning-hub-docs/issues/1) |
-| P0-4 Quyết định đi/không đi | Biên bản Ban chủ nhiệm | ≥ 3/5 tiêu chí đạt — [docs#2](https://github.com/hcmute-dsc/learning-hub-docs/issues/2) |
+| P0-3 Chạy 1 đợt thử (4–6 tuần, ≥ 20 người) bằng app Learning Hub (track `sql-30-days`) + Discord | Số liệu & phản hồi | Báo cáo theo CRITIQUE §6 — [docs#1](https://github.com/hcmute-dsc/learning-hub-docs/issues/1); bộ công cụ chạy đợt (checklist, tin Discord, số liệu tuần, form, mẫu báo cáo): [TRIAL-P0](../ops/TRIAL-P0.md) |
+| P0-4 Quyết định đi/không đi | Biên bản Ban chủ nhiệm | ≥ 3/5 tiêu chí đạt — [docs#2](https://github.com/hcmute-dsc/learning-hub-docs/issues/2); mẫu báo cáo: [TRIAL-P0 §7](../ops/TRIAL-P0.md#7-mẫu-báo-cáo-cho-p0-4) |
 Nếu không đi: dừng ở content repo + site tĩnh.
 
 ## 1. Epic
