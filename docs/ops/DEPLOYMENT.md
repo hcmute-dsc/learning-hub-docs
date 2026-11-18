@@ -6,7 +6,7 @@ Tài liệu bàn giao cho tech lead hiện tại và các thế hệ sau: hệ t
 >
 > Không bao giờ ghi giá trị secret, mật khẩu, URL webhook hay IP thật của VPS vào repo. Chỉ ghi **tên** secret và **nơi** cất nó.
 
-Cập nhật lần cuối: 17/11/2026.
+Cập nhật lần cuối: 18/11/2026.
 
 ## 1. Hiện trạng production
 
@@ -21,6 +21,7 @@ Cập nhật lần cuối: 17/11/2026.
 | User deploy | `learnhub`: nhóm `docker`, **không** `sudo`, chỉ đăng nhập bằng SSH key |
 | Deploy | tự động mỗi lần CI xanh trên `main` (workflow `Deploy`) |
 | Sao lưu | cron của `learnhub` lúc 19:30 UTC (2:30 sáng giờ VN), giữ 14 ngày; kiểm tra khôi phục mỗi tháng (mục 5) |
+| Bản sao ngoài VPS | chưa bật ([learning-hub#1](https://github.com/hcmute-dsc/learning-hub/issues/1)): mã hóa `age` mỗi tuần, kéo về máy tech lead (mục 5.2) |
 | Giám sát | workflow `Uptime` mỗi 15 phút; cảnh báo lỗi 500 vào kênh Discord vận hành |
 | Discord | bật 17/11/2026: kênh CLB + kênh vận hành riêng tư |
 
@@ -153,7 +154,7 @@ sudo -u learnhub crontab -e
 30 19 * * * /opt/learning-hub/backup.sh >> /opt/learning-hub/backups/backup.log 2>&1
 ```
 
-Chạy thử: `sudo -u learnhub /opt/learning-hub/backup.sh`. Kiểm tra: `sudo -u learnhub crontab -l` phải thấy dòng `backup.sh`. Bản sao lưu chứa email thành viên, nên chỉ `learnhub` đọc được. Xem, chép về máy, kiểm tra và khôi phục: [mục 5](#5-sao-lưu-và-khôi-phục-database).
+Chạy thử: `sudo -u learnhub /opt/learning-hub/backup.sh`. Kiểm tra: `sudo -u learnhub crontab -l` phải thấy dòng `backup.sh`. Bản sao lưu chứa email thành viên, nên chỉ `learnhub` đọc được. Xem, kiểm tra và khôi phục: [mục 5](#5-sao-lưu-và-khôi-phục-database). Bản sao mã hóa ra ngoài VPS mỗi tuần: [mục 5.2](#52-chép-ra-ngoài-vps-mỗi-tuần-tự-động).
 
 ### 3.8. Discord
 1. Trong Discord: chuột phải vào kênh → **Edit Channel → Integrations → Webhooks → New Webhook → Copy Webhook URL**. Làm cho 2 kênh: kênh CLB và kênh vận hành **riêng tư**.
@@ -212,16 +213,29 @@ Mọi lệnh chạy trên VPS bằng `learnhub` (`ssh learnhub`), trong `/opt/le
 | Cron có chạy không | `tail backups/backup.log` (mỗi đêm một dòng `backup ok`) |
 | Sao lưu ngay | `./backup.sh`, chạy trước mọi thao tác nguy hiểm với DB |
 
-### 5.2. Chép về máy khác (mỗi tuần)
+### 5.2. Chép ra ngoài VPS (mỗi tuần, tự động)
 
-Bản sao lưu chỉ nằm trên VPS, nên hỏng VPS là mất cả hai. Trên máy bạn (có `Host learnhub` trong `~/.ssh/config`, mục 3.3):
+Hỏng VPS là mất cả dữ liệu lẫn bản sao lưu trên đó, nên mỗi tuần có một bản **mã hóa** được kéo về máy tech lead. Đã so sánh 3 nơi giữ (máy tech lead, bucket cloud riêng, Google Drive CLB) và chọn máy tech lead: không thêm tài khoản, không thêm secret trên VPS ([learning-hub#1](https://github.com/hcmute-dsc/learning-hub/issues/1)).
 
-```bash
-mkdir -p ~/learning-hub-backups
-scp "learnhub:/opt/learning-hub/backups/learning_hub-*.sql.gz" ~/learning-hub-backups/
-```
+| | |
+| --- | --- |
+| Mã hóa | `offsite-export.sh`, cron `learnhub` Chủ nhật 20:00 UTC (3:00 sáng thứ Hai giờ VN): bản sao lưu mới nhất → `age` với khóa **công khai** trong `/opt/learning-hub/offsite-recipients.txt` → `backups/offsite/learning_hub-….sql.gz.age`, giữ 4 bản. Từ chối nếu bản mới nhất cũ hơn 2 ngày hoặc hỏng gzip |
+| Kéo về | `offsite-pull.ps1` trên máy tech lead (Windows Task Scheduler, thứ Hai 9:00, chạy bù nếu máy tắt): tải bản mới, giữ 12 bản (~3 tháng), ghi `pull.log` |
+| Quyền | SSH key riêng `learning-hub-backup-pull`, bị khóa bằng `restrict,command="/opt/learning-hub/offsite-serve.sh"`: chỉ `list` và `get <file .age>`. Không mở shell, không đọc được `.env` hay bản chưa mã hóa |
+| Giải mã | chỉ khóa bí mật `age` (có passphrase) trên máy tech lead. VPS không có khóa này. Khóa và passphrase cất trong trình quản lý mật khẩu: mất là mọi bản sao ngoài VPS vô dụng |
+| Nơi để | thư mục **ngoài mọi repo git** (vd. `$HOME\learning-hub-backups`, `D:\repos\learning-hub-backups`); script tự từ chối thư mục trong repo |
 
-Để trong thư mục riêng của bạn. Không đưa lên Drive công khai, không gửi qua chat, không commit.
+Cài đặt một lần (lệnh đầy đủ ở [`deploy/README.md`, "Chép bản sao lưu ra ngoài VPS"](https://github.com/hcmute-dsc/learning-hub/blob/main/deploy/README.md#chép-bản-sao-lưu-ra-ngoài-vps-mỗi-tuần-tự-động)):
+
+1. Máy tech lead: `winget install --id FiloSottile.age -e`; tạo khóa `age-keygen`, bọc passphrase bằng `age -p` thành `$HOME\.age\learning-hub-backup.key`; tạo SSH key `learning-hub-backup-pull` (không passphrase); thêm `Host learnhub-backup` vào `~/.ssh/config`.
+2. VPS (sau khi Deploy đã chép script lên): `sudo apt install -y age`; dán dòng `age1…` vào `offsite-recipients.txt`; thêm dòng `restrict,command="/opt/learning-hub/offsite-serve.sh" <khóa .pub>` vào `authorized_keys` của `learnhub`; thêm cron `0 20 * * 0 /opt/learning-hub/offsite-export.sh >> /opt/learning-hub/backups/offsite.log 2>&1`; chạy thử một lần.
+3. Máy tech lead: `ssh learnhub-backup list` (lưu host key), kiểm tra `ssh learnhub-backup "cat /opt/learning-hub/.env"` bị từ chối, chạy `offsite-pull.ps1` một lần, rồi `Register-ScheduledTask` theo README.
+
+| Việc | Cách làm |
+| --- | --- |
+| Xem có chạy không | VPS: `tail backups/offsite.log` (mỗi tuần `offsite ok`). Máy tech lead: `pull.log` (mỗi tuần `pull ok`) |
+| Khôi phục khi mất VPS | `age -d -i $HOME\.age\learning-hub-backup.key -o restore.sql.gz <file .age>` → `scp` lên VPS mới → mục 5.4, 5.5. Xóa file giải mã ngay sau đó |
+| Thêm người giữ bản sao | thêm dòng `age1…` của họ vào `offsite-recipients.txt` |
 
 ### 5.3. Kiểm tra bản sao lưu (mỗi tháng)
 
@@ -242,6 +256,15 @@ docker rm -f lh-restore-test
 ```
 
 Kết quả đúng: thấy `Khôi phục OK`, và 2 dòng số gần bằng nhau (production có thể hơn một chút).
+
+**Bản sao ngoài VPS** (mục 5.2) cũng kiểm tra mỗi tháng, trên máy tech lead (cần `age` và Docker Desktop). Script giải mã bản mới nhất vào thư mục tạm, nạp vào Postgres tạm `--network none`, so số dòng với production (chỉ đọc), rồi xóa container và file giải mã:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File deploy\offsite-restore-check.ps1 `
+  -Dest D:\repos\learning-hub-backups -ProdHost learnhub
+```
+
+Kết quả đúng: `Decrypt OK`, `gzip OK`, `Restore OK`, 2 dòng số gần bằng nhau. Dòng cuối in sẵn một hàng cho bảng dưới.
 
 | Ngày | Kết quả |
 | --- | --- |
@@ -312,6 +335,6 @@ Mỗi lần khôi phục database, quay về bản cũ hay site sập lâu, ghi 
 3. Chuyển OAuth app sang org hoặc tạo lại, rồi sửa `GITHUB_CLIENT_*` trong `.env` và chạy lại Deploy.
 4. Tạo key deploy mới (mục 3.3, 3.5), xóa khóa cũ khỏi `authorized_keys`, cập nhật `VPS_SSH_KEY`.
 5. Kiểm tra lại webhook Discord (mục 3.8). Người cũ rời server thì tạo webhook mới.
-6. Người mới tự chạy kiểm tra bản sao lưu (mục 5.3) một lần, để chắc họ biết cách khôi phục. Người cũ xóa các bản sao lưu đã chép về máy mình (mục 5.2).
+6. Người mới làm phần cài đặt ở mục 5.2 với khóa `age` và SSH key của **họ**, thay dòng `age1…` trong `offsite-recipients.txt`, rồi tự chạy cả hai kiểm tra ở mục 5.3 một lần. Người cũ xóa dòng `learning-hub-backup-pull` của mình trong `authorized_keys`, gỡ task trong Task Scheduler, xóa các bản sao và khóa `age` trên máy mình.
 7. GitHub App `hcmute-dsc-learning-hub` (tự thêm issue/PR vào project) thuộc org, không cần tạo lại. Chỉ cần người mới là owner của org; nghi lộ private key thì đổi key theo [WORKFLOW §4](WORKFLOW.md#4-cài-đặt-làm-bằng-tay-trên-web-api-của-github-chưa-hỗ-trợ).
 8. Cập nhật bảng "Hiện trạng production" ở mục 1 và ngày "Cập nhật lần cuối".
