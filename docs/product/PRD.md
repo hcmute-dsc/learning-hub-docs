@@ -79,7 +79,7 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | F9 | Dashboard thành viên / mentor / admin cơ bản | MVP |
 | F10 | Thông báo Discord (webhook) khi: có review, có bài mới cần review | MVP (một chiều) |
 | F11 | Hint & solution mở khóa sau N lần thử / sau khi nộp | P2 |
-| F12 | Huy hiệu & streak nhẹ, có thể tắt | P2 |
+| F12 | Huy hiệu & streak nhẹ, có thể tắt (quy tắc ở §6.1) | P2 |
 | F13 | Notification trong app, email digest | P2 |
 | F14 | Đóng góp nội dung qua UI "Edit on GitHub" + preview | P2 |
 | F15 | Liên kết Google/email trường | P2 |
@@ -90,6 +90,40 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | F20 | Chấm SQL tự động bằng `sql-checker` trên VPS (PostgreSQL riêng, dataset DSC Shop): nộp câu truy vấn trong app, so với tập kết quả kỳ vọng; chuyển dần 31 bài `self_check` của `sql-30-days` sang chấm tự động (ADR-07) | MVP-Full |
 | F21 | Bảng xếp hạng opt-in theo học kỳ/đợt: reset mỗi kỳ, xếp theo số bài hoàn thành (`self_check` trọng số thấp hơn), không theo tốc độ, top 10 + hạng của mình, không xếp hạng toàn thời gian (ADR-08) | MVP-Full |
 | F22 | Thông báo Web Push trên trình duyệt (bài được review, yêu cầu review mới cho mentor, track mới publish); Discord là kênh thứ hai; iOS cần "Thêm vào Màn hình chính" | MVP-Full |
+
+### 6.1 F12 — Huy hiệu và streak (chốt 18/11/2026, learning-hub#48)
+
+Động lực nhẹ, không điểm, không xếp hạng (§3 "Không gamification nặng").
+
+**Bộ huy hiệu đầu tiên** (định nghĩa trong code: `packages/shared/src/achievements.ts`, quy tắc ở `apps/api/src/modules/learning/badges.ts`):
+
+| Mã | Tên | Điều kiện |
+| --- | --- | --- |
+| `first_lesson` | Bài học đầu tiên | hoàn thành ≥ 1 bài học |
+| `first_exercise` | Bài tập đầu tiên | hoàn thành ≥ 1 bài tập (`completed`: qua chấm tự động hoặc mentor duyệt) |
+| `first_module` | Xong một chặng | mọi bài học và bài tập của một module đều xong |
+| `first_track` | Về đích | hoàn thành trọn một track |
+| `exercises_10` | Mười bài tập | hoàn thành ≥ 10 bài tập |
+| `streak_7` | Bền bỉ 7 ngày | streak dài nhất ≥ 7 |
+
+**Cấp huy hiệu**
+- Cấp sau các sự kiện học tập có sẵn: hoàn thành bài học, bài tập `passed`, project được duyệt. Hoàn thành module/track luôn đi kèm một trong các sự kiện đó.
+- Idempotent: khóa `(user_id, badge)` trong `user_badges`; cấp lại không tạo trùng, sự kiện `learning.badge_awarded` chỉ phát một lần mỗi huy hiệu (để F13 thông báo sau này).
+- Lưới an toàn: khi đọc dashboard/hồ sơ, hệ thống cấp nốt huy hiệu còn thiếu, nên thành viên học trước khi có tính năng vẫn nhận đủ.
+- Đã cấp thì không thu hồi, kể cả khi nội dung thay đổi hoặc mở lại bài học.
+- Thêm huy hiệu: thêm vào hai file trên kèm test; không đổi tên mã đã có (mã được lưu trong DB).
+
+**Streak (chuỗi ngày học)**
+- Ngày tính theo giờ Việt Nam (UTC+7); một ngày "có học" khi có ít nhất một bài học hoàn thành hoặc một lần nộp bài.
+- Không phạt nặng: **được nghỉ xen kẽ 1 ngày**. Hai ngày có học cách nhau tối đa 2 ngày vẫn chung một chuỗi; nghỉ **2 ngày liền** thì chuỗi kết thúc.
+- Độ dài chuỗi = số ngày có học trong chuỗi (không tính ngày nghỉ).
+- Chuỗi hiện tại còn sống khi ngày học gần nhất là hôm nay, hôm qua hoặc hôm kia (hôm qua là ngày được nghỉ, học hôm nay là nối tiếp). Lưu cả chuỗi dài nhất.
+- Không lưu streak trong DB: tính lại từ `lesson_progress.completed_at` và `submissions.submitted_at`.
+
+**Tắt được**
+- `/settings` có công tắc "Hiện huy hiệu và chuỗi ngày học" (`users.show_achievements`, mặc định bật).
+- Tắt thì ẩn ở **mọi nơi**: thẻ "Thành tích" trên dashboard, ô streak và mục huy hiệu trên `/u/[login]`; API trả `achievements: null`, kể cả khi người khác xem hồ sơ.
+- Khi tắt, huy hiệu vẫn được cấp ngầm; bật lại là thấy đủ.
 
 ## 7. Yêu cầu chức năng (rút gọn)
 
