@@ -226,6 +226,13 @@ Cách góp ý:
 
 Repo nội dung còn xem thêm: kiến thức đúng, câu lệnh chạy được, văn phong dễ hiểu, có ghi nguồn.
 
+**Review tự động.** Mọi PR do agent (Claude Code, Codex…) mở đều được agent tự review theo checklist trên **trước khi** giao cho maintainer, theo skill `review-pr` (learning-hub#22):
+- review sau khi CI xanh, đọc cả code xung quanh diff để kiểm tra các giả định;
+- sửa hết `must:` rồi chạy lại CI;
+- đăng kết quả lên PR thành comment "Review tự động" (GitHub không cho tự approve PR của mình), và gửi link review khi giao.
+
+Maintainer đọc review đó trước, rồi quyết định merge. Review tự động không thay thế người duyệt.
+
 Hiện chỉ có 1 maintainer, nên PR do Claude Code soạn sẽ được người giữ repo review rồi merge. Khi có thêm maintainer thì bật "1 approval" (§7.5).
 
 ### 7.3 Vòng đời bug
