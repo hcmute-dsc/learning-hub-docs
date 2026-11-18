@@ -3,7 +3,7 @@
 > Ưu tiên MoSCoW: **M**ust · **S**hould · **C**ould · **W**on't (cho MVP). Mức: Lite = MVP-Lite (≈ 6–8 tuần), Full = MVP-Full. Ước lượng theo "người-tuần" cho sinh viên bán thời gian (~8 giờ/tuần); chỉ mang tính định hướng.
 > Phụ thuộc: `→ E2` nghĩa là cần epic E2 trước.
 
-> **Theo dõi tiến độ:** từ 18/11/2026, việc cần làm và trạng thái nằm trên [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1) (cách dùng: [WORKFLOW](../ops/WORKFLOW.md)). Tài liệu này giữ phần thiết kế: story, task, acceptance.
+> **Theo dõi tiến độ:** từ 18/11/2026, việc cần làm và trạng thái nằm trên [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1) (cách dùng: [WORKFLOW](../ops/WORKFLOW.md)); field **Epic** trên board có đủ E1–E15 (E11 là option "Vận hành"). Tài liệu này giữ phần thiết kế: story, task, acceptance. Cột trạng thái bên dưới chỉ là ảnh chụp ngày 18/11/2026; khi khác nhau, tin board.
 
 ## 0. Phase 0 — xác thực nhu cầu (trước khi viết app) — **Must**
 
@@ -12,30 +12,30 @@
 | Việc | Kết quả | Tiêu chí hoàn thành |
 | --- | --- | --- |
 | P0-1 Tạo `learning-hub-content`, schema, CI validate | Repo có CI chạy `hub-content-validate` (package `@hub/content` trong monorepo app) | Validate pass trên bản import mẫu — **Đã xong 16/11/2026**: [hcmute-dsc/learning-hub-content](https://github.com/hcmute-dsc/learning-hub-content), CI xanh |
-| P0-2 Import SQL Challenge (script + rà soát) | Track `sql-30-days` hợp lệ | 33 bài qua validate; maintainer duyệt — **Đã import 16/11/2026**: 4 chặng, 32 bài học, 31 bài `self_check` + dự án cuối khóa (`project`, rubric 100 điểm), bằng `tools/import-sql-challenge.mjs`; còn chờ maintainer rà soát nội dung |
-| P0-3 Chạy 1 đợt thử (4–6 tuần, ≥ 20 người) bằng site VitePress + PR/Issue + Discord | Số liệu & phản hồi | Báo cáo theo CRITIQUE §6 |
-| P0-4 Quyết định đi/không đi | Biên bản Ban chủ nhiệm | ≥ 3/5 tiêu chí đạt |
+| P0-2 Import SQL Challenge (script + rà soát) | Track `sql-30-days` hợp lệ | 33 bài qua validate; maintainer duyệt — **Xong**: import 16/11/2026 (4 chặng, 32 bài học, 31 bài `self_check` + dự án cuối khóa), rà soát xong 18/11/2026 ([learning-hub-content#1](https://github.com/hcmute-dsc/learning-hub-content/issues/1)), thêm quiz tổng kết; từ 18/11/2026 nằm ở repo riêng [learning-hub-track-sql-30-days](https://github.com/hcmute-dsc/learning-hub-track-sql-30-days) |
+| P0-3 Chạy 1 đợt thử (4–6 tuần, ≥ 20 người) bằng site VitePress + PR/Issue + Discord | Số liệu & phản hồi | Báo cáo theo CRITIQUE §6 — [docs#1](https://github.com/hcmute-dsc/learning-hub-docs/issues/1) |
+| P0-4 Quyết định đi/không đi | Biên bản Ban chủ nhiệm | ≥ 3/5 tiêu chí đạt — [docs#2](https://github.com/hcmute-dsc/learning-hub-docs/issues/2) |
 Nếu không đi: dừng ở content repo + site tĩnh.
 
 ## 1. Epic
 
-| # | Epic | Phase | MoSCoW |
-| --- | --- | --- | --- |
-| E1 | Nền tảng dự án & DevEx | Lite | M |
-| E2 | Danh tính & quyền | Lite | M |
-| E3 | Nội dung từ Git (sync/publish) | Lite | M |
-| E4 | Catalog & học | Lite | M |
-| E5 | Bài tập & nộp bài | Lite | M |
-| E6 | Chấm tự động (checker repo) | Lite (1 loại bài) → Full | M |
-| E7 | Mentor review | Lite | M |
-| E8 | Mentorship (ghép cặp) | Full | S |
-| E9 | Thông báo Discord | Full (webhook đơn giản ở Lite) | S |
-| E10 | Quản trị & audit | Full | S |
-| E11 | Vận hành & bàn giao | Lite → Full | M |
-| E12 | Phase 2 (hint, huy hiệu, notification in-app/email, Google, chứng nhận hoàn thành track, v.v.) | P2 | W (MVP) |
-| E13 | Chấm SQL trên VPS (`sql-checker`, "B-lite" — ADR-07) | Full (ngay sau MVP-Lite) | M |
-| E14 | Bảng xếp hạng opt-in theo học kỳ (ADR-08) | Full | M |
-| E15 | Thông báo Web Push (ADR-08) | Full | M |
+| # | Epic | Phase | MoSCoW | Hiện trạng (18/11/2026) | Issue còn mở |
+| --- | --- | --- | --- | --- | --- |
+| E1 | Nền tảng dự án & DevEx | Lite | M | Xong phần chính: monorepo, CI (test, build, `prisma migrate`) | [#31](https://github.com/hcmute-dsc/learning-hub/issues/31) quét secret, chiều phụ thuộc, commit |
+| E2 | Danh tính & quyền | Lite | M | Xong: đăng nhập GitHub, duyệt bằng danh sách email, phân quyền, khóa/mở tài khoản | — |
+| E3 | Nội dung từ Git (sync/publish) | Lite | M | Xong, chạy production; từ 18/11/2026 đọc qua registry (ADR-10) | — |
+| E4 | Catalog & học | Lite | M | Xong: track, enroll, bài học, tiến độ, dashboard | [#32](https://github.com/hcmute-dsc/learning-hub/issues/32) lọc theo tag |
+| E5 | Bài tập & nộp bài | Lite | M | Xong cho `quiz`, `self_check`, `project` (nộp link, mentor review) | chấm tự động: E6 |
+| E6 | Chấm tự động (checker repo) | Lite (1 loại bài) → Full | M | Chưa làm | [#4](https://github.com/hcmute-dsc/learning-hub/issues/4) |
+| E7 | Mentor review | Lite | M | Xong phần cơ bản: hàng đợi cũ nhất trước, nhận xét, kết quả | [#30](https://github.com/hcmute-dsc/learning-hub/issues/30) lọc và số liệu |
+| E8 | Mentorship (ghép cặp) | Full | S | Chưa làm | [#7](https://github.com/hcmute-dsc/learning-hub/issues/7) |
+| E9 | Thông báo Discord | Full (webhook đơn giản ở Lite) | S | Xong: webhook kênh CLB và kênh vận hành, outbox | — |
+| E10 | Quản trị & audit | Full | S | Một phần: thành viên, email được duyệt, nội dung, nhật ký | [#29](https://github.com/hcmute-dsc/learning-hub/issues/29) tổng quan, [#34](https://github.com/hcmute-dsc/learning-hub/issues/34) báo cáo/CSV |
+| E11 | Vận hành & bàn giao | Lite → Full | M | Đang chạy: deploy tự động, sao lưu hằng ngày, uptime, tài liệu bàn giao | [#1](https://github.com/hcmute-dsc/learning-hub/issues/1) sao lưu ra ngoài, [#28](https://github.com/hcmute-dsc/learning-hub/issues/28) `/contribute` |
+| E12 | Phase 2 (hint, huy hiệu, notification in-app/email, Google, chứng nhận hoàn thành track, v.v.) | P2 | W (MVP) | Chưa làm | [#33](https://github.com/hcmute-dsc/learning-hub/issues/33), [#35](https://github.com/hcmute-dsc/learning-hub/issues/35) |
+| E13 | Chấm SQL trên VPS (`sql-checker`, "B-lite" — ADR-07) | Full (ngay sau MVP-Lite) | M | Chưa làm | [#3](https://github.com/hcmute-dsc/learning-hub/issues/3) |
+| E14 | Bảng xếp hạng opt-in theo học kỳ (ADR-08) | Full | M | Chưa làm | [#5](https://github.com/hcmute-dsc/learning-hub/issues/5) |
+| E15 | Thông báo Web Push (ADR-08) | Full | M | Chưa làm | [#6](https://github.com/hcmute-dsc/learning-hub/issues/6) |
 
 ## 2. Chi tiết
 
@@ -52,14 +52,14 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 | US-01 Đăng nhập GitHub | OAuth + PKCE, tạo user, session DB, cookie | Đăng nhập/đăng xuất; user `pending` thấy `/pending` | Đã có (khung E1–E3) |
 | Phân quyền | Bảng `roles`, `user_roles`, guard + policy, seed admin | Ma trận quyền có test e2e | Đã có (khung E1–E3) |
 | Duyệt thành viên | Admin/mentor duyệt `pending` (UI tối giản hoặc SQL runbook ở Lite) | Chuyển `active` + audit | Đã có (khung E1–E3) |
-| Duyệt bằng danh sách email (quyết định 16/11/2026) | Bảng `approved_emails` + migration; lúc đăng nhập gọi `GET /user/emails` (scope `user:email`), khớp mọi email đã xác minh → `active`, user `pending` khớp ở lần sau cũng `active`; `GET/PUT /admin/approved-emails` (chỉ admin; Lite: form dán danh sách tối giản); bỏ org/allowlist login khỏi quy tắc tự duyệt (org chỉ là tùy chọn); giữ `BOOTSTRAP_ADMIN_GITHUB_LOGIN` | Email phụ đã xác minh khớp → `active`; email chưa xác minh không khớp; thay đổi danh sách ghi audit (không chép danh sách); member/mentor không đọc được danh sách | Chưa làm |
+| Duyệt bằng danh sách email (quyết định 16/11/2026) | Bảng `approved_emails` + migration; lúc đăng nhập gọi `GET /user/emails` (scope `user:email`), khớp mọi email đã xác minh → `active`, user `pending` khớp ở lần sau cũng `active`; `GET/PUT /admin/approved-emails` (chỉ admin; Lite: form dán danh sách tối giản); bỏ org/allowlist login khỏi quy tắc tự duyệt (org chỉ là tùy chọn); giữ `BOOTSTRAP_ADMIN_GITHUB_LOGIN` | Email phụ đã xác minh khớp → `active`; email chưa xác minh không khớp; thay đổi danh sách ghi audit (không chép danh sách); member/mentor không đọc được danh sách | Đã có |
 
-### E3 — Nội dung từ Git (M) → E2 — **đang làm**
+### E3 — Nội dung từ Git (M) → E2
 | Story | Task | Acceptance | Trạng thái |
 | --- | --- | --- | --- |
-| Validator | Package `@hub/content` (Zod schema, parser, CLI `hub-content-validate`); `content-example` cho dev/test | Lỗi nêu file; exit 1 khi có lỗi | Đang làm |
-| US-09/10 Sync & publish | `ContentSource` + `LocalDirContentSource`/`GithubContentSource`; bảng `content_versions`; sync = validate + ghi version `draft`/`rejected` (không ghi catalog); publish = đọc lại tại SHA, validate lại, upsert catalog trong 1 giao dịch; endpoint sync/publish + CLI `pnpm --filter @hub/api content:sync [--sha <sha>] [--publish]` ở Lite, UI admin ở Full | Version `draft` có `commit_sha` + diff; sync lại cùng commit không tạo version mới; publish đúng 1 version; item bị gỡ → `archived`; lỗi validate nêu file (422) | Đang làm |
-| Seed không còn track demo | Nội dung demo local từ sync `content-example` | Seed chỉ tạo roles/admin | Đang làm |
+| Validator | Package `@hub/content` (Zod schema, parser, CLI `hub-content-validate`); `content-example` cho dev/test | Lỗi nêu file; exit 1 khi có lỗi | Đã có |
+| US-09/10 Sync & publish | `ContentSource` + `LocalDirContentSource`/`GithubContentSource`; bảng `content_versions`; sync = validate + ghi version `draft`/`rejected` (không ghi catalog); publish = đọc lại tại SHA, validate lại, upsert catalog trong 1 giao dịch; endpoint sync/publish + CLI `pnpm --filter @hub/api content:sync [--sha <sha>] [--publish]` ở Lite, UI admin ở Full | Version `draft` có `commit_sha` + diff; sync lại cùng commit không tạo version mới; publish đúng 1 version; item bị gỡ → `archived`; lỗi validate nêu file (422) | Đã có; từ 18/11/2026 thêm `RegistryContentSource` (ADR-10) |
+| Seed không còn track demo | Nội dung demo local từ sync `content-example` | Seed chỉ tạo roles/admin | Đã có |
 | Import SQL | Dùng script P0-2 | Track SQL hiển thị trong DB | Đã làm (sync + publish từ GitHub, 16/11/2026) |
 
 ### E4 — Catalog & học (M) → E3
