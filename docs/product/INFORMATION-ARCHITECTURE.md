@@ -118,6 +118,7 @@ Bố cục hai cột (desktop):
 
 | Khu | Trang | Chức năng |
 | --- | --- | --- |
+| Tổng quan | `/admin` | chỉ admin: số thành viên (active/pending/suspended), bản publish và bản nháp chờ, bài chờ review và bài chờ lâu nhất, hoạt động 7 ngày; mỗi ô mở tab chi tiết. Vai trò khác vào thẳng tab đầu tiên được mở |
 | Người dùng | `/admin/users` | duyệt `pending`, gán vai trò, tạm khóa |
 | Email được duyệt | `/admin/approved-emails` | dán/thay danh sách email thành viên (chỉ admin) |
 | Mentoring | `/admin/mentorship` | gán/đổi mentor, xem giới hạn mentee |

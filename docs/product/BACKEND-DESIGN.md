@@ -220,6 +220,7 @@ Theo tinh thần RFC 9457 (problem+json):
 | `POST /admin/mentorship/{id}/assign` | admin | MVP | |
 | `POST /admin/content/sync` | content_maintainer, admin | MVP | `{commitSha?}` → version `draft` + diff; 422 + danh sách lỗi (version `rejected`); không ghi catalog |
 | `POST /admin/content/versions/{id}/publish` | admin | MVP | đọc lại tại commit SHA đã ghim, validate lại, ghi catalog trong 1 giao dịch; 422 nếu không còn hợp lệ |
+| `GET /admin/overview` | admin | MVP-Full | chỉ số đếm: thành viên theo trạng thái, bản publish + số bản nháp, số bài chờ review + bài chờ lâu nhất, hoạt động 7 ngày (đăng nhập, bài nộp, dòng audit); không có tên hay email |
 | `PUT /admin/users/{id}/roles` | admin | MVP | ghi audit |
 | `POST /admin/users/{id}/approve` | admin, mentor | MVP | `pending` → `active`, ghi audit |
 | `GET /admin/approved-emails` | admin | MVP | danh sách email được duyệt; không mở cho vai trò khác |
