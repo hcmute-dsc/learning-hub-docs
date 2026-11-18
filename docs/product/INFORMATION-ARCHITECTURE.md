@@ -68,6 +68,7 @@ Khối theo thứ tự ưu tiên:
 6. **Huy hiệu & streak** (tuỳ chọn, tắt được). [P2]
 
 Dashboard mentor (trong `/review` + `/mentor/mentees`): số bài chờ, bài chờ lâu nhất, mentee có hoạt động gần đây/không hoạt động ≥ 14 ngày. [MVP]
+`/review` lọc theo track và mentee qua URL (`?track=&mentee=`, giữ khi tải lại); ô lọc mentee và số "mentee không hoạt động" chỉ hiện khi mentor có mentee `active` trong `mentor_assignments` (E8). "Không hoạt động" = không nộp bài, không có tiến độ bài học trong 14 ngày, tính từ ngày bắt đầu kèm cặp.
 Dashboard admin (`/admin`): số thành viên `pending`, số track published, version draft chờ publish, hàng đợi review quá hạn, số test_run lỗi 7 ngày. [MVP-Full]
 
 ## 4. Cấu trúc Learning Path (Track)
