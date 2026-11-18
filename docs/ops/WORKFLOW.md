@@ -230,3 +230,23 @@ protect learning-hub-docs
 - `enforce_admins: false` để admin còn xử lý được sự cố. Dùng quyền này chỉ khi khẩn cấp và ghi vào nhật ký sự cố.
 
 Kiểm tra: `gh api repos/hcmute-dsc/learning-hub/branches/main/protection -q '.required_status_checks.contexts'`.
+
+### 7.6 Quy tắc cho AI agent (Claude Code, Codex, Cursor…)
+
+Agent làm theo đúng quy trình như người. Quy tắc nằm trong repo để ai mở repo bằng agent cũng nhận được:
+
+| Repo | File quy tắc | Skills (`.claude/skills/`) |
+| --- | --- | --- |
+| `learning-hub` | `AGENTS.md` (`CLAUDE.md` nạp file này) | `start-task` (issue → project → nhánh), `fix-bug` (vòng đời bug), `ship-pr` (commit → PR → CI → review → kiểm tra production), `review-pr` (checklist review) |
+| `learning-hub-content` | `AGENTS.md` | `content-change` (sửa/thêm bài), `publish-content` (đồng bộ và publish lên site) |
+| `learning-hub-docs` | `AGENTS.md` | dùng skills của `learning-hub` |
+
+Script `learning-hub/.claude/skills/start-task/project-item.sh` đưa issue/PR vào project và điền field theo tên. Ví dụ:
+
+```bash
+bash .claude/skills/start-task/project-item.sh <link issue> "Status=In progress" "Priority=P1 - Cao" Area=Backend Size=S
+```
+
+Agent không tự merge PR, không đổi cài đặt repo hay production, và không publish nội dung khi chưa có người đồng ý trong chat.
+
+Khi đổi quy trình ở §7, sửa luôn `AGENTS.md` và skills cho khớp, trong cùng đợt PR.
