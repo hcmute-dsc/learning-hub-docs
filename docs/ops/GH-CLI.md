@@ -91,4 +91,4 @@ Danh sách đầy đủ secret và biến của production: [DEPLOYMENT §1](DEP
 1. Người mới tự cài và đăng nhập `gh` bằng **tài khoản của họ** (mục 1–2). Không chia sẻ token.
 2. Admin org thêm họ vào org với quyền phù hợp (owner nếu là tech lead).
 3. Người cũ: `gh auth logout -h github.com` trên máy không còn dùng cho CLB.
-4. Các token **riêng** gắn với tài khoản người cũ phải tạo lại bằng tài khoản người mới, ví dụ `ADD_TO_PROJECT_PAT` ([WORKFLOW §4](WORKFLOW.md)). Secret của deploy (`VPS_*`) không gắn với tài khoản: chỉ cần đổi khóa SSH theo [DEPLOYMENT §8](DEPLOYMENT.md#8-bàn-giao-cho-tech-lead-mới).
+4. Token **riêng** gắn với tài khoản người cũ (nếu có) phải tạo lại bằng tài khoản người mới. Việc tự thêm issue vào project dùng GitHub App của org nên không cần làm lại ([WORKFLOW §4](WORKFLOW.md)). Secret của deploy (`VPS_*`) không gắn với tài khoản: chỉ cần đổi khóa SSH theo [DEPLOYMENT §8](DEPLOYMENT.md#8-bàn-giao-cho-tech-lead-mới).

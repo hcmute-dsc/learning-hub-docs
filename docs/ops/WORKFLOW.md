@@ -113,22 +113,50 @@ Chỉ làm một lần, hoặc khi tạo lại project. Ai có quyền admin pro
 
 Đã cấu hình và kiểm tra trên web ngày 18/11/2026: cả 11 workflow bật, giá trị như bảng trên.
 
-**Giới hạn của gói Free:** mỗi workflow auto-add chỉ chọn được **1 repo**, và org gói Free chỉ có **1** workflow auto-add (nút *Duplicate workflow* báo "Maximum number of auto add workflows reached"). Vì vậy `learning-hub-content` và `learning-hub-docs` dùng GitHub Action riêng: `.github/workflows/add-to-project.yml` (dùng `actions/add-to-project`, đã ghim theo commit). Nó thêm mọi issue/PR mới vào project. Khi chưa có token, job chỉ ghi chú và bỏ qua, không báo đỏ.
+**Giới hạn của gói Free:** mỗi workflow auto-add chỉ chọn được **1 repo**, và org gói Free chỉ có **1** workflow auto-add (nút *Duplicate workflow* báo "Maximum number of auto add workflows reached"). Vì vậy `learning-hub-content` và `learning-hub-docs` dùng GitHub Action riêng: `.github/workflows/add-to-project.yml` (dùng `actions/add-to-project`, đã ghim theo commit). Nó thêm mọi issue/PR mới vào project. Khi chưa cài GitHub App, job chỉ ghi chú và bỏ qua, không báo đỏ.
 
-**Cài token (một lần, người giữ quyền admin org làm):**
-1. Tạo **token (classic)** tại https://github.com/settings/tokens/new: Note `learning-hub add-to-project`, Expiration 1 năm, chỉ tick scope **`project`** (2 repo đều public nên không cần `repo`).
-2. Lưu thành **secret của từng repo**. Chạy trên máy mình, mỗi lệnh dán token một lần khi được hỏi (không dán vào chat hay issue):
+Action lấy token từ một **GitHub App của org**, không dùng token cá nhân. Trước đây job dùng token classic của một thành viên (`ADD_TO_PROJECT_PAT`), nên dùng chung giới hạn API với tài khoản đó: tài khoản gọi API nhiều thì job đỏ với lỗi `API rate limit already exceeded for user ID …` ([learning-hub-docs#8](https://github.com/hcmute-dsc/learning-hub-docs/issues/8)). GitHub App có giới hạn riêng, thuộc về org, không hết hạn và không phải tạo lại khi đổi người.
+
+**Cài GitHub App (một lần, owner của org làm):**
+
+1. Tạo App tại https://github.com/organizations/hcmute-dsc/settings/apps/new:
+   - **GitHub App name:** `hcmute-dsc-learning-hub` (tên phải chưa ai dùng trên GitHub; trùng thì thêm hậu tố).
+   - **Homepage URL:** `https://github.com/hcmute-dsc/learning-hub`.
+   - **Webhook:** bỏ tick **Active**.
+   - **Permissions:**
+     - Repository → **Issues**: Read-only, **Pull requests**: Read-only (Metadata: Read-only tự có).
+     - Organization → **Projects**: Read and write.
+     - Các quyền khác để No access.
+   - **Where can this GitHub App be installed?** Only on this account.
+   - Bấm **Create GitHub App**.
+2. Trên trang App vừa tạo:
+   - Ghi lại **Client ID** (dạng `Iv23…`; không phải bí mật).
+   - Kéo xuống **Private keys** → **Generate a private key**. Trình duyệt tải về file `.pem`. File này là bí mật: không gửi qua chat, issue hay commit.
+3. Menu trái **Install App** → **Install** cạnh `hcmute-dsc` → **Only select repositories**: `learning-hub-content`, `learning-hub-docs` → **Install**.
+4. Lưu vào **từng repo** (chạy trên máy mình; thay `<client-id>` và đường dẫn file `.pem`):
 
    ```bash
-   gh secret set ADD_TO_PROJECT_PAT --repo hcmute-dsc/learning-hub-content
-   gh secret set ADD_TO_PROJECT_PAT --repo hcmute-dsc/learning-hub-docs
+   gh variable set PROJECT_APP_CLIENT_ID --repo hcmute-dsc/learning-hub-content --body "<client-id>"
+   gh variable set PROJECT_APP_CLIENT_ID --repo hcmute-dsc/learning-hub-docs --body "<client-id>"
+   gh secret set PROJECT_APP_PRIVATE_KEY --repo hcmute-dsc/learning-hub-content < ~/Downloads/<file>.pem
+   gh secret set PROJECT_APP_PRIVATE_KEY --repo hcmute-dsc/learning-hub-docs < ~/Downloads/<file>.pem
    ```
 
-   (Cũng có thể lưu thành secret của org bằng `--org hcmute-dsc --repos learning-hub-content,learning-hub-docs`. Cách này cần `gh` có quyền `admin:org`, nếu thiếu sẽ báo lỗi `HTTP 403 … needs the "admin:org" scope`. Secret theo repo chỉ cần quyền `repo` sẵn có, nên dùng cách trên.)
+   Xong thì xóa file `.pem` khỏi máy (hoặc cất vào trình quản lý mật khẩu của CLB). Mất file thì chỉ cần tạo key mới ở bước 2 rồi chạy lại 2 lệnh `gh secret set`.
 
-3. Kiểm tra: tạo thử 1 issue trong `learning-hub-docs`. Tab Actions → *Add to project* phải xanh, và issue xuất hiện trong project với Status = Backlog. Xong thì đóng issue thử.
+   (Cũng có thể lưu thành variable/secret của org bằng `--org hcmute-dsc --repos learning-hub-content,learning-hub-docs`. Cách này cần `gh` có quyền `admin:org`, nếu thiếu sẽ báo lỗi `HTTP 403 … needs the "admin:org" scope`. Lưu theo repo chỉ cần quyền `repo` sẵn có, nên dùng cách trên.)
 
-Token gắn với tài khoản người tạo. Khi bàn giao, người mới tạo token của họ rồi chạy lại bước 2. Token hết hạn thì workflow đỏ: tạo token mới, chạy lại bước 2. Nếu cần thêm việc thủ công: khung **Projects** bên phải issue → DSC Learning Hub.
+5. Kiểm tra: tạo thử 1 issue trong `learning-hub-docs`. Tab Actions → *Add to project* phải xanh (bước *Get a short-lived token from the GitHub App* chạy, không bị bỏ qua), và issue xuất hiện trong project với Status = Backlog. Xong thì đóng issue thử.
+6. Gỡ token cũ, nếu còn:
+
+   ```bash
+   gh secret delete ADD_TO_PROJECT_PAT --repo hcmute-dsc/learning-hub-content
+   gh secret delete ADD_TO_PROJECT_PAT --repo hcmute-dsc/learning-hub-docs
+   ```
+
+   Rồi xóa token classic `learning-hub add-to-project` tại https://github.com/settings/tokens.
+
+**Bàn giao:** App thuộc org nên không phải làm gì khi đổi tech lead; người mới chỉ cần là owner của org để sửa App. Nghi lộ private key: trang App → **Private keys** → tạo key mới, chạy lại 2 lệnh `gh secret set` ở bước 4, rồi xóa key cũ. Nếu cần thêm việc thủ công: khung **Projects** bên phải issue → DSC Learning Hub.
 
 **Quyền** (⋯ → Settings → Manage access): thêm team `mentors` / Ban chủ nhiệm với quyền *Write*. Thành viên chỉ cần *Read*.
 

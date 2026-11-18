@@ -313,4 +313,5 @@ Mỗi lần khôi phục database, quay về bản cũ hay site sập lâu, ghi 
 4. Tạo key deploy mới (mục 3.3, 3.5), xóa khóa cũ khỏi `authorized_keys`, cập nhật `VPS_SSH_KEY`.
 5. Kiểm tra lại webhook Discord (mục 3.8). Người cũ rời server thì tạo webhook mới.
 6. Người mới tự chạy kiểm tra bản sao lưu (mục 5.3) một lần, để chắc họ biết cách khôi phục. Người cũ xóa các bản sao lưu đã chép về máy mình (mục 5.2).
-7. Cập nhật bảng "Hiện trạng production" ở mục 1 và ngày "Cập nhật lần cuối".
+7. GitHub App `hcmute-dsc-learning-hub` (tự thêm issue/PR vào project) thuộc org, không cần tạo lại. Chỉ cần người mới là owner của org; nghi lộ private key thì đổi key theo [WORKFLOW §4](WORKFLOW.md#4-cài-đặt-làm-bằng-tay-trên-web-api-của-github-chưa-hỗ-trợ).
+8. Cập nhật bảng "Hiện trạng production" ở mục 1 và ngày "Cập nhật lần cuối".
