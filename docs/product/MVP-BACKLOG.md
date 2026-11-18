@@ -24,18 +24,26 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 | E1 | Nền tảng dự án & DevEx | Lite | M | Xong phần chính: monorepo, CI (test, build, `prisma migrate`) | [#31](https://github.com/hcmute-dsc/learning-hub/issues/31) quét secret, chiều phụ thuộc, commit |
 | E2 | Danh tính & quyền | Lite | M | Xong: đăng nhập GitHub, duyệt bằng danh sách email, phân quyền, khóa/mở tài khoản | — |
 | E3 | Nội dung từ Git (sync/publish) | Lite | M | Xong, chạy production; từ 18/11/2026 đọc qua registry (ADR-10) | — |
-| E4 | Catalog & học | Lite | M | Xong: track, enroll, bài học, tiến độ, dashboard | [#32](https://github.com/hcmute-dsc/learning-hub/issues/32) lọc theo tag |
+| E4 | Catalog & học | Lite | M | Xong: track, enroll, bài học, tiến độ, dashboard | [#32](https://github.com/hcmute-dsc/learning-hub/issues/32) lọc theo tag, [#44](https://github.com/hcmute-dsc/learning-hub/issues/44) trang cài đặt cho từng track |
 | E5 | Bài tập & nộp bài | Lite | M | Xong cho `quiz`, `self_check`, `project` (nộp link, mentor review) | chấm tự động: E6 |
 | E6 | Chấm tự động (checker repo) | Lite (1 loại bài) → Full | M | Chưa làm | [#4](https://github.com/hcmute-dsc/learning-hub/issues/4) |
-| E7 | Mentor review | Lite | M | Xong phần cơ bản: hàng đợi cũ nhất trước, nhận xét, kết quả | [#30](https://github.com/hcmute-dsc/learning-hub/issues/30) lọc và số liệu |
+| E7 | Mentor review | Lite | M | Xong phần cơ bản: hàng đợi cũ nhất trước, nhận xét, kết quả | [#30](https://github.com/hcmute-dsc/learning-hub/issues/30) lọc và số liệu, [#41](https://github.com/hcmute-dsc/learning-hub/issues/41) trao đổi mentor–mentee, [#43](https://github.com/hcmute-dsc/learning-hub/issues/43) ghi chú cho mentor |
 | E8 | Mentorship (ghép cặp) | Full | S | Chưa làm | [#7](https://github.com/hcmute-dsc/learning-hub/issues/7) |
 | E9 | Thông báo Discord | Full (webhook đơn giản ở Lite) | S | Xong: webhook kênh CLB và kênh vận hành, outbox | — |
 | E10 | Quản trị & audit | Full | S | Một phần: thành viên, email được duyệt, nội dung, nhật ký | [#29](https://github.com/hcmute-dsc/learning-hub/issues/29) tổng quan, [#34](https://github.com/hcmute-dsc/learning-hub/issues/34) báo cáo/CSV |
 | E11 | Vận hành & bàn giao | Lite → Full | M | Đang chạy: deploy tự động, sao lưu hằng ngày, uptime, tài liệu bàn giao | [#1](https://github.com/hcmute-dsc/learning-hub/issues/1) sao lưu ra ngoài, [#28](https://github.com/hcmute-dsc/learning-hub/issues/28) `/contribute` |
-| E12 | Phase 2 (hint, huy hiệu, notification in-app/email, Google, chứng nhận hoàn thành track, v.v.) | P2 | W (MVP) | Chưa làm | [#33](https://github.com/hcmute-dsc/learning-hub/issues/33), [#35](https://github.com/hcmute-dsc/learning-hub/issues/35) |
+| E12 | Phase 2 (hint, huy hiệu, notification in-app/email, Google, chứng nhận hoàn thành track, v.v.) | P2 | W (MVP) | Chưa làm | [#33](https://github.com/hcmute-dsc/learning-hub/issues/33), [#35](https://github.com/hcmute-dsc/learning-hub/issues/35), [#40](https://github.com/hcmute-dsc/learning-hub/issues/40) lời giải cộng đồng |
 | E13 | Chấm SQL trên VPS (`sql-checker`, "B-lite" — ADR-07) | Full (ngay sau MVP-Lite) | M | Chưa làm | [#3](https://github.com/hcmute-dsc/learning-hub/issues/3) |
 | E14 | Bảng xếp hạng opt-in theo học kỳ (ADR-08) | Full | M | Chưa làm | [#5](https://github.com/hcmute-dsc/learning-hub/issues/5) |
 | E15 | Thông báo Web Push (ADR-08) | Full | M | Chưa làm | [#6](https://github.com/hcmute-dsc/learning-hub/issues/6) |
+
+### So với Exercism (18/11/2026)
+
+Đã có hoặc đã có issue: track, bài học, bài tập, tiến độ, mở khóa (E4, E5); chấm tự động (E6, E13); mentor review và ghép cặp (E7, E8); hint, lời giải, huy hiệu, thông báo (E12, E15); bảng xếp hạng (E14); tìm kiếm; trang hồ sơ `/u/[login]`; trang `/contribute`.
+
+Thêm sau khi so sánh: lời giải cộng đồng ([#40](https://github.com/hcmute-dsc/learning-hub/issues/40)), trao đổi nhiều lượt giữa mentor và mentee ([#41](https://github.com/hcmute-dsc/learning-hub/issues/41)), ghi chú cho mentor theo từng bài ([#43](https://github.com/hcmute-dsc/learning-hub/issues/43)), trang cài đặt và tài liệu thêm cho từng track ([#44](https://github.com/hcmute-dsc/learning-hub/issues/44)).
+
+Cố ý không làm ở MVP: editor chạy code trên trình duyệt và runner nhiều ngôn ngữ (F17, cần VPS riêng); CLI tải/nộp bài (nộp qua GitHub là đủ). Bản đồ khái niệm của track và nhận xét tự động ngoài đạt/không đạt chưa có issue riêng; nhận xét tự động đi cùng [#4](https://github.com/hcmute-dsc/learning-hub/issues/4) (E6).
 
 ## 2. Chi tiết
 
