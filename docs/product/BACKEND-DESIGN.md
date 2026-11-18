@@ -229,6 +229,12 @@ Theo tinh thần RFC 9457 (problem+json):
 | `POST /exercises/{id}/self-check` | member | MVP | `{completed:true}` cho bài `self_check` |
 | `GET /admin/audit-logs` | admin | MVP | cursor |
 | `POST /integrations/github/webhook` | chữ ký HMAC | MVP | không dùng session |
+| `GET /certificates/{code}` | public | P2 | trang xác minh F19: tên lúc cấp, track, ngày, repo + commit, `status: valid\|revoked`; không email/id; 404 nếu mã sai định dạng hoặc không có |
+| `GET /me/certificates` | member | P2 | mọi chứng nhận của mình (kể cả ẩn/thu hồi); cấp bù cho track đã hoàn thành trước đó |
+| `PATCH /me/certificates/{code}` | member | P2 | `{hidden}`; mã của người khác → 404 |
+| `GET /members/{login}/certificates` | đã đăng nhập | P2 | chứng nhận hiện trên hồ sơ (không ẩn, không thu hồi) |
+| `GET /admin/certificates` | admin | P2 | 200 chứng nhận mới nhất, kèm login và lý do thu hồi |
+| `POST /admin/certificates/{code}/revoke` | admin | P2 | `{reason}` 3–280 ký tự; 409 nếu đã thu hồi; ghi audit `certificate.revoke` |
 | `GET /me/achievements` | member | P2 | |
 | `GET /me/notifications` | member | P2 | |
 | `POST /me/push-subscriptions` | member | MVP-Full | `{endpoint, keys:{p256dh, auth}}`; upsert theo `endpoint`; 422 nếu host không thuộc danh sách push service |

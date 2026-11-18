@@ -1,7 +1,7 @@
 # DATABASE — Thiết kế PostgreSQL
 
 > PostgreSQL 16 + Prisma. Quy ước: bảng `snake_case` số nhiều, cột `snake_case` (Prisma map bằng `@map`). Khóa chính `uuid` (v7 sinh ở ứng dụng, để sắp xếp theo thời gian). Thời gian `timestamptz` (UTC). Nhãn: **[MVP]**, **[MVP-Full]** (thuộc MVP, làm sau MVP-Lite) hoặc **[P2]**.
-> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng view, không lưu điểm. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration, trừ `user_badges` (§3.16d, đã làm).
+> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng view, không lưu điểm. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration, trừ `user_badges` (§3.16d) và `certificates` (§3.16e), đã làm.
 
 ## 1. Phân loại dữ liệu
 
@@ -13,7 +13,7 @@
 | Mentoring | `mentor_assignments`, `reviews`, `review_comments` | DB |
 | Vận hành | `audit_logs` | DB |
 | Thông báo (MVP-Full) | `push_subscriptions` | DB |
-| Phase 2 | `achievements`, `user_achievements`, `notifications` | DB |
+| Phase 2 | `certificates`, `achievements`, `user_achievements`, `notifications` | DB |
 
 ## 2. ERD
 
@@ -45,6 +45,8 @@ erDiagram
   users ||--o{ mentor_assignments : "mentor"
   tracks |o--o{ mentor_assignments : "scoped to"
   users ||--o{ audit_logs : acts
+  users ||--o{ certificates : "earns (P2)"
+  tracks ||--o{ certificates : "certified in (P2)"
   users ||--o{ push_subscriptions : "subscribes (MVP-Full)"
   users ||--o{ user_badges : "earns (P2)"
 ```
@@ -354,6 +356,30 @@ Quy tắc: đăng ký lại cùng `endpoint` → upsert; push service trả 404/
 
 PK `(user_id, badge)` → cấp huy hiệu idempotent (`insert … on conflict do nothing`). Danh sách huy hiệu và điều kiện nằm trong code (`packages/shared` `achievements.ts`), không có bảng `achievements`: thêm huy hiệu không cần migration, CHECK chỉ kiểm định dạng mã. Mã không còn trong code thì bị bỏ qua khi đọc. Streak không lưu, tính từ `lesson_progress` và `submissions`.
 
+### 3.16e `certificates` [P2]
+**Mục đích:** chứng nhận hoàn thành track có link xác minh công khai (PRD F19, quy tắc PRD §6.2; learning-hub#47, migration `20261119000200_certificates`). Tên, track và commit được **chép vào** lúc cấp, để chứng nhận luôn nói đúng điều đã đúng vào ngày cấp.
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| id | uuid | PK |
+| code | text | not null, UQ; CHECK `^[a-z2-7]{24}$` — 120 bit ngẫu nhiên, phần không đoán được của `/certificates/:code` |
+| user_id | uuid | FK → users (restrict) |
+| track_id | uuid | FK → tracks (restrict) |
+| recipient_name | text | not null — `users.display_name` lúc cấp |
+| track_slug, track_title | text | not null — lúc cấp |
+| content_repo | text | not null — repo của track (registry: repo riêng của track, ADR-10) |
+| commit_sha | char(40) | not null; CHECK hex chữ thường — commit nội dung đang publish lúc cấp |
+| completed_at | timestamptz | not null — `enrollments.completed_at` |
+| issued_at | timestamptz | default now() |
+| hidden | boolean | default false — ẩn khỏi hồ sơ; link công khai vẫn mở |
+| revoked_at | timestamptz | null |
+| revoked_by | uuid | null, FK → users (set null) |
+| revoke_reason | text | null; ≤ 280 ký tự; CHECK `(revoked_at is null) = (revoke_reason is null)`; chỉ admin thấy |
+| UQ | (user_id, track_id) | cấp một lần; race giữa hai request do khóa này quyết định |
+| IX | (issued_at desc) | danh sách admin |
+
+Ghi: chỉ `CertificatesRepository` (module `certificates`) đọc/ghi bảng này. Thu hồi dùng `update … where revoked_at is null` nên hai admin bấm cùng lúc chỉ một người thành công (người kia nhận 409).
+
 ### 3.17 Phase 2 (chưa migrate)
 - Huy hiệu: đã làm bằng `user_badges` (§3.16d) thay cho thiết kế cũ `achievements` + `user_achievements`.
 - `notifications(id, user_id, type, payload jsonb, read_at, created_at)`; IX `(user_id, read_at, created_at desc)` — hộp thông báo trong app (P2). Web Push không cần bảng này (§3.16c, MVP-Full).
@@ -361,7 +387,7 @@ PK `(user_id, badge)` → cấp huy hiệu idempotent (`insert … on conflict d
 ## 4. Ràng buộc quan trọng (tóm tắt)
 
 1. Một commit nội dung = một `content_version`; chỉ một version `published`.
-2. `enrollments (user, track)` duy nhất → enroll idempotent.
+2. `enrollments (user, track)` duy nhất → enroll idempotent. `certificates (user, track)` duy nhất → cấp chứng nhận một lần.
 3. `submissions (user, exercise, attempt)` duy nhất; `idempotency_key` chống nộp trùng do bấm hai lần.
 4. `test_runs (provider, external_run_id)` duy nhất → webhook gửi lại không tạo bản ghi trùng.
 5. Tối đa 1 `review` đang mở / submission; mentor không tự review bài của chính mình (check ở tầng service + kiểm tra `reviewer_id <> submissions.user_id`).
