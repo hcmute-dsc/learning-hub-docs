@@ -13,7 +13,7 @@ flowchart LR
   end
   Hub[[Learning Hub<br/>web + api]]
   GH[(GitHub<br/>OAuth, API, Webhooks, Actions)]
-  CR[(learning-hub-content<br/>Git repo)]
+  CR[(learning-hub-content registry<br/>+ learning-hub-track-* repos)]
   DC[Discord<br/>kênh thông báo]
   Site[hcmute-dsc.io.vn<br/>site CLB]
   MP[mentoring-program<br/>bản đồ]

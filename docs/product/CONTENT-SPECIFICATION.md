@@ -1,11 +1,44 @@
 # CONTENT-SPECIFICATION — Quản lý nội dung bằng Git
 
-> Nội dung học nằm trong repo riêng `learning-hub-content`, **tách khỏi mã nguồn ứng dụng**. Git là nguồn sự thật; PostgreSQL giữ bản sao có chỉ mục (DECISIONS ADR-05). Mọi bản publish truy vết được tới **commit SHA**.
+> Nội dung học nằm trong **mỗi track một repo** `learning-hub-track-<slug>`, **tách khỏi mã nguồn ứng dụng**; repo `learning-hub-content` là **registry** ghi commit được publish của từng track (DECISIONS ADR-10). Git là nguồn sự thật; PostgreSQL giữ bản sao có chỉ mục (DECISIONS ADR-05). Mọi bản publish truy vết được tới **commit SHA**.
 
 ## 1. Cấu trúc repo
 
+Có hai loại repo:
+
+**Repo track** `learning-hub-track-<slug>` (tạo từ template `learning-hub-track-template`). Chứa **đúng một** thư mục `tracks/<slug>/`, với `<slug>` trùng `slug` trong `track.yaml` và trong registry:
+
+```
+learning-hub-track-sql-30-days/
+  README.md  CONTRIBUTING.md  AGENTS.md  CODEOWNERS  LICENSE
+  .github/workflows/validate.yml      # gọi workflow dùng chung trong learning-hub
+  tracks/
+    sql-30-days/
+      track.yaml
+      modules/…                       # như cây bên dưới
+```
+
+**Registry** `learning-hub-content`:
+
 ```
 learning-hub-content/
+  README.md  CONTRIBUTING.md  CODEOWNERS
+  tracks.yaml                         # danh sách track: slug, repo, commit
+  .github/workflows/validate.yml      # tải mọi track ở commit đã ghim, validate cùng nhau
+```
+
+```yaml
+# tracks.yaml
+tracks:
+  - slug: sql-30-days
+    repo: hcmute-dsc/learning-hub-track-sql-30-days
+    commit: 0123456789abcdef0123456789abcdef01234567   # 40 ký tự hex, không dùng tên nhánh
+```
+
+Cây thư mục của một track (giống nhau ở mọi repo track; trước ADR-10 cả cây này nằm trong `learning-hub-content`):
+
+```
+learning-hub-track-<slug>/
   README.md  CONTRIBUTING.md  CODEOWNERS  LICENSE
   schema/                       # (tuỳ chọn, tương lai) JSON Schema sinh từ Zod để editor gợi ý; nguồn chuẩn là Zod trong @hub/content (§4)
     track.schema.json  module.schema.json  lesson.schema.json  exercise.schema.json
@@ -206,6 +239,7 @@ Kết quả lưu trong `content_versions.summary`: diff khi `draft`, danh sách 
 
 ## 5. Phiên bản & truy vết
 
+- Với registry, `C` là commit của `learning-hub-content`; mỗi track còn lưu **repo và commit nguồn** của nó (từ `tracks.yaml`) để footer, link "Sửa trên GitHub" và ảnh trỏ đúng repo track.
 - Mỗi sync tại commit `C` tạo `content_versions(commit_sha = C)`: `draft` (kèm diff thêm/sửa/xóa/không đổi theo loại) nếu hợp lệ, `rejected` (kèm danh sách lỗi) nếu không. Sync idempotent theo `(source_repo, commit_sha)` và **không ghi** bảng catalog.
 - `published` chỉ do admin bấm publish (MVP-Lite: maintainer chạy CLI `content:sync --publish`): đọc lại nguồn **tại đúng commit SHA đã ghim**, validate lại, rồi ghi catalog trong một giao dịch (USER-FLOWS §10).
 - Đối tượng nội dung lưu `content_version_id` (version **published** gần nhất thay đổi nó) và `content_hash` (sha256 nội dung chuẩn hóa) để publish chỉ upsert bản ghi mới/đổi. Item biến mất khỏi Git → `status = archived`, không xóa cứng.
@@ -216,18 +250,26 @@ Kết quả lưu trong `content_versions.summary`: diff khi `draft`, danh sách 
 
 ## 6. Quy trình Pull Request
 
+**Trong repo track** (mentor của track làm):
+
 1. Fork/branch từ `main`, viết nội dung, chạy `hub-content-validate .` (CLI của `@hub/content`) + `pnpm content:preview` (dự kiến).
 2. Mở PR dùng template (mục đích, loại thay đổi, kiểm tra tự làm, có breaking không).
 3. CI bắt buộc: validate (`hub-content-validate`); link check, gitleaks, build preview (dự kiến, chưa làm).
 4. Review: ≥ 1 maintainer của track (theo `CODEOWNERS`); thay đổi `exercise` loại `code` cần thêm 1 người ở Ban kỹ thuật (liên quan test ẩn).
 5. Merge vào `main` (squash). Branch protection: không push trực tiếp.
-6. Webhook `push` (hoặc admin bấm Sync, hoặc maintainer chạy CLI `content:sync` ở MVP-Lite) → hub tạo `content_version` draft → admin xem diff và publish.
+
+**Publish qua registry** (Ban chủ nhiệm duyệt):
+
+6. Mở PR vào `learning-hub-content` đổi `commit` của track trong `tracks.yaml` sang commit mới trên `main` của repo track. Mô tả PR tóm tắt thay đổi (link các PR của repo track).
+7. CI của registry tải **mọi** track ở commit đã ghim và validate cùng nhau (slug/uid trùng giữa các track, prerequisite chéo track).
+8. Ban chủ nhiệm duyệt, squash merge → hub tạo `content_version` draft (webhook, nút Sync, hoặc CLI `content:sync` ở MVP-Lite) → admin xem diff và publish.
 
 ## 7. Sở hữu nội dung
 
 | Cấp | Chủ sở hữu | Quyền |
 | --- | --- | --- |
-| Repo | Ban kỹ thuật + Chủ nhiệm | admin repo, quản lý checker |
+| Registry `learning-hub-content` | Ban kỹ thuật + Chủ nhiệm | duyệt PR publish (đổi commit trong `tracks.yaml`), quản lý checker |
+| Repo track | team của track (mentor) | admin repo track; Ban kỹ thuật giữ quyền admin để bàn giao |
 | Track | `maintainers` trong `track.yaml` (CODEOWNERS sinh/kiểm tra tự động) | duyệt PR của track |
 | Bài viết | `authors` | ghi nhận công; được sửa bài mình |
 Khi maintainer rời CLB: Ban kỹ thuật gán lại trong cùng PR dọn dẹp học kỳ; track không có maintainer **không được publish bản mới**.
@@ -253,9 +295,10 @@ Bộ phân tích (`parseContent()` trong `@hub/content`) nhận nội dung file 
 | --- | --- | --- |
 | `LocalDirContentSource` | dev/test (vd `content-example`) | commit SHA = sha1 trên danh sách đường dẫn (đã sắp xếp) + nội dung file; publish **báo lỗi rõ** nếu thư mục đã đổi kể từ lúc sync (SHA không còn khớp) |
 | `GithubContentSource` | MVP | đọc repo/branch cấu hình qua GitHub REST: `commits/{branch}` (HEAD), `git/trees/{sha}?recursive=1`, `contents/{path}?ref={sha}`; chạy không cần token với repo công khai, token tuỳ chọn để nâng rate limit; đích dài hạn là GitHub App (SECURITY §10) |
+| `RegistryContentSource` | production sau ADR-10 | đọc `tracks.yaml` của registry tại HEAD, rồi đọc `tracks/<slug>/…` của từng repo track tại commit đã ghim (cùng các gọi REST như `GithubContentSource`); báo lỗi khi repo track chứa thư mục track khác slug, commit không đủ 40 ký tự hex, hoặc slug trùng |
 | `GitlabContentSource`, `TarballContentSource` | tương lai | |
 
-Cấu hình (env): `CONTENT_SOURCE=local|github`, `CONTENT_LOCAL_DIR`, `CONTENT_REPO` (vd `hcmute-dsc/learning-hub-content`), `CONTENT_BRANCH`, `CONTENT_GITHUB_TOKEN` (tuỳ chọn).
+Cấu hình (env): `CONTENT_SOURCE=local|github|registry` (`registry` đọc `CONTENT_REPO` như registry), `CONTENT_LOCAL_DIR`, `CONTENT_REPO` (vd `hcmute-dsc/learning-hub-content`), `CONTENT_BRANCH`, `CONTENT_GITHUB_TOKEN` (tuỳ chọn).
 
 Thay đổi cấu trúc thư mục chỉ ảnh hưởng parser + schema trong `@hub/content`, và có `contentSpecVersion` trong `tracks/…` hoặc file gốc `content.config.yaml` để hỗ trợ nhiều phiên bản schema.
 
