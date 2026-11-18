@@ -51,7 +51,9 @@ Mọi issue phải điền **đủ** các ô ở khung bên phải. Issue thiế
 Một lệnh điền tất cả, kèm cách dùng chi tiết: skill `start-task` của repo `learning-hub`.
 
 ```bash
-bash .claude/skills/start-task/project-item.sh <link issue>   Type=Task "Status=In progress" "Priority=P1 - Cao" Area=Backend Size=S "Epic=Vận hành"   Sprint=@current "Milestone=Phase 0 — Dùng thử" Assignee=@me Label=enhancement
+bash .claude/skills/start-task/project-item.sh <link issue> \
+  Type=Task "Status=In progress" "Priority=P1 - Cao" Area=Backend Size=S "Epic=Vận hành" \
+  Sprint=@current "Milestone=Phase 0 — Dùng thử" Assignee=@me Label=enhancement
 ```
 
 PR cũng điền: assignee, label, milestone, và các field trên project giống issue của nó (Status = In review).
@@ -271,7 +273,8 @@ Agent làm theo đúng quy trình như người. Quy tắc nằm trong repo đ�
 Script `learning-hub/.claude/skills/start-task/project-item.sh` đưa issue/PR vào project và điền đủ thông tin ở §1.1 theo tên. Ví dụ:
 
 ```bash
-bash .claude/skills/start-task/project-item.sh <link issue> Type=Task "Status=In progress" "Priority=P1 - Cao" \n  Area=Backend Size=S "Epic=Vận hành" Sprint=@current "Milestone=Phase 0 — Dùng thử" Assignee=@me Label=ops
+bash .claude/skills/start-task/project-item.sh <link issue> Type=Task "Status=In progress" "Priority=P1 - Cao" \
+  Area=Backend Size=S "Epic=Vận hành" Sprint=@current "Milestone=Phase 0 — Dùng thử" Assignee=@me Label=ops
 ```
 
 Agent không tự merge PR, không đổi cài đặt repo hay production, và không publish nội dung khi chưa có người đồng ý trong chat.
