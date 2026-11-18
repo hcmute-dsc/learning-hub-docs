@@ -43,7 +43,7 @@ Nếu không đi: dừng ở content repo + site tĩnh.
 
 Thêm sau khi so sánh: lời giải cộng đồng ([#40](https://github.com/hcmute-dsc/learning-hub/issues/40)), trao đổi nhiều lượt giữa mentor và mentee ([#41](https://github.com/hcmute-dsc/learning-hub/issues/41)), ghi chú cho mentor theo từng bài ([#43](https://github.com/hcmute-dsc/learning-hub/issues/43)), trang cài đặt và tài liệu thêm cho từng track ([#44](https://github.com/hcmute-dsc/learning-hub/issues/44)).
 
-Cố ý không làm ở MVP: editor chạy code trên trình duyệt và runner nhiều ngôn ngữ (F17, cần VPS riêng); CLI tải/nộp bài (nộp qua GitHub là đủ). Bản đồ khái niệm của track và nhận xét tự động ngoài đạt/không đạt chưa có issue riêng; nhận xét tự động đi cùng #4 (E6).
+Cố ý không làm ở MVP: editor chạy code trên trình duyệt và runner nhiều ngôn ngữ (F17, cần VPS riêng); CLI tải/nộp bài (nộp qua GitHub là đủ). Bản đồ khái niệm của track và nhận xét tự động ngoài đạt/không đạt chưa có issue riêng; nhận xét tự động đi cùng [#4](https://github.com/hcmute-dsc/learning-hub/issues/4) (E6).
 
 ## 2. Chi tiết
 
