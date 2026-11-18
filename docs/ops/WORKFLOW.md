@@ -31,6 +31,33 @@ Mọi việc của Learning Hub (code, nội dung, tài liệu, vận hành, vi�
 
 Thêm Epic mới: Project → ⚙ Settings → Epic → thêm option. Khi thêm epic vào MVP-BACKLOG thì thêm luôn ở đây.
 
+### 1.1 Thông tin bắt buộc trên mỗi issue
+
+Mọi issue phải điền **đủ** các ô ở khung bên phải. Issue thiếu thông tin coi như chưa tạo xong.
+
+| Ô | Giá trị | Chọn thế nào |
+| --- | --- | --- |
+| **Type** (của org) | Bug · Feature · Task | Bug: chạy sai. Feature: tính năng mới cho người dùng. Task: mọi việc khác (vận hành, tài liệu, test, refactor, việc CLB) |
+| **Labels** | `bug` · `enhancement` · `documentation` · `ops` · `club` (repo docs) · `content` (repo nội dung) | khớp với Type và Area |
+| **Assignees** | người đang làm | việc ở Backlog để trống: ai rảnh thì nhận |
+| **Priority** (của org) | Urgent · High · Medium | tự suy ra từ Priority của project: P0 → Urgent, P1 → High, P2 → Medium |
+| **Effort** (của org) | Low · Medium · High | tự suy ra từ Size: S → Low, M → Medium, L → High |
+| **Start date / Target date** (của org) | ngày | mặc định là ngày đầu và cuối Sprint. Việc đã xong thì ghi ngày bắt đầu và ngày đóng thật |
+| **Milestone** | `Phase 0 — Dùng thử` · `MVP-Full` (chỉ repo code) | MVP-Full = các epic E6, E8, E13, E14, E15. Còn lại là Phase 0 |
+| **Projects** | Status, Priority, Area, Epic, Size, Sprint | như bảng ở §1 |
+| **Relationships** | blocked by · sub-issue | ghi khi có. Ví dụ: docs#2 bị chặn bởi docs#1 |
+| **Development** | PR | tự có khi PR ghi `Closes #n`. PR ở repo khác thì comment link vào issue |
+
+Một lệnh điền tất cả, kèm cách dùng chi tiết: skill `start-task` của repo `learning-hub`.
+
+```bash
+bash .claude/skills/start-task/project-item.sh <link issue>   Type=Task "Status=In progress" "Priority=P1 - Cao" Area=Backend Size=S "Epic=Vận hành"   Sprint=@current "Milestone=Phase 0 — Dùng thử" Assignee=@me Label=enhancement
+```
+
+PR cũng điền: assignee, label, milestone, và các field trên project giống issue của nó (Status = In review).
+
+Ngày 18/11/2026 đã điền bổ sung cho toàn bộ issue và PR đang có trên board.
+
 ## 2. Vòng đời một việc
 
 **Không có issue thì không làm.** Mọi yêu cầu, kể cả sửa nhỏ hay lỗi phát hiện rồi sửa ngay, đều có issue trên project. Chi tiết về nhánh, commit, PR, review ở [§7](#7-tiêu-chuẩn-nhánh-commit-pr-review-bug).
@@ -38,7 +65,7 @@ Thêm Epic mới: Project → ⚙ Settings → Epic → thêm option. Khi thêm 
 1. **Tạo issue** trong repo đúng chỗ, bằng mẫu có sẵn (issue trống bị tắt): code → `learning-hub`, bài học → `learning-hub-content`, tài liệu và việc của CLB → `learning-hub-docs`. Tìm issue cũ trước khi tạo mới.
    - Tiêu đề có tiền tố: `[E13] …`, `[Content] …`, `[Ops] …`, `[Org] …`, `[Phase 0] …`, `[Bug] …`.
    - Thân issue có: bối cảnh (link tài liệu), checklist việc cần làm, **"Hoàn thành khi: …"**.
-2. **Vào project:** issue mới tự vào project với Status = Backlog. Điền Priority, Area, Epic, Size. Đủ thông tin thì chuyển Ready.
+2. **Điền đủ thông tin** theo [§1.1](#11-thông-tin-bắt-buộc-trên-mỗi-issue) (issue ở repo `learning-hub` tự vào project với Status = Backlog; hai repo kia cần token ở §4, chưa có thì script thêm vào). Đủ thông tin thì chuyển Ready.
 3. **Nhận việc:** tự gán mình vào Assignees, chuyển Status = In progress, đặt Sprint. Tạo nhánh theo §7.
 4. **Mở PR** theo mẫu, dòng đầu `Closes #<số>` (khác repo: `Closes hcmute-dsc/<repo>#<số>`). Project tự chuyển sang In review.
 5. **Review rồi squash merge:** issue tự đóng và tự sang Done.
@@ -241,10 +268,10 @@ Agent làm theo đúng quy trình như người. Quy tắc nằm trong repo đ�
 | `learning-hub-content` | `AGENTS.md` | `content-change` (sửa/thêm bài), `publish-content` (đồng bộ và publish lên site) |
 | `learning-hub-docs` | `AGENTS.md` | dùng skills của `learning-hub` |
 
-Script `learning-hub/.claude/skills/start-task/project-item.sh` đưa issue/PR vào project và điền field theo tên. Ví dụ:
+Script `learning-hub/.claude/skills/start-task/project-item.sh` đưa issue/PR vào project và điền đủ thông tin ở §1.1 theo tên. Ví dụ:
 
 ```bash
-bash .claude/skills/start-task/project-item.sh <link issue> "Status=In progress" "Priority=P1 - Cao" Area=Backend Size=S
+bash .claude/skills/start-task/project-item.sh <link issue> Type=Task "Status=In progress" "Priority=P1 - Cao" \n  Area=Backend Size=S "Epic=Vận hành" Sprint=@current "Milestone=Phase 0 — Dùng thử" Assignee=@me Label=ops
 ```
 
 Agent không tự merge PR, không đổi cài đặt repo hay production, và không publish nội dung khi chưa có người đồng ý trong chat.
