@@ -343,7 +343,7 @@ Luồng: domain event → listener ghi `outbox_events` (chỉ id) → worker tro
 | read_at | timestamptz | null = chưa đọc |
 | created_at | timestamptz | |
 
-IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor đang active, trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord).
+IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor và admin đang active (admin mở được trang review), trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord).
 
 `notification_preferences` — lựa chọn email tóm tắt; không có dòng = tắt (mặc định):
 

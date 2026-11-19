@@ -80,7 +80,7 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | F10 | Thông báo Discord (webhook) khi: có review, có bài mới cần review | MVP (một chiều) |
 | F11 | Hint & solution mở khóa sau N lần thử / sau khi nộp | P2 |
 | F12 | Huy hiệu & streak nhẹ, có thể tắt | P2 |
-| F13 | Notification trong app, email digest. Đã làm (learning-hub#49): chuông trên header khi bài được review, có bài chờ review (mentor), có lộ trình mới; email tóm tắt hằng ngày tuỳ chọn (mặc định tắt, SMTP qua biến môi trường, có link huỷ) | P2 |
+| F13 | Notification trong app, email digest. Đã làm (learning-hub#49): chuông trên header khi bài được review, có bài chờ review (mentor và admin), có lộ trình mới; email tóm tắt hằng ngày tuỳ chọn (mặc định tắt, SMTP qua biến môi trường, có link huỷ) | P2 |
 | F14 | Đóng góp nội dung qua UI "Edit on GitHub" + preview | P2 |
 | F15 | Liên kết Google/email trường | P2 |
 | F16 | Bản đồ mentoring đọc từ content repo | P2 |
