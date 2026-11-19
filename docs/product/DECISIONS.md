@@ -102,7 +102,16 @@
 
 **`learning-hub-content` giữ public (đã chốt 17/11/2026).** Lý do: repo không chứa đáp án (đáp án và test ẩn chỉ nằm ở `learning-hub-checker`, private); app tải ảnh bài học thẳng từ `raw.githubusercontent.com` và đồng bộ nội dung không cần token; 28 bài hướng dẫn thành viên clone repo để lấy dữ liệu thực hành (`setup/`); nội dung mang giấy phép mở (CC BY-SA / MIT). Nếu sau này cần giấu một phần (đáp án, đề thi), tách phần đó sang repo private riêng thay vì đổi repo này. Đổi repo này sang private đòi hỏi trước: token chỉ-đọc `CONTENT_GITHUB_TOKEN`, API tự tải ảnh bằng token, và chuyển `setup/` ra repo public.
 
-Thêm thành viên CLB vào org `hcmute-dsc` (chưa làm): trước khi mời đại trà, đổi base permission từ **Read** sang **No permission** (hiện mọi thành viên org đọc được 5 repo private) và tắt "Members can create repositories"; cấp quyền qua team. Khi đó có thể bật `GITHUB_ORG=hcmute-dsc` để duyệt tài khoản tự động.
+**Quyền thành viên org `hcmute-dsc` (chốt 19/11/2026, [docs#3](https://github.com/hcmute-dsc/learning-hub-docs/issues/3)): để mở, không siết.** Bản nháp trước định đổi base permission sang *No permission* và tắt quyền tạo repo; Chủ nhiệm CLB quyết định giữ mở để thành viên tự do tạo repo và thử nghiệm. Cài đặt hiện tại:
+
+| Cài đặt (Settings → Member privileges) | Giá trị |
+| --- | --- |
+| Base permission | **Read**: mọi thành viên đọc được mọi repo của org, kể cả repo private |
+| Members can create repositories (public và private) | Bật |
+| Members can delete or transfer repositories | Bật: chỉ người có quyền **Admin** trên chính repo đó |
+| Members can change repository visibility | Bật: chỉ người có quyền **Admin** trên chính repo đó |
+
+Lớp bảo vệ còn lại: nhánh `main` của các repo Learning Hub cần PR và CI xanh ([WORKFLOW §7.5](../ops/WORKFLOW.md)); thành viên chỉ có Read nên không sửa hay xoá được repo người khác. **Lưu ý khi tạo `learning-hub-checker`:** với base permission Read, mọi thành viên org đọc được test ẩn trong repo private đó. Lúc ấy phải chọn một trong hai: hạ base permission xuống *No permission* rồi cấp quyền qua team, hoặc đặt repo checker ngoài org này. Có thể bật `GITHUB_ORG=hcmute-dsc` để duyệt tài khoản tự động khi mời thành viên vào org.
 
 Chuyển đổi: (1) tạo content repo, import sql-challenge, giữ site cũ; (2) dựng hub; (3) ngừng cập nhật Course-DSC/study-jam-*; (4) cập nhật `.github` profile và website CLB. Không có repo nào bị xóa; chỉ archive sau khi owner đồng ý.
 
