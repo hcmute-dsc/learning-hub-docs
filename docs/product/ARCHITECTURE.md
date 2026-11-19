@@ -1,5 +1,7 @@
 # ARCHITECTURE — Kiến trúc hệ thống
 
+> **Đọc trước khi dùng tài liệu này:** đây là bản **thiết kế** (16/11/2026), gồm cả phần chưa làm. Hệ thống **đang chạy**, có sơ đồ đối chiếu với code, nằm ở [ops/SYSTEM-OVERVIEW.md](../ops/SYSTEM-OVERVIEW.md). Các mục dưới đây có ghi chú *Hiện trạng* ở chỗ thực tế khác thiết kế.
+
 > Nguyên tắc: **đơn giản đủ để sinh viên bảo trì**. Modular monolith, 1 database, 3 tiến trình ở MVP-Lite (`web`, `api`, `postgres`); MVP-Full thêm `sql-checker` + PostgreSQL riêng của nó (§7, ADR-07). Redis/BullMQ/MinIO **không** có ở MVP (điều kiện thêm ở §8, §9).
 
 ## 1. Bối cảnh hệ thống
@@ -30,9 +32,8 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  Browser --> Proxy[Reverse proxy<br/>Caddy/Nginx · TLS]
-  Proxy --> Web[Next.js web<br/>SSR/RSC]
-  Proxy --> API
+  Browser --> Proxy[Reverse proxy<br/>Traefik có sẵn trên VPS · TLS]
+  Proxy --> Web[Next.js web<br/>SSR/RSC · rewrite /api/*]
   Web -->|REST /api/v1<br/>cookie session| API
   subgraph API[NestJS api — modular monolith]
     direction TB
@@ -54,6 +55,8 @@ flowchart TB
 ```
 
 ## 3. Ranh giới module backend
+
+> *Hiện trạng (19/11/2026):* các module đang có là `identity`, `users`, `catalog`, `content`, `learning`, `submissions`, `reviews`, `notifications`, `audit`, `overview`, `health`; chưa có `assessments`, `mentorship`. Phụ thuộc thực tế và sự kiện: [SYSTEM-OVERVIEW §3](../ops/SYSTEM-OVERVIEW.md#3-module-backend). Ranh giới được kiểm tra bằng `scripts/check-boundaries.mjs` trong job `build-test`.
 
 Chi tiết từng module: BACKEND-DESIGN.md. Quy tắc chung:
 
@@ -139,6 +142,8 @@ Phần lớn nội dung là SQL (31 bài `self_check` của `sql-30-days` có th
 
 ## 8. Background jobs
 
+> *Hiện trạng (19/11/2026):* API **chưa có** cron job nào. Thông báo Discord gửi nền ngay trong tiến trình, lỗi chỉ ghi log; bảng `outbox_events` có sẵn nhưng chưa dùng (sẽ dùng từ [learning-hub#49](https://github.com/hcmute-dsc/learning-hub/issues/49)). Việc định kỳ hiện chạy bằng cron trên VPS (sao lưu) và GitHub Actions (uptime mỗi 15 phút).
+
 MVP **không dùng Redis/BullMQ**. Việc nền chạy trong tiến trình API bằng `@nestjs/schedule` (cron) và bảng `outbox`/trạng thái trong DB:
 
 | Job | Tần suất | Mục đích |
@@ -154,6 +159,8 @@ MVP **không dùng Redis/BullMQ**. Việc nền chạy trong tiến trình API b
 MVP: không cho upload file (bài nộp là liên kết GitHub, nội dung nằm ở Git). Ảnh minh họa lesson nằm trong content repo và được phục vụ qua CDN/GitHub raw đã proxy cache (hoặc build copy vào `web/public/content`). **Phase 2:** nếu cần avatar tùy chỉnh/đính kèm → MinIO (S3-compatible) + signed URL, giới hạn loại/kích thước, quét tên file (SECURITY §6).
 
 ## 10. Tích hợp Discord
+
+> *Hiện trạng (19/11/2026):* hai webhook: kênh CLB (`DISCORD_WEBHOOK_URL`: có bài cần review, review xong, publish nội dung) và kênh vận hành (`DISCORD_ALERT_WEBHOOK_URL`: workflow Uptime báo site lỗi). Chưa có bot, chưa có Web Push.
 
 - Một chiều (MVP): **Incoming Webhook** gửi embed vào kênh: `#review-queue` (bài cần review), `#hub-announcements` (publish track mới). Mentee nhận thông báo cá nhân bằng DM chỉ khi đã liên kết Discord (P2).
 - P2: bot `discord.js` đọc lệnh `/progress`, `/mydaily`; liên kết tài khoản bằng mã một lần. Discord **không** là nguồn sự thật: mọi trạng thái nằm ở DB.
@@ -189,12 +196,12 @@ Chi tiết trong SECURITY.md. Điểm kiến trúc: không chạy code thành vi
 
 ```mermaid
 flowchart LR
-  Dev[Dev push/PR] --> CI[GitHub Actions: lint, test, build, prisma migrate check]
-  CI --> Img[Build image api + web → GHCR]
-  Img -->|merge main| Deploy[Deploy workflow: SSH hoặc watchtower pull]
+  Dev[Dev push/PR] --> CI[GitHub Actions CI: build-test, secrets, tên PR]
+  CI -->|merge main, CI xanh| Img[Deploy: build image api + web → GHCR]
+  Img --> Deploy[SSH: compose pull, migrate, up -d]
   subgraph VM[1 VPS Linux nhỏ - Docker Compose]
-    Caddy --> web
-    Caddy --> api
+    Traefik --> web
+    web -->|/api/*| api
     api --> db[(postgres)]
     db --- Vol[(volume + pg_dump hằng ngày)]
     api -->|mạng nội bộ riêng · MVP-Full| sqlc[sql-checker]

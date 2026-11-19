@@ -79,7 +79,7 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | F9 | Dashboard thành viên / mentor / admin cơ bản | MVP |
 | F10 | Thông báo Discord (webhook) khi: có review, có bài mới cần review | MVP (một chiều) |
 | F11 | Hint & solution mở khóa sau N lần thử / sau khi nộp | P2 |
-| F12 | Huy hiệu & streak nhẹ, có thể tắt | P2 |
+| F12 | Huy hiệu & streak nhẹ, có thể tắt (quy tắc ở §6.1) | P2 |
 | F13 | Notification trong app, email digest. Đã làm (learning-hub#49): chuông trên header khi bài được review, có bài chờ review (mentor và admin), có lộ trình mới; email tóm tắt hằng ngày tuỳ chọn (mặc định tắt, SMTP qua biến môi trường, có link huỷ) | P2 |
 | F14 | Đóng góp nội dung qua UI "Edit on GitHub" + preview | P2 |
 | F15 | Liên kết Google/email trường | P2 |
@@ -90,6 +90,51 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | F20 | Chấm SQL tự động bằng `sql-checker` trên VPS (PostgreSQL riêng, dataset DSC Shop): nộp câu truy vấn trong app, so với tập kết quả kỳ vọng; chuyển dần 31 bài `self_check` của `sql-30-days` sang chấm tự động (ADR-07) | MVP-Full |
 | F21 | Bảng xếp hạng opt-in theo học kỳ/đợt: reset mỗi kỳ, xếp theo số bài hoàn thành (`self_check` trọng số thấp hơn), không theo tốc độ, top 10 + hạng của mình, không xếp hạng toàn thời gian (ADR-08) | MVP-Full |
 | F22 | Thông báo Web Push trên trình duyệt (bài được review, yêu cầu review mới cho mentor, track mới publish); Discord là kênh thứ hai; iOS cần "Thêm vào Màn hình chính" | MVP-Full |
+
+### 6.1 F12 — Huy hiệu và streak (chốt 18/11/2026, learning-hub#48)
+
+Động lực nhẹ, không điểm, không xếp hạng (§3 "Không gamification nặng").
+
+**Bộ huy hiệu đầu tiên** (định nghĩa trong code: `packages/shared/src/achievements.ts`, quy tắc ở `apps/api/src/modules/learning/badges.ts`):
+
+| Mã | Tên | Điều kiện |
+| --- | --- | --- |
+| `first_lesson` | Bài học đầu tiên | hoàn thành ≥ 1 bài học |
+| `first_exercise` | Bài tập đầu tiên | hoàn thành ≥ 1 bài tập (`completed`: qua chấm tự động hoặc mentor duyệt) |
+| `first_module` | Xong một chặng | mọi bài học và bài tập của một module đều xong |
+| `first_track` | Về đích | hoàn thành trọn một track |
+| `exercises_10` | Mười bài tập | hoàn thành ≥ 10 bài tập |
+| `streak_7` | Bền bỉ 7 ngày | streak dài nhất ≥ 7 |
+
+**Cấp huy hiệu**
+- Cấp sau các sự kiện học tập có sẵn: hoàn thành bài học, bài tập `passed`, project được duyệt. Hoàn thành module/track luôn đi kèm một trong các sự kiện đó.
+- Idempotent: khóa `(user_id, badge)` trong `user_badges`; cấp lại không tạo trùng, sự kiện `learning.badge_awarded` chỉ phát một lần mỗi huy hiệu (để F13 thông báo sau này).
+- Lưới an toàn: khi đọc dashboard/hồ sơ, hệ thống cấp nốt huy hiệu còn thiếu, nên thành viên học trước khi có tính năng vẫn nhận đủ.
+- Đã cấp thì không thu hồi, kể cả khi nội dung thay đổi hoặc mở lại bài học.
+- Thêm huy hiệu: thêm vào hai file trên kèm test; không đổi tên mã đã có (mã được lưu trong DB).
+
+**Streak (chuỗi ngày học)**
+- Ngày tính theo giờ Việt Nam (UTC+7); một ngày "có học" khi có ít nhất một bài học hoàn thành hoặc một lần nộp bài.
+- Không phạt nặng: **được nghỉ xen kẽ 1 ngày**. Hai ngày có học cách nhau tối đa 2 ngày vẫn chung một chuỗi; nghỉ **2 ngày liền** thì chuỗi kết thúc.
+- Độ dài chuỗi = số ngày có học trong chuỗi (không tính ngày nghỉ).
+- Chuỗi hiện tại còn sống khi ngày học gần nhất là hôm nay, hôm qua hoặc hôm kia (hôm qua là ngày được nghỉ, học hôm nay là nối tiếp). Hồ sơ hiện thêm chuỗi dài nhất từng có.
+- Không lưu streak trong DB: tính lại từ `lesson_progress.completed_at` và `submissions.submitted_at`.
+
+**Tắt được**
+- `/settings` có công tắc "Hiện huy hiệu và chuỗi ngày học" (`users.show_achievements`, mặc định bật).
+- Tắt thì ẩn ở **mọi nơi**: thẻ "Thành tích" trên dashboard, ô streak và mục huy hiệu trên `/u/[login]`; API trả `achievements: null`, kể cả khi người khác xem hồ sơ.
+- Khi tắt, huy hiệu vẫn được cấp ngầm; bật lại là thấy đủ.
+
+### 6.2 Quy tắc chứng nhận hoàn thành track (F19, learning-hub#47)
+
+- **Điều kiện hoàn thành:** mọi lesson và exercise **đang active** của track đã xong — lesson có `lesson_progress.status = completed`, exercise có submission `approved`, hoặc `passed` khi `requires_review = false` (DATABASE §3.11, §6). Track không có mục nào thì không bao giờ "hoàn thành". Quy tắc nằm ở **một chỗ** trong code (`apps/api/src/modules/learning/progress.ts`, `isAllDone`); lần đầu đủ điều kiện, enrollment được lưu `completed` + `completed_at` và phát sự kiện `learning.track_completed` đúng một lần. Chứng nhận, huy hiệu… chỉ **nghe** sự kiện này, không tự tính lại.
+- **Cấp một lần:** mỗi (thành viên, track) tối đa một chứng nhận. Nội dung track đổi sau đó không cấp lại; chứng nhận đã thu hồi cũng không cấp lại khi thành viên "hoàn thành lại".
+- **Nội dung chứng nhận:** tên hiển thị **lúc cấp**, tên track, ngày hoàn thành (`completed_at`), ngày cấp, repo + commit nội dung members đang đọc lúc cấp. Không có email, không có id tài khoản.
+- **Mã:** 24 ký tự base32 chữ thường (120 bit ngẫu nhiên), là phần không đoán được của link `/certificates/[code]`.
+- **Trang công khai** `/certificates/[code]`: ai có link cũng xem được, không cần đăng nhập; `noindex`; in hoặc lưu PDF bằng hộp thoại in của trình duyệt (CSS print, A4 ngang). Chứng nhận bị thu hồi vẫn mở được nhưng ghi rõ "đã bị thu hồi" (không ghi lý do).
+- **Hồ sơ:** `/u/[login]` (chỉ thành viên đã đăng nhập) hiện các chứng nhận còn hiệu lực mà chủ nhân không ẩn. Thành viên ẩn/hiện từng chứng nhận ở `/settings`; ẩn khỏi hồ sơ **không** khóa link đã chia sẻ.
+- **Thu hồi:** chỉ admin, ở tab Quản trị → Chứng nhận, bắt buộc ghi lý do (3–280 ký tự); ghi `audit_logs` (`certificate.revoke`). Không có thao tác "khôi phục" trong giao diện.
+- **Hoàn thành trước khi có tính năng:** enrollment đã `completed` mà chưa có chứng nhận được cấp bù khi chủ nhân mở `/settings` hoặc hồ sơ của mình (commit nội dung là bản đang publish lúc cấp bù).
 
 ## 7. Yêu cầu chức năng (rút gọn)
 
@@ -110,7 +155,7 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | FR-13 | Xóa mềm user/nội dung; giữ bài nộp (xem DATABASE). | MVP |
 | FR-14 | Xuất tiến độ (CSV) cho admin. | P2 |
 | FR-15 | Admin nhập/thay danh sách email được duyệt; chỉ admin xem được; mọi thay đổi ghi `audit_logs`; không xuất cho member. | MVP |
-| FR-16 | Hoàn thành track → cấp chứng nhận có link xác minh công khai (F19). | P2 |
+| FR-16 | Hoàn thành track → cấp chứng nhận một lần, có link xác minh công khai không cần đăng nhập; thành viên ẩn khỏi hồ sơ, admin thu hồi có audit (F19, quy tắc §6.2). | P2 |
 | FR-17 | Bài SQL chấm bằng `sql-checker`: truy vấn chạy read-only với timeout, kết quả ghi `test_runs`; so có thứ tự khi đề yêu cầu `ORDER BY` (F20). | MVP-Full |
 | FR-18 | Bảng xếp hạng chỉ gồm thành viên đã opt-in (`users.leaderboard_opt_in`), tính bằng truy vấn/view theo kỳ, không lưu điểm (F21). | MVP-Full |
 | FR-19 | Thành viên bật/tắt Web Push theo từng thiết bị; subscription hết hạn (404/410) tự xóa (F22). | MVP-Full |

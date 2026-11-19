@@ -11,9 +11,9 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 | --- | --- |
 | Ban chủ nhiệm | README này → [CRITIQUE](docs/product/CRITIQUE.md) → [DECISIONS](docs/product/DECISIONS.md) → [PRD](docs/product/PRD.md) → [TRIAL-P0](docs/ops/TRIAL-P0.md) |
 | Mentor / người viết nội dung | [NEW-TRACK](docs/ops/NEW-TRACK.md) → [CONTENT-SPECIFICATION](docs/product/CONTENT-SPECIFICATION.md) → [USER-FLOWS](docs/product/USER-FLOWS.md) |
-| Tech lead / người trực web | [GH-CLI](docs/ops/GH-CLI.md) → [DEPLOYMENT](docs/ops/DEPLOYMENT.md) → [WORKFLOW](docs/ops/WORKFLOW.md) |
+| Tech lead / người trực web | [SYSTEM-OVERVIEW](docs/ops/SYSTEM-OVERVIEW.md) → [GH-CLI](docs/ops/GH-CLI.md) → [DEPLOYMENT](docs/ops/DEPLOYMENT.md) → [WORKFLOW](docs/ops/WORKFLOW.md) |
 | Người muốn đóng góp | [WORKFLOW](docs/ops/WORKFLOW.md) → [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1) |
-| Dev | [ARCHITECTURE](docs/product/ARCHITECTURE.md) → [DATABASE](docs/product/DATABASE.md) → [BACKEND-DESIGN](docs/product/BACKEND-DESIGN.md) → [FRONTEND-DESIGN](docs/product/FRONTEND-DESIGN.md) → [SECURITY](docs/product/SECURITY.md) → [MVP-BACKLOG](docs/product/MVP-BACKLOG.md) |
+| Dev | [SYSTEM-OVERVIEW](docs/ops/SYSTEM-OVERVIEW.md) → [ARCHITECTURE](docs/product/ARCHITECTURE.md) → [DATABASE](docs/product/DATABASE.md) → [BACKEND-DESIGN](docs/product/BACKEND-DESIGN.md) → [FRONTEND-DESIGN](docs/product/FRONTEND-DESIGN.md) → [SECURITY](docs/product/SECURITY.md) → [MVP-BACKLOG](docs/product/MVP-BACKLOG.md) |
 
 ## Mục lục tài liệu (`docs/product/`)
 
@@ -37,6 +37,7 @@ Nền tảng học tập nội bộ cho thành viên **HCMUTE Developer Student 
 
 | Tài liệu | Nội dung |
 | --- | --- |
+| [SYSTEM-OVERVIEW.md](docs/ops/SYSTEM-OVERVIEW.md) | Kiến trúc **đang chạy** bằng sơ đồ cho người nhận bàn giao: repo, container, module, luồng đăng nhập/publish/review, CI/CD, sao lưu, trạng thái |
 | [DEPLOYMENT.md](docs/ops/DEPLOYMENT.md) | Hiện trạng production, auto deploy bằng GitHub Actions, cài lại từ đầu (user `learnhub`, SSH key, secret, sao lưu, Discord), lỗi đã gặp, bàn giao |
 | [WORKFLOW.md](docs/ops/WORKFLOW.md) | Quy trình làm việc với [GitHub Project](https://github.com/orgs/hcmute-dsc/projects/1): field, vòng đời issue/PR, họp sprint |
 | [NEW-TRACK.md](docs/ops/NEW-TRACK.md) | Tạo track mới: đề xuất, tạo repo từ template, viết bài, review, ghim commit trong `tracks.yaml` và publish; lỗi thường gặp |

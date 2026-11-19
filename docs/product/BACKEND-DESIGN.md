@@ -123,7 +123,7 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 - E: `MentorRequested`, `MentorAssigned`, `MentorshipEnded`. D: `users`.
 
 ### notifications
-- **Trách nhiệm:** nhận domain event, chọn kênh/mẫu tin, gửi qua port `NotificationChannel`; (P2, đã làm) chuông trong app và email tóm tắt: `InboxListener` ghi `outbox_events`, `OutboxWorker` (khởi động trong `main.ts`, không chạy trong CLI) gọi `NotificationDispatcher` để ghi `notifications` cho từng người nhận hoặc gửi email qua port `MailSender` (adapter SMTP `integrations/email`, no-op khi thiếu `SMTP_HOST`/`SMTP_FROM`). DATABASE §3.16d.
+- **Trách nhiệm:** nhận domain event, chọn kênh/mẫu tin, gửi qua port `NotificationChannel`; (P2, đã làm) chuông trong app và email tóm tắt: `InboxListener` ghi `outbox_events`, `OutboxWorker` (khởi động trong `main.ts`, không chạy trong CLI) gọi `NotificationDispatcher` để ghi `notifications` cho từng người nhận hoặc gửi email qua port `MailSender` (adapter SMTP `integrations/email`, no-op khi thiếu `SMTP_HOST`/`SMTP_FROM`). DATABASE §3.16f.
 - C: (P2) `InboxController`, `UnsubscribeController`; [MVP-Full] `PushSubscriptionsController`. S: `NotificationDispatcher`. Port: `NotificationChannel` (adapter Discord + [MVP-Full] `WebPushChannel`, bảng `push_subscriptions`).
 - D: lắng nghe event, `users`.
 
@@ -209,6 +209,7 @@ Theo tinh thần RFC 9457 (problem+json):
 | `GET /exercises/{id}` | member | MVP | 403/409 nếu khóa |
 | `POST /exercises/{id}/submissions` | member | MVP | header Idempotency-Key |
 | `POST /exercises/{id}/quiz-attempts` | member | MVP | chấm tức thì |
+| `POST /exercises/{id}/hints/{position}` | member | P2 | mở một hint (F11): 201 lần đầu, 200 nếu đã mở; 409 nếu sai thứ tự, chưa đủ `cost` lần nộp hoặc bài đang khóa; 404 nếu không có hint đó. `GET /exercises/{id}` trả `hints` (chỉ hint đã mở) và `solution` (nội dung chỉ khi member đã hoàn thành bài) |
 | `GET /submissions/{id}` | chủ bài / mentor được giao / admin | MVP | + `testRuns[]`, `reviews[]` |
 | `GET /me/submissions?exerciseId=` | member | MVP | cursor |
 | `POST /mentorship/requests` | member | MVP | |
@@ -228,6 +229,12 @@ Theo tinh thần RFC 9457 (problem+json):
 | `POST /exercises/{id}/self-check` | member | MVP | `{completed:true}` cho bài `self_check` |
 | `GET /admin/audit-logs` | admin | MVP | cursor |
 | `POST /integrations/github/webhook` | chữ ký HMAC | MVP | không dùng session |
+| `GET /certificates/{code}` | public | P2 | trang xác minh F19: tên lúc cấp, track, ngày, repo + commit, `status: valid\|revoked`; không email/id; 404 nếu mã sai định dạng hoặc không có |
+| `GET /me/certificates` | member | P2 | mọi chứng nhận của mình (kể cả ẩn/thu hồi); cấp bù cho track đã hoàn thành trước đó |
+| `PATCH /me/certificates/{code}` | member | P2 | `{hidden}`; mã của người khác → 404 |
+| `GET /members/{login}/certificates` | đã đăng nhập | P2 | chứng nhận hiện trên hồ sơ (không ẩn, không thu hồi) |
+| `GET /admin/certificates` | admin | P2 | 200 chứng nhận mới nhất, kèm login và lý do thu hồi |
+| `POST /admin/certificates/{code}/revoke` | admin | P2 | `{reason}` 3–280 ký tự; 409 nếu đã thu hồi; ghi audit `certificate.revoke` |
 | `GET /me/achievements` | member | P2 | |
 | `GET /me/notifications` | member | P2 | 20 mới nhất của mình + `unreadCount` |
 | `GET /me/notifications/unread-count` | member | P2 | `{data:{count}}` cho chuông trên header |
