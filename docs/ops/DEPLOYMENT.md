@@ -342,6 +342,7 @@ docker compose -f docker-compose.prod.yml ps                     # 7. kiểm tra
 | `pull access denied` cho image `latest` | `.env` chưa có `IMAGE_TAG` | workflow giờ tự ghi `IMAGE_TAG` |
 | Trang đăng nhập báo 500 | trên mạng `edge` dùng chung, tên `api` trỏ nhầm sang API của site khác | API dùng alias riêng `learning-hub-api` |
 | Mọi người cùng bị "quá nhiều request" | trang server-render dùng chung IP của container web | web chuyển tiếp `X-Forwarded-For`, `TRUST_PROXY_HOPS=2` |
+| Deploy đỏ: `ssh: connect to host … port 22: Connection timed out` (19/11/2026, 2 lần) | kết nối runner GitHub → VPS đôi khi timeout một lần; site không bị gián đoạn | bước "Wait for SSH" thử lại tới 6 vòng, `scp` thử lại 3 lần, `ConnectTimeout 20` + `ConnectionAttempts 3` (learning-hub#63) |
 | Đĩa VPS đầy dần (~1 GB mỗi lần deploy) | image cũ còn tag nên `prune` thường không xóa | `prune -af` lọc theo label của repo |
 | Crontab trống sau khi cài | lệnh cài cron chạy với `set -e` khi `crontab -l` còn rỗng | ghi crontab trực tiếp, kiểm tra bằng `crontab -l` |
 | File sao lưu ai cũng đọc được | thiếu `umask` | `backup.sh` đặt `umask 077` |
