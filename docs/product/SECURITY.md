@@ -127,7 +127,7 @@ Bật 2FA bắt buộc cho tất cả thành viên Ban kỹ thuật và chủ or
 
 ## 11. Audit logging
 
-Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường [P2], cấp/thu hồi vai trò, duyệt/khóa user, thay đổi danh sách email được duyệt, gán/đổi mentor, sync/publish/reject content, chạy lại test do admin, xóa/ẩn danh dữ liệu, thay đổi cấu hình. Trường: ai, hành động, đối tượng, thời điểm, IP/User-Agent (băm hoặc rút gọn), metadata (không chứa secret). Chỉ admin đọc. Giữ 24 tháng (DATABASE §9).
+Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường [P2], cấp/thu hồi vai trò, duyệt/khóa user, thu hồi chứng nhận (`certificate.revoke`, kèm lý do), thay đổi danh sách email được duyệt, gán/đổi mentor, sync/publish/reject content, chạy lại test do admin, xóa/ẩn danh dữ liệu, thay đổi cấu hình. Trường: ai, hành động, đối tượng, thời điểm, IP/User-Agent (băm hoặc rút gọn), metadata (không chứa secret). Chỉ admin đọc. Giữ 24 tháng (DATABASE §9).
 
 ## 12. Bảo mật hạ tầng & chuỗi cung ứng
 
@@ -138,7 +138,7 @@ Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường 
 
 ## 13. Riêng tư & tuân thủ
 
-Thu thập tối thiểu (tên hiển thị, GitHub id/login, email nếu cần, avatar). Trang chính sách riêng tư bằng tiếng Việt ngắn gọn; thành viên có thể yêu cầu xóa/ẩn danh (DATABASE §8). Không bán/chia sẻ dữ liệu. Danh sách email được duyệt chỉ admin truy cập, không xuất cho member. **Bảng xếp hạng (MVP-Full): chỉ opt-in** — `users.leaderboard_opt_in` mặc định `false`, chỉ người đã bật mới xuất hiện; tắt là biến mất ngay; chỉ thành viên đã đăng nhập xem được, không có trang công khai ra Internet; không xếp hạng toàn thời gian. Subscription Web Push là dữ liệu thiết bị: xóa khi người dùng tắt, đăng xuất khỏi thiết bị đó hoặc bị xóa tài khoản. **Đã chốt (16/11/2026):** không cần đăng ký với nhà trường; dữ liệu thành viên lưu riêng tư (chỉ admin truy cập, không công khai, không chia sẻ ra ngoài).
+Thu thập tối thiểu (tên hiển thị, GitHub id/login, email nếu cần, avatar). Trang chính sách riêng tư bằng tiếng Việt ngắn gọn; thành viên có thể yêu cầu xóa/ẩn danh (DATABASE §8). Không bán/chia sẻ dữ liệu. Danh sách email được duyệt chỉ admin truy cập, không xuất cho member. **Bảng xếp hạng (MVP-Full): chỉ opt-in** — `users.leaderboard_opt_in` mặc định `false`, chỉ người đã bật mới xuất hiện; tắt là biến mất ngay; chỉ thành viên đã đăng nhập xem được, không có trang công khai ra Internet; không xếp hạng toàn thời gian. **Chứng nhận (P2, F19):** trang `/certificates/[code]` là trang công khai duy nhất có dữ liệu thành viên — chỉ tên hiển thị lúc cấp, track, ngày hoàn thành/cấp, repo + commit nội dung; không email, không id, không lý do thu hồi; `noindex` để tên không vào kết quả tìm kiếm; mã 120 bit ngẫu nhiên nên không dò được link của người khác, mã sai định dạng trả 404 trước khi đọc DB. Ẩn khỏi hồ sơ không thu hồi link đã chia sẻ (ghi rõ ở `/settings`). Subscription Web Push là dữ liệu thiết bị: xóa khi người dùng tắt, đăng xuất khỏi thiết bị đó hoặc bị xóa tài khoản. **Đã chốt (16/11/2026):** không cần đăng ký với nhà trường; dữ liệu thành viên lưu riêng tư (chỉ admin truy cập, không công khai, không chia sẻ ra ngoài).
 
 ## 14. Quản lý sự cố
 

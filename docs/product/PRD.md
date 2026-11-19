@@ -125,6 +125,17 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 - Tắt thì ẩn ở **mọi nơi**: thẻ "Thành tích" trên dashboard, ô streak và mục huy hiệu trên `/u/[login]`; API trả `achievements: null`, kể cả khi người khác xem hồ sơ.
 - Khi tắt, huy hiệu vẫn được cấp ngầm; bật lại là thấy đủ.
 
+### 6.2 Quy tắc chứng nhận hoàn thành track (F19, learning-hub#47)
+
+- **Điều kiện hoàn thành:** mọi lesson và exercise **đang active** của track đã xong — lesson có `lesson_progress.status = completed`, exercise có submission `approved`, hoặc `passed` khi `requires_review = false` (DATABASE §3.11, §6). Track không có mục nào thì không bao giờ "hoàn thành". Quy tắc nằm ở **một chỗ** trong code (`apps/api/src/modules/learning/progress.ts`, `isAllDone`); lần đầu đủ điều kiện, enrollment được lưu `completed` + `completed_at` và phát sự kiện `learning.track_completed` đúng một lần. Chứng nhận, huy hiệu… chỉ **nghe** sự kiện này, không tự tính lại.
+- **Cấp một lần:** mỗi (thành viên, track) tối đa một chứng nhận. Nội dung track đổi sau đó không cấp lại; chứng nhận đã thu hồi cũng không cấp lại khi thành viên "hoàn thành lại".
+- **Nội dung chứng nhận:** tên hiển thị **lúc cấp**, tên track, ngày hoàn thành (`completed_at`), ngày cấp, repo + commit nội dung members đang đọc lúc cấp. Không có email, không có id tài khoản.
+- **Mã:** 24 ký tự base32 chữ thường (120 bit ngẫu nhiên), là phần không đoán được của link `/certificates/[code]`.
+- **Trang công khai** `/certificates/[code]`: ai có link cũng xem được, không cần đăng nhập; `noindex`; in hoặc lưu PDF bằng hộp thoại in của trình duyệt (CSS print, A4 ngang). Chứng nhận bị thu hồi vẫn mở được nhưng ghi rõ "đã bị thu hồi" (không ghi lý do).
+- **Hồ sơ:** `/u/[login]` (chỉ thành viên đã đăng nhập) hiện các chứng nhận còn hiệu lực mà chủ nhân không ẩn. Thành viên ẩn/hiện từng chứng nhận ở `/settings`; ẩn khỏi hồ sơ **không** khóa link đã chia sẻ.
+- **Thu hồi:** chỉ admin, ở tab Quản trị → Chứng nhận, bắt buộc ghi lý do (3–280 ký tự); ghi `audit_logs` (`certificate.revoke`). Không có thao tác "khôi phục" trong giao diện.
+- **Hoàn thành trước khi có tính năng:** enrollment đã `completed` mà chưa có chứng nhận được cấp bù khi chủ nhân mở `/settings` hoặc hồ sơ của mình (commit nội dung là bản đang publish lúc cấp bù).
+
 ## 7. Yêu cầu chức năng (rút gọn)
 
 | ID | Yêu cầu | Phase |
@@ -144,7 +155,7 @@ Một người có thể có nhiều vai trò. Chi tiết RBAC: SECURITY.md.
 | FR-13 | Xóa mềm user/nội dung; giữ bài nộp (xem DATABASE). | MVP |
 | FR-14 | Xuất tiến độ (CSV) cho admin. | P2 |
 | FR-15 | Admin nhập/thay danh sách email được duyệt; chỉ admin xem được; mọi thay đổi ghi `audit_logs`; không xuất cho member. | MVP |
-| FR-16 | Hoàn thành track → cấp chứng nhận có link xác minh công khai (F19). | P2 |
+| FR-16 | Hoàn thành track → cấp chứng nhận một lần, có link xác minh công khai không cần đăng nhập; thành viên ẩn khỏi hồ sơ, admin thu hồi có audit (F19, quy tắc §6.2). | P2 |
 | FR-17 | Bài SQL chấm bằng `sql-checker`: truy vấn chạy read-only với timeout, kết quả ghi `test_runs`; so có thứ tự khi đề yêu cầu `ORDER BY` (F20). | MVP-Full |
 | FR-18 | Bảng xếp hạng chỉ gồm thành viên đã opt-in (`users.leaderboard_opt_in`), tính bằng truy vấn/view theo kỳ, không lưu điểm (F21). | MVP-Full |
 | FR-19 | Thành viên bật/tắt Web Push theo từng thiết bị; subscription hết hạn (404/410) tự xóa (F22). | MVP-Full |
