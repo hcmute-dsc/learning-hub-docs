@@ -201,9 +201,10 @@ Theo tinh thần RFC 9457 (problem+json):
 | `GET /auth/github/login` | public | MVP | redirect GitHub |
 | `GET /auth/me` | đã đăng nhập | MVP | user + roles |
 | `GET /tracks?level=&tag=&page=` | đã đăng nhập | MVP | chỉ published |
-| `GET /tracks/{slug}` | đã đăng nhập | MVP | gồm module + lesson + exercise tóm tắt, trạng thái mở khóa |
+| `GET /tracks/{slug}` | đã đăng nhập | MVP | gồm module + lesson + exercise tóm tắt, trạng thái mở khóa; `docs: {setup, resources}` cho biết track có trang nào |
+| `GET /tracks/{slug}/docs/{page}` | đã đăng nhập | MVP-Full | `page` = `setup` \| `resources`: Markdown của trang "Cài đặt"/"Tài liệu thêm" kèm `source` (repo, commit, đường dẫn file). 404 nếu track không có trang đó (learning-hub#44) |
 | `POST /tracks/{slug}/enrollments` | member | MVP | idempotent |
-| `GET /me/enrollments` | member | MVP | kèm % tiến độ |
+| `GET /me/enrollments` | member | MVP | kèm % tiến độ; `hasSetup` khi track có trang "Cài đặt" |
 | `GET /lessons/{id}` | member | MVP | body Markdown |
 | `PUT /lessons/{id}/progress` | member | MVP | `{status}` |
 | `GET /exercises/{id}` | member | MVP | 403/409 nếu khóa |

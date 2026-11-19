@@ -45,6 +45,9 @@ learning-hub-track-<slug>/
   tracks/
     sql-30-days/
       track.yaml
+      docs/                             # (tuỳ chọn) trang cấp track, §3.1b
+        setup.md                        # trang "Cài đặt"
+        resources.md                    # trang "Tài liệu thêm"
       modules/
         01-foundations/
           module.yaml
@@ -100,6 +103,21 @@ position: 10                         # thứ tự trong catalog
 status: active                       # active | archived
 modules: [01-foundations, 02-aggregation]   # *  thứ tự module (tên thư mục)
 ```
+
+### 3.1b Trang cấp track — `docs/setup.md`, `docs/resources.md` (learning-hub#44)
+
+Hai file **tuỳ chọn** trong thư mục track, giống trang "Installation" và "Resources" của một track Exercism:
+
+| File | Trang trên site | Viết gì |
+| --- | --- | --- |
+| `docs/setup.md` | **Cài đặt** (`/tracks/<slug>/setup`) | công cụ cần cài (Docker Desktop, WSL2, PostgreSQL…), từng bước cho Windows/macOS/Linux, và cách **tự kiểm tra** trên máy (lệnh chạy thử, kết quả mong đợi) |
+| `docs/resources.md` | **Tài liệu thêm** (`/tracks/<slug>/resources`) | sách, trang tham khảo, video để học sâu hơn |
+
+- Markdown thuần, **không front matter** và không cần tiêu đề `#`: site tự đặt tiêu đề "Cài đặt" / "Tài liệu thêm". Theo cùng luật Markdown như bài học (§4); ảnh tương đối tính từ thư mục `docs/` (ví dụ `../assets/docker-desktop.png`).
+- Không có file thì không có trang và không có tab. Trang track chỉ hiện tab "Tổng quan · Cài đặt · Tài liệu thêm" khi track có ít nhất một trang.
+- Track có `docs/setup.md`: dashboard nhắc thành viên mở trang **Cài đặt** ngay sau khi enroll, đến khi họ xong mục đầu tiên của track.
+- Sync/publish lưu hai trang theo phiên bản nội dung như mọi trường của track (DATABASE `tracks.setup_md`, `tracks.resources_md`). Sửa trang làm track hiện "Sửa" trong bản nháp.
+- Ví dụ: `learning-hub/content-example/tracks/sql-sample/docs/` và `tracks/example-track/docs/` trong `learning-hub-track-template`.
 
 ### 3.2 Module — `module.yaml`
 
@@ -263,6 +281,7 @@ Validator không dừng ở lỗi đầu tiên: trả về **toàn bộ** lỗi 
 | Nội dung | Markdown > 200 KB; `<script>`, `<iframe>`, `javascript:`, thuộc tính sự kiện inline **ngoài khối code** | Đã làm |
 | Quiz | `answer` ngoài phạm vi option, ít hơn 2 option, `id` câu hỏi trùng | Đã làm |
 | Hint | tên file không phải `NN.md`; số thứ tự có chỗ trống; quá 10 hint; hint rỗng; front matter sai (`cost` ngoài 0–100, trường lạ) | Đã làm |
+| Trang track | file `.md` khác `setup.md`/`resources.md` trong `docs/` của track (thường do gõ sai tên); trang rỗng; trang có front matter; Markdown vi phạm luật nội dung | Đã làm |
 | Lời giải | `solution.md`/`solution/` nằm trong repo nội dung công khai; lời giải trong repo checker trùng hai exercise cùng slug; Markdown của lời giải vi phạm luật nội dung | Đã làm |
 | Ghi chú mentor | `mentor-notes.md` rỗng, có front matter, hoặc vi phạm luật Markdown (§3.10) | Đã làm |
 | Khóa tự nhiên (lúc sync/publish, cần DB) | item mới dùng lại khóa tự nhiên (cha + slug, hoặc track slug) của bản ghi đang có với `id` khác ⇒ thường do `uid` bị sửa | Đã làm (API) |

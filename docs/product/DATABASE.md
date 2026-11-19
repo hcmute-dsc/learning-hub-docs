@@ -142,6 +142,8 @@ Sync idempotent nhờ UQ `(source_repo, commit_sha)`. Publish (1 giao dịch): v
 | position | int | thứ tự hiển thị |
 | tags | text[] | GIN index |
 | starter_repo | text | null — `owner/repo` của repo mẫu của track (một repo cho cả track, mỗi bài `code` một thư mục) |
+| setup_md | text | null — `docs/setup.md` của track, trang "Cài đặt" (CONTENT-SPECIFICATION §3.1b). Migration `20261119190000_track_docs` |
+| resources_md | text | null — `docs/resources.md` của track, trang "Tài liệu thêm" (§3.1b) |
 | status | text | `active` \| `archived` (bị gỡ khỏi Git khi publish, hoặc `status: archived` trong track.yaml) |
 | content_version_id | uuid | FK → content_versions (version **published** gần nhất thêm/sửa bản ghi; sync không đổi cột này) |
 | source_path | text | đường dẫn trong repo |
