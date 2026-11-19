@@ -25,6 +25,7 @@ Quy tắc bắt buộc:
 - Trả 404 thay vì 403 khi lộ sự tồn tại tài nguyên là nhạy cảm (bài nộp của người khác).
 - Hành động nhạy cảm (gán vai trò, publish content, đổi mentor, duyệt user, xóa/ẩn danh dữ liệu) ghi `audit_logs`; người thực hiện ≠ người bị tác động khi cấp `admin`.
 - Test tự động cho ma trận quyền (mỗi endpoint × vai trò) trong e2e.
+- **Hint và lời giải tham khảo** [P2, learning-hub#46]: `GET /exercises/{id}` chỉ trả nội dung các hint member **đã mở**; hint mở theo thứ tự, sau đủ `cost` lần nộp, và không mở được khi bài đang khóa (`POST /exercises/{id}/hints/{position}`, 409 nếu sai thứ tự hoặc chưa đủ lần nộp). Lời giải chỉ trả cho member đã **hoàn thành** bài (trạng thái `completed`: đạt, hoặc được duyệt nếu bài cần review; nộp mà chưa đạt thì chưa thấy), và luôn trả cho `mentor`/`admin` để review; `content_maintainer` không có quyền thêm. Lời giải không bao giờ nằm trong repo nội dung công khai (validator từ chối), chỉ đọc từ repo checker riêng tư bằng token chỉ đọc (`SOLUTIONS_GITHUB_TOKEN`). Quy tắc là hàm thuần có unit test: `apps/api/src/modules/submissions/hints.ts`.
 
 ## 3. Validate input
 

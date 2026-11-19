@@ -120,6 +120,8 @@ Host learnhub
 
 Người cài tự điền giá trị trên VPS. Không gửi secret qua chat hay issue.
 
+**Lời giải tham khảo (không bắt buộc, learning-hub#46).** Mặc định tắt (`SOLUTIONS_SOURCE=none`). Muốn bật: tạo fine-grained token chỉ đọc (Contents: Read-only) cho đúng repo riêng tư `learning-hub-checker`; trong `.env` đặt `SOLUTIONS_SOURCE=github`, `SOLUTIONS_REPO=hcmute-dsc/learning-hub-checker`, `SOLUTIONS_BRANCH=main` và tự gõ token vào `SOLUTIONS_GITHUB_TOKEN`; chạy lại Deploy rồi sync + publish nội dung. Lời giải được đọc ở commit mới nhất của repo checker lúc sync/publish; chỉ sửa lời giải thì phải đợi lần publish nội dung kế tiếp. Chi tiết: `deploy/README.md` bước 10 của repo code.
+
 ### 3.5. Secret GitHub Actions
 Bằng `gh` CLI trên máy bạn (trong `~/.ssh`). Khóa đi thẳng từ file lên GitHub, không qua clipboard:
 
