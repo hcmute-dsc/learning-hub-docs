@@ -214,6 +214,7 @@ Theo tinh thần RFC 9457 (problem+json):
 | `GET /me/submissions?exerciseId=` | member | MVP | cursor |
 | `POST /mentorship/requests` | member | MVP | |
 | `GET /reviews/queue?track=&mentee=` | mentor | MVP | cũ nhất trước, tối đa 200 dòng; `track` = slug, `mentee` = GitHub login (không phân biệt hoa thường); kèm `stats` (đang chờ, đã nhận, quá hạn, chờ lâu nhất, mentee không hoạt động ≥ 14 ngày) và `options` (track, mentee của mentor) |
+| `GET /reviews/submissions/{submissionId}` | mentor | MVP | trang review một bài nộp: bài nộp, các lần trước, đề bài, rubric và `exercise.mentorNotesMd` (ghi chú cho mentor, CONTENT-SPECIFICATION §3.10; `null` nếu bài không có). Đây là endpoint duy nhất trả ghi chú mentor |
 | `POST /submissions/{id}/reviews` | mentor | MVP | mở review (409 nếu đã có) |
 | `POST /reviews/{id}/comments` | reviewer | MVP | |
 | `POST /reviews/{id}/complete` | reviewer | MVP | `{status: approved\|changes_requested, summary}` |
