@@ -80,7 +80,8 @@ Việc lớn (Size L) thì tách thành nhiều issue nhỏ, hoặc dùng checkl
 1. Xem view **Board**: việc nào Done, việc nào kẹt ở In progress / In review quá lâu.
 2. Chọn việc cho sprint mới: ưu tiên P0 → P1, chuyển từ Backlog sang Ready nếu đã rõ, đặt Sprint.
 3. Mỗi người nhận 1–2 việc phù hợp thời gian học. CLB là việc tình nguyện: nhận ít mà xong còn hơn nhận nhiều mà bỏ dở.
-4. Thêm sprint mới khi hết: Project → ⚙ Settings → Sprint → Add iteration.
+4. Kiểm tra [issue `good first issue`](https://github.com/hcmute-dsc/learning-hub/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22) của learning-hub: còn ít nhất 3 việc đang mở. Trang [/contribute](https://learn.hcmute-dsc.io.vn/contribute) dẫn người mới tới danh sách này, nên danh sách trống là người mới không biết bắt đầu từ đâu (learning-hub#69). Thiếu thì tạo thêm việc nhỏ, ghi rõ bối cảnh, file cần sửa và khi nào là xong; để trống người nhận, Status = Ready. Cách viết: CONTRIBUTING.md mục "Good first issues".
+5. Thêm sprint mới khi hết: Project → ⚙ Settings → Sprint → Add iteration.
 
 ## 4. Cài đặt làm bằng tay trên web (API của GitHub chưa hỗ trợ)
 
