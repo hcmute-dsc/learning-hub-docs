@@ -1,7 +1,7 @@
 # DATABASE — Thiết kế PostgreSQL
 
 > PostgreSQL 16 + Prisma. Quy ước: bảng `snake_case` số nhiều, cột `snake_case` (Prisma map bằng `@map`). Khóa chính `uuid` (v7 sinh ở ứng dụng, để sắp xếp theo thời gian). Thời gian `timestamptz` (UTC). Nhãn: **[MVP]**, **[MVP-Full]** (thuộc MVP, làm sau MVP-Lite) hoặc **[P2]**.
-> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng view, không lưu điểm. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration.
+> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng view, không lưu điểm. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration, trừ `user_badges` (§3.16d, đã làm).
 
 ## 1. Phân loại dữ liệu
 
@@ -44,6 +44,7 @@ erDiagram
   tracks |o--o{ mentor_assignments : "scoped to"
   users ||--o{ audit_logs : acts
   users ||--o{ push_subscriptions : "subscribes (MVP-Full)"
+  users ||--o{ user_badges : "earns (P2)"
 ```
 
 Ghi chú: `exercise_prerequisites` là quan hệ tự tham chiếu `exercises`↔`exercises`. Mentor/mentee đều là `users` (hai FK trong `mentor_assignments`).
@@ -66,6 +67,7 @@ Ký hiệu: PK, FK, UQ (unique), IX (index). Mọi bảng có `created_at timest
 | status | text | `pending` (chờ duyệt) \| `active` \| `suspended`; default `pending`, tự thành `active` nếu có email đã xác minh trên GitHub khớp `approved_emails` (hoặc là admin bootstrap) |
 | last_login_at | timestamptz | null |
 | leaderboard_opt_in | boolean | not null default false — [MVP-Full] chỉ người tự bật mới xuất hiện trên bảng xếp hạng (ADR-08) |
+| show_achievements | boolean | not null default true — [P2] `false` ẩn huy hiệu và streak trên dashboard và hồ sơ (PRD §6.1, F12) |
 | updated_at, deleted_at | timestamptz | `deleted_at` = xóa mềm |
 
 Quan hệ: 1–N `user_roles`, `enrollments`, `submissions`, …
@@ -323,8 +325,19 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 
 Quy tắc: đăng ký lại cùng `endpoint` → upsert; push service trả 404/410 → xóa dòng; người dùng tắt trên thiết bị → xóa dòng.
 
+### 3.16d `user_badges` [P2]
+**Mục đích:** huy hiệu thành viên đã đạt (PRD §6.1, F12; migration `20261118120000_badges`, learning-hub#48).
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| user_id | uuid | FK → users, on delete cascade |
+| badge | text | not null — mã huy hiệu như `first_lesson`; CHECK `^[a-z0-9_]{1,40}$` |
+| awarded_at | timestamptz | not null default now() |
+
+PK `(user_id, badge)` → cấp huy hiệu idempotent (`insert … on conflict do nothing`). Danh sách huy hiệu và điều kiện nằm trong code (`packages/shared` `achievements.ts`), không có bảng `achievements`: thêm huy hiệu không cần migration, CHECK chỉ kiểm định dạng mã. Mã không còn trong code thì bị bỏ qua khi đọc. Streak không lưu, tính từ `lesson_progress` và `submissions`.
+
 ### 3.17 Phase 2 (chưa migrate)
-- `achievements(id, code uq, title, description, criteria jsonb)`, `user_achievements(user_id, achievement_id, awarded_at; PK cả hai)`.
+- Huy hiệu: đã làm bằng `user_badges` (§3.16d) thay cho thiết kế cũ `achievements` + `user_achievements`.
 - `notifications(id, user_id, type, payload jsonb, read_at, created_at)`; IX `(user_id, read_at, created_at desc)` — hộp thông báo trong app (P2). Web Push không cần bảng này (§3.16c, MVP-Full).
 
 ## 4. Ràng buộc quan trọng (tóm tắt)
