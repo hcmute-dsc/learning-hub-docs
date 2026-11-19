@@ -57,6 +57,7 @@ learning-hub-track-<slug>/
               statement.md                # đề bài
               hints/                      # P2
                 01.md
+              mentor-notes.md             # tuỳ chọn: ghi chú cho mentor khi review — CÔNG KHAI, xem §3.10
               assets/                     # ảnh, dữ liệu mẫu nhỏ
               # KHÔNG có solution/ ở repo công khai — xem §3.8
     git-github-basics/
@@ -224,6 +225,23 @@ Với `self_check`, đáp án gập cần hiển thị ngay nên nằm trong `st
 ### 3.9 Prerequisites
 Hai tầng: `lesson.prerequisites` (khuyến nghị, hiển thị; trỏ tới lesson **hoặc** exercise) và `exercise.prerequisites` (bắt buộc, khóa bài; **chỉ** trỏ tới exercise). Tham chiếu theo đường dẫn logic `<track>/<module>/<slug>` (slug, không phải tên thư mục). Đồ thị prerequisite của exercise phải là **DAG** (validator kiểm tra vòng).
 
+### 3.10 Ghi chú cho mentor — `mentor-notes.md` (tuỳ chọn, learning-hub#43)
+Mỗi exercise có thể có file `mentor-notes.md` cạnh `statement.md` (giống "mentor notes" của Exercism): những điểm cần xem khi review, lỗi hay gặp, cách góp ý. Nhờ đó các mentor review đồng đều, mentor mới đỡ bỡ ngỡ.
+
+```markdown
+## Khi review bài này
+- PR chỉ sửa `ABOUT.md`; file khác bị sửa thì nhắc thành viên tách ra.
+
+## Lỗi hay gặp
+- Mở PR vào repo template gốc thay vì repo của mình.
+```
+
+- Markdown thuần, **không** front matter; cùng luật Markdown như bài học (§4). File rỗng là lỗi validate: không cần ghi chú thì đừng tạo file.
+- Sync/publish lưu ghi chú theo phiên bản nội dung như các trường khác (DATABASE `exercises.mentor_notes_md`). Sửa ghi chú làm exercise được tính là "đã đổi" trong diff.
+- Hub chỉ hiện ghi chú trên trang review `/review/[submissionId]` cho `mentor`/`admin`; API không trả ghi chú cho member (SECURITY §2).
+- **Lưu ý: repo track công khai, nên ghi chú cũng công khai**: ai cũng đọc được trên GitHub. Hub chỉ ẩn ghi chú khỏi giao diện thành viên, **không** giữ bí mật. **Không đặt đáp án, lời giải hay test cần giấu ở đây**: chúng thuộc repo checker riêng tư (§3.6, §3.8). Ghi chú nên nói *cần xem gì*, không nói *đáp án là gì*.
+- Ví dụ: `content-example/tracks/git-github-basics/.../first-pull-request/mentor-notes.md` và bài mẫu trong `learning-hub-track-template`.
+
 ## 4. Validation
 
 Validator/parser nằm trong monorepo ứng dụng, package **`@hub/content`** (`packages/content`), dùng **Zod** làm nguồn sự thật cho schema (JSON Schema trong `schema/` chỉ là tuỳ chọn/tương lai). Cùng một code chạy ở ba nơi:
@@ -246,6 +264,7 @@ Validator không dừng ở lỗi đầu tiên: trả về **toàn bộ** lỗi 
 | Quiz | `answer` ngoài phạm vi option, ít hơn 2 option, `id` câu hỏi trùng | Đã làm |
 | Hint | tên file không phải `NN.md`; số thứ tự có chỗ trống; quá 10 hint; hint rỗng; front matter sai (`cost` ngoài 0–100, trường lạ) | Đã làm |
 | Lời giải | `solution.md`/`solution/` nằm trong repo nội dung công khai; lời giải trong repo checker trùng hai exercise cùng slug; Markdown của lời giải vi phạm luật nội dung | Đã làm |
+| Ghi chú mentor | `mentor-notes.md` rỗng, có front matter, hoặc vi phạm luật Markdown (§3.10) | Đã làm |
 | Khóa tự nhiên (lúc sync/publish, cần DB) | item mới dùng lại khóa tự nhiên (cha + slug, hoặc track slug) của bản ghi đang có với `id` khác ⇒ thường do `uid` bị sửa | Đã làm (API) |
 | Link | link nội bộ gãy; link ngoài (cảnh báo, không fail) | Dự kiến — bước CI của content repo |
 | Secret | secret lọt vào nội dung (gitleaks) | Dự kiến — bước CI của content repo |
