@@ -1,7 +1,7 @@
 # DATABASE — Thiết kế PostgreSQL
 
 > PostgreSQL 16 + Prisma. Quy ước: bảng `snake_case` số nhiều, cột `snake_case` (Prisma map bằng `@map`). Khóa chính `uuid` (v7 sinh ở ứng dụng, để sắp xếp theo thời gian). Thời gian `timestamptz` (UTC). Nhãn: **[MVP]**, **[MVP-Full]** (thuộc MVP, làm sau MVP-Lite) hoặc **[P2]**.
-> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng view, không lưu điểm. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration, trừ `user_badges` (§3.16d) và `certificates` (§3.16e), đã làm.
+> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng view, không lưu điểm. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration, trừ `user_badges` (§3.16d), `certificates` (§3.16e) và `notifications`, `notification_preferences` (§3.16f), đã làm.
 
 ## 1. Phân loại dữ liệu
 
@@ -13,7 +13,8 @@
 | Mentoring | `mentor_assignments`, `reviews`, `review_comments` | DB |
 | Vận hành | `audit_logs` | DB |
 | Thông báo (MVP-Full) | `push_subscriptions` | DB |
-| Phase 2 | `certificates`, `achievements`, `user_achievements`, `notifications` | DB |
+| Thông báo trong app (P2, F13) | `notifications`, `notification_preferences` | DB |
+| Phase 2 | `certificates`, `achievements`, `user_achievements` | DB |
 
 ## 2. ERD
 
@@ -48,6 +49,8 @@ erDiagram
   users ||--o{ certificates : "earns (P2)"
   tracks ||--o{ certificates : "certified in (P2)"
   users ||--o{ push_subscriptions : "subscribes (MVP-Full)"
+  users ||--o{ notifications : "receives (P2)"
+  users ||--o| notification_preferences : "chooses (P2)"
   users ||--o{ user_badges : "earns (P2)"
 ```
 
@@ -327,7 +330,7 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 | --- | --- | --- |
 | `sessions` | `id` (text, token ngẫu nhiên đã băm sha256) PK, `user_id` FK→users cascade, `expires_at`, `last_seen_at`, `user_agent`, `ip` | IX `(user_id)`, IX `(expires_at)` để dọn dẹp |
 | `webhook_deliveries` | `delivery_id` (text) PK — `X-GitHub-Delivery`, `event`, `received_at`, `processed_at` null | chống xử lý trùng; dọn sau 30 ngày |
-| `outbox_events` | `id` bigint identity PK, `type`, `payload jsonb`, `status` (`pending`\|`sent`\|`failed`), `attempts` int, `next_attempt_at`, `last_error` | IX `(status, next_attempt_at)`; dùng cho gửi Discord có retry |
+| `outbox_events` | `id` bigint identity PK, `type`, `payload jsonb`, `status` (`pending`\|`sent`\|`failed`), `attempts` int, `next_attempt_at`, `last_error` | IX `(status, next_attempt_at)`; hàng đợi thông báo có retry (§3.16f). `type`: `inbox.review_completed`, `inbox.review_requested`, `inbox.track_published`, `email.digest`. Discord hiện gửi thẳng, chưa qua bảng này |
 
 ### 3.16c `push_subscriptions` [MVP-Full]
 **Mục đích:** subscription Web Push của từng thiết bị/trình duyệt (DECISIONS ADR-08, ARCHITECTURE §10).
@@ -380,9 +383,39 @@ PK `(user_id, badge)` → cấp huy hiệu idempotent (`insert … on conflict d
 
 Ghi: chỉ `CertificatesRepository` (module `certificates`) đọc/ghi bảng này. Thu hồi dùng `update … where revoked_at is null` nên hai admin bấm cùng lúc chỉ một người thành công (người kia nhận 409).
 
+### 3.16f `notifications`, `notification_preferences` [P2, F13]
+**Mục đích:** chuông thông báo trong app và email tóm tắt tuỳ chọn (learning-hub#49). Migration `20261119120000_notifications`.
+
+Luồng: domain event → listener ghi `outbox_events` (chỉ id) → worker trong API (mỗi 15 giây, `FOR UPDATE SKIP LOCKED`) tìm người nhận và ghi `notifications`, hoặc gửi email. Lỗi thử lại với backoff 1, 2, 4… phút, tối đa 8 lần rồi `status = 'failed'` kèm `last_error`.
+
+`notifications` — một dòng cho mỗi người nhận:
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| id | uuid | PK (v7) |
+| user_id | uuid | FK → users, on delete cascade |
+| type | text | CHECK `review_completed` \| `review_requested` \| `track_published` |
+| payload | jsonb | `{title, body, link}`: chữ dựng sẵn lúc ghi, `link` là đường dẫn trong web; đọc chuông không cần join |
+| source_event_id | bigint | null — dòng `outbox_events` đã sinh ra nó; UQ `(source_event_id, user_id)` nên chạy lại không tạo trùng |
+| read_at | timestamptz | null = chưa đọc |
+| created_at | timestamptz | |
+
+IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor và admin đang active (admin mở được trang review), trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord).
+
+`notification_preferences` — lựa chọn email tóm tắt; không có dòng = tắt (mặc định):
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| user_id | uuid | PK, FK → users, on delete cascade |
+| email_digest | boolean | default false |
+| unsubscribe_token | text | UQ — 32 byte ngẫu nhiên (base64url) trong link huỷ của email |
+| last_digest_at | timestamptz | null — lần xếp hàng email gần nhất; đặt = lúc bật để email đầu chỉ có thông báo sau khi bật |
+| updated_at | timestamptz | |
+
+IX một phần `(last_digest_at) where email_digest`. Email gửi sau 8:00 giờ VN, mỗi ngày một lần, chỉ khi có thông báo chưa đọc mới; địa chỉ là `users.email` của tài khoản active.
+
 ### 3.17 Phase 2 (chưa migrate)
 - Huy hiệu: đã làm bằng `user_badges` (§3.16d) thay cho thiết kế cũ `achievements` + `user_achievements`.
-- `notifications(id, user_id, type, payload jsonb, read_at, created_at)`; IX `(user_id, read_at, created_at desc)` — hộp thông báo trong app (P2). Web Push không cần bảng này (§3.16c, MVP-Full).
 
 ## 4. Ràng buộc quan trọng (tóm tắt)
 
@@ -432,6 +465,7 @@ Ghi: chỉ `CertificatesRepository` (module `certificates`) đọc/ghi bảng n�
 | submissions, test_runs, reviews, review_comments | Không xóa mềm lẻ; bất biến. Xóa chỉ khi hết thời hạn lưu giữ. |
 | enrollments | `status = 'dropped'` thay vì xóa. |
 | approved_emails | Xóa cứng khi admin gỡ hoặc thay danh sách (thay đổi đã ghi `audit_logs`). Gỡ email không tự khóa tài khoản đã `active`. |
+| notifications, notification_preferences | Xóa cứng theo user (cascade); thông báo tự xóa sau 90 ngày. |
 | push_subscriptions | Xóa cứng khi người dùng tắt, push service báo hết hạn (404/410) hoặc user bị xóa/ẩn danh. |
 | audit_logs | Append-only, không xóa trước hạn. |
 
@@ -447,4 +481,6 @@ Mọi truy vấn mặc định lọc `deleted_at is null` qua Prisma middleware/
 | audit_logs | 24 tháng |
 | content_versions | Giữ vô thời hạn (nhỏ) |
 | approved_emails | Đến khi người đó rời CLB; admin rà soát danh sách mỗi học kỳ |
+| notifications | 90 ngày (worker xóa) |
+| outbox_events | Dòng `sent` chưa tự dọn; xóa tay dòng cũ hơn 90 ngày khi bảng lớn |
 | push_subscriptions | Đến khi tắt/hết hạn; xóa nếu `last_used_at` (hoặc `created_at`) quá 90 ngày |

@@ -123,8 +123,8 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 - E: `MentorRequested`, `MentorAssigned`, `MentorshipEnded`. D: `users`.
 
 ### notifications
-- **Trách nhiệm:** nhận domain event, chọn kênh/mẫu tin, gửi qua port `NotificationChannel`; (P2) lưu `notifications`.
-- C: (P2) `NotificationsController`; [MVP-Full] `PushSubscriptionsController`. S: `NotificationDispatcher`. Port: `NotificationChannel` (adapter Discord + [MVP-Full] `WebPushChannel`, bảng `push_subscriptions`).
+- **Trách nhiệm:** nhận domain event, chọn kênh/mẫu tin, gửi qua port `NotificationChannel`; (P2, đã làm) chuông trong app và email tóm tắt: `InboxListener` ghi `outbox_events`, `OutboxWorker` (khởi động trong `main.ts`, không chạy trong CLI) gọi `NotificationDispatcher` để ghi `notifications` cho từng người nhận hoặc gửi email qua port `MailSender` (adapter SMTP `integrations/email`, no-op khi thiếu `SMTP_HOST`/`SMTP_FROM`). DATABASE §3.16f.
+- C: (P2) `InboxController`, `UnsubscribeController`; [MVP-Full] `PushSubscriptionsController`. S: `NotificationDispatcher`. Port: `NotificationChannel` (adapter Discord + [MVP-Full] `WebPushChannel`, bảng `push_subscriptions`).
 - D: lắng nghe event, `users`.
 
 ### audit
@@ -236,7 +236,12 @@ Theo tinh thần RFC 9457 (problem+json):
 | `GET /admin/certificates` | admin | P2 | 200 chứng nhận mới nhất, kèm login và lý do thu hồi |
 | `POST /admin/certificates/{code}/revoke` | admin | P2 | `{reason}` 3–280 ký tự; 409 nếu đã thu hồi; ghi audit `certificate.revoke` |
 | `GET /me/achievements` | member | P2 | |
-| `GET /me/notifications` | member | P2 | |
+| `GET /me/notifications` | member | P2 | 20 mới nhất của mình + `unreadCount` |
+| `GET /me/notifications/unread-count` | member | P2 | `{data:{count}}` cho chuông trên header |
+| `POST /me/notifications/{id}/read` | member | P2 | 204; id không phải của mình → 404 |
+| `POST /me/notifications/read-all` | member | P2 | 204 |
+| `GET/PUT /me/notifications/settings` | member | P2 | `{emailDigest}`; trả thêm `emailAvailable` (server có SMTP), `hasEmail`; bật khi không có SMTP/email → 409 |
+| `POST /notifications/unsubscribe` | công khai (token) | P2 | `{token}` từ link email → tắt email tóm tắt; 204 |
 | `POST /me/push-subscriptions` | member | MVP-Full | `{endpoint, keys:{p256dh, auth}}`; upsert theo `endpoint`; 422 nếu host không thuộc danh sách push service |
 | `DELETE /me/push-subscriptions/{id}` | member | MVP-Full | chỉ subscription của mình |
 | `PATCH /me/settings` | member | MVP-Full | `{leaderboardOptIn}` |
