@@ -2,7 +2,7 @@
 
 Hướng dẫn từ lúc có ý tưởng tới lúc track hiện trên https://learn.hcmute-dsc.io.vn. Mỗi track nằm trong **một repo riêng** `hcmute-dsc/learning-hub-track-<slug>`, tạo từ [learning-hub-track-template](https://github.com/hcmute-dsc/learning-hub-track-template) ([DECISIONS ADR-10](../product/DECISIONS.md)). Mentor chỉ cần clone repo của track mình, không cần clone cả hệ thống.
 
-Cập nhật lần cuối: 18/11/2026. Đã chạy thử các bước của mentor (mục 3) trên bản sao của template: `init-track` và validator đều chạy đúng.
+Cập nhật lần cuối: 19/11/2026 (thêm trang Cài đặt / Tài liệu thêm, learning-hub#44). Đã chạy thử các bước của mentor (mục 3) trên bản sao của template: `init-track` và validator đều chạy đúng.
 
 ## 0. Ai làm gì
 
@@ -69,6 +69,8 @@ Mỗi file mẫu có comment giải thích từng trường. Đặc tả đầy 
 ```
 tracks/<slug>/
   track.yaml                       # tóm tắt, cấp độ, thẻ, mục tiêu, danh sách chương
+  docs/setup.md                    # (tuỳ chọn) trang "Cài đặt": cài công cụ, tự kiểm tra bài
+  docs/resources.md                # (tuỳ chọn) trang "Tài liệu thêm"
   assets/                          # ảnh (≤ 500 KB/ảnh)
   modules/01-<tên-chương>/
     module.yaml                    # thứ tự bài học và bài tập của chương
@@ -86,6 +88,7 @@ Quy tắc quan trọng:
 - Mọi câu lệnh, đoạn code trong bài phải **chạy thử** trước khi commit. Đáp án quiz phải khớp câu hỏi.
 - Nội dung lấy từ nơi khác: ghi nguồn và tác giả trong PR và trong `track.yaml` (`source`).
 - Không đưa lời giải hay test ẩn vào repo (repo công khai).
+- Track cần cài công cụ trước khi học (Docker, PostgreSQL, Python…): viết `docs/setup.md` thay vì một bài học "Cài đặt". Ghi từng bước cho Windows/macOS/Linux và một lệnh để tự kiểm tra, kèm kết quả mong đợi. Site hiện tab **Cài đặt** trên trang track và nhắc người mới enroll mở nó. Không cần thì xóa file mẫu; `docs/resources.md` cũng vậy ([CONTENT-SPECIFICATION §3.1b](../product/CONTENT-SPECIFICATION.md#31b-trang-cấp-track--docssetupmd-docsresourcesmd-learning-hub44)).
 
 ### 3.3 Kiểm tra trên máy
 
@@ -158,12 +161,14 @@ Issue đề xuất chỉ chuyển Done khi track đã lên site.
 | `tracks.yaml: … commit must be a full 40-character SHA` | Ghi tên nhánh hoặc commit rút gọn | Dán đủ 40 ký tự từ `git ls-remote` |
 | `track "<slug>" is both in this repo and in …` | Track vẫn còn trong `tracks/` của learning-hub-content | Xóa thư mục cũ trong learning-hub-content |
 | `uid` trùng | Copy bài từ track khác mà không đổi `uid` | Đổi `uid` của bài **chưa publish**; bài đã publish thì không đổi |
+| `only docs/setup.md and docs/resources.md are published from docs/` | Gõ sai tên file trang track, hoặc thêm trang khác trong `docs/` | Đổi tên thành `setup.md`/`resources.md`; nội dung khác viết thành bài học |
+| `front matter is not used here` | `docs/setup.md` hoặc `docs/resources.md` có khối `--- … ---` | Xóa khối đó, bắt đầu bằng nội dung |
 
 ## 7. Xong khi
 
 - [ ] Repo `learning-hub-track-<slug>` public, mentor có quyền Maintain, CI `validate` xanh trên `main`.
 - [ ] `tracks.yaml` trong learning-hub-content ghim đúng commit, CI xanh.
-- [ ] Track đã publish, trang `/tracks/<slug>` mở được, dòng Nguồn đúng repo.
+- [ ] Track đã publish, trang `/tracks/<slug>` mở được, dòng Nguồn đúng repo. Track có `docs/setup.md` thì tab **Cài đặt** mở được.
 - [ ] Issue đề xuất Done trên Project #1.
 
 Skill cho agent: `new-track` trong [learning-hub](https://github.com/hcmute-dsc/learning-hub/tree/main/.claude/skills/new-track) (phía Ban chủ nhiệm) và trong repo template (phía mentor).

@@ -22,6 +22,7 @@ flowchart TD
   Dash["dashboard"]
   Tracks["tracks"]
   Track["tracks/slug"]
+  TrackDocs["tracks/slug/setup, resources"]
   Module["tracks/slug/module"]
   Lesson["lessons/id"]
   Exercise["exercises/id"]
@@ -43,6 +44,8 @@ flowchart TD
   Home --> Login --> Pending
   Login --> Dash
   Dash --> Tracks --> Track --> Module --> Lesson
+  Track --> TrackDocs
+  Dash --> TrackDocs
   Module --> Exercise --> Sub
   Dash --> MySubs
   Dash --> MyMentor
@@ -61,6 +64,7 @@ flowchart TD
 
 Khối theo thứ tự ưu tiên:
 1. **Tiếp tục học** — một thẻ lớn: bài kế tiếp (lesson/exercise) của track gần nhất. [MVP]
+   Trước thẻ này: **Cài đặt cho <track>** khi track vừa enroll có trang "Cài đặt" và thành viên chưa xong mục nào của track (learning-hub#44). [MVP-Full]
 2. **Việc cần làm** — bài `changes_requested` cần sửa, bài đang `testing`, yêu cầu mentor đang chờ. [MVP]
 3. **Lộ trình của tôi** — danh sách track đã enroll với vòng tiến độ, nhãn đợi (`cohort`). [MVP]
 4. **Mentor của tôi** — tên, nút nhắn (liên kết Discord), bài đang chờ review. [MVP]
@@ -76,6 +80,7 @@ Dashboard admin (`/admin`): số thành viên `pending`, số track published, v
 ```
 Track  (catalog card: tiêu đề, level, giờ ước tính, tags, số bài, người đóng góp)
  └─ Trang Track
+     • Tab: Tổng quan · Cài đặt · Tài liệu thêm (chỉ khi track có docs/setup.md hoặc docs/resources.md)
      • Giới thiệu + "Sau khi học bạn có thể…" (outcomes)
      • Điều kiện tiên quyết (track khuyến nghị)
      • Lộ trình: danh sách Module (có % tiến độ)
