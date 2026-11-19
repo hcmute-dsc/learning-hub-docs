@@ -327,7 +327,7 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 Quy tắc: đăng ký lại cùng `endpoint` → upsert; push service trả 404/410 → xóa dòng; người dùng tắt trên thiết bị → xóa dòng.
 
 ### 3.16d `notifications`, `notification_preferences` [P2, F13]
-**Mục đích:** chuông thông báo trong app và email tóm tắt tuỳ chọn (learning-hub#49). Migration `20261118120000_notifications`.
+**Mục đích:** chuông thông báo trong app và email tóm tắt tuỳ chọn (learning-hub#49). Migration `20261119120000_notifications`.
 
 Luồng: domain event → listener ghi `outbox_events` (chỉ id) → worker trong API (mỗi 15 giây, `FOR UPDATE SKIP LOCKED`) tìm người nhận và ghi `notifications`, hoặc gửi email. Lỗi thử lại với backoff 1, 2, 4… phút, tối đa 8 lần rồi `status = 'failed'` kèm `last_error`.
 
