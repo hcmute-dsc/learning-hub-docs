@@ -84,6 +84,7 @@
 
 **Giữ trong MVP (MVP-Full)** theo quyết định của Chủ nhiệm CLB (16/11/2026), trước đây nằm trong danh sách loại:
 - **Bảng xếp hạng** theo "thiết kế an toàn": chỉ hiện thành viên đã **opt-in** (mặc định ẩn); theo học kỳ/đợt và reset mỗi kỳ, không có xếp hạng toàn thời gian; xếp theo số bài hoàn thành (`approved` hoặc tự động `passed`), `self_check` có trọng số thấp hơn bài chấm tự động/mentor duyệt, **không bao giờ** theo tốc độ; hiện top 10 + hạng của chính người xem. Xem CRITIQUE §3.4, FRONTEND-DESIGN §13, DATABASE §6.
+  - **Đăng bảng xếp hạng tuần lên Discord** (bổ sung 21/11/2026, [learning-hub#76](https://github.com/hcmute-dsc/learning-hub/issues/76)): thành viên tự kết nối tài khoản Discord trong `/settings` bằng OAuth2 scope `identify` (chỉ đọc id và tên, không đọc tin nhắn hay server). Sáng thứ Hai 9:00 giờ VN, app đăng top 5 của tuần trước (cùng truy vấn, cửa sổ 7 ngày) thành một embed qua webhook kênh CLB và `outbox_events` (thử lại khi lỗi, key `leaderboard-week:<YYYY-Www>` để không đăng trùng; tuần trống không đăng). Người đã kết nối được tag bằng `<@id>`, và chỉ những id đó nằm trong `allowed_mentions.users` (`parse` rỗng), nên không ai khác bị ping. **Kết nối Discord không phải đồng ý lên bảng**: chỉ `leaderboard_opt_in` quyết định. **Không cần bot Discord.**
 - **Thông báo push trên trình duyệt** (Web Push: service worker + khóa VAPID): bài nộp được review, có yêu cầu review mới (mentor), track mới được publish. Discord vẫn là kênh thứ hai. Xem ARCHITECTURE §10, SECURITY §8.
 
 ## ADR-09 — Chiến lược repo GitHub (tóm tắt)

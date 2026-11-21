@@ -25,6 +25,7 @@ Cập nhật lần cuối: 18/11/2026.
 | Giám sát | workflow `Uptime` mỗi 15 phút; cảnh báo lỗi 500 vào kênh Discord vận hành |
 | Discord | bật 17/11/2026: kênh CLB + kênh vận hành riêng tư |
 | Email tóm tắt (SMTP) | chưa bật: `SMTP_*` trong `.env` còn trống (mục 3.9) |
+| Kết nối Discord + bảng xếp hạng tuần | chưa bật kết nối: `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET` còn trống (mục 3.10); bài tuần vẫn đăng qua webhook kênh CLB khi có người bật bảng xếp hạng |
 
 **Secret và biến trên GitHub** (repo `hcmute-dsc/learning-hub`):
 
@@ -203,6 +204,25 @@ docker compose -f docker-compose.prod.yml exec -T db psql -U hub -d learning_hub
 
 Mật khẩu SMTP lộ: thu hồi App password/SMTP key, tạo cái mới, sửa `.env`, Deploy lại.
 
+### 3.10. Kết nối Discord và bảng xếp hạng tuần (không bắt buộc)
+Thành viên bấm **Kết nối Discord** trong `/settings` (OAuth2, chỉ scope `identify`: đọc id và tên Discord, không đọc tin nhắn hay server). Sáng thứ Hai 9:00 giờ VN, API đăng top 5 bảng xếp hạng tuần trước lên **kênh CLB** qua `DISCORD_WEBHOOK_URL` (mục 3.8) và tag người đã kết nối ([learning-hub#76](https://github.com/hcmute-dsc/learning-hub/issues/76), [ADR-08](../product/DECISIONS.md#adr-08--loại-khỏi-mvp)). Không cần bot. Chỉ người đã bật bảng xếp hạng mới có tên; kết nối Discord không phải đồng ý lên bảng. Chi tiết đầy đủ: `deploy/README.md` Bước 14.
+
+1. https://discord.com/developers/applications → **New Application** (`DSC Learning Hub`).
+2. Tab **OAuth2 → Redirects → Add Redirect**: `https://learn.hcmute-dsc.io.vn/api/v1/me/discord/callback`, **Save Changes**. Local dùng application riêng với `http://localhost:3000/api/v1/me/discord/callback`.
+3. Cũng tab **OAuth2**: chép **Client ID**, bấm **Reset Secret** lấy **Client Secret** (chỉ hiện một lần). Không cần bot, không mời app vào server.
+4. SSH bằng `learnhub`, `nano /opt/learning-hub/.env`, điền `DISCORD_CLIENT_ID=` và `DISCORD_CLIENT_SECRET=`. Không commit, không dán vào chat, issue hay PR.
+5. Chạy lại Deploy để API đọc `.env`.
+
+Thiếu hai biến này thì nút bị ẩn, bài tuần vẫn đăng (mọi người hiện bằng tên). Thiếu `DISCORD_WEBHOOK_URL` thì không đăng gì.
+
+Kiểm tra: vào `/settings` → mục **Discord** → **Kết nối Discord** → quay về thấy tên Discord; **Quản trị → Nhật ký** có dòng "Kết nối Discord". Sau 9:00 thứ Hai:
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T db psql -U hub -d learning_hub -c   "select id, idempotency_key, status, attempts, last_error from outbox_events where type = 'discord.leaderboard_week' order by id desc limit 5"
+```
+
+Mỗi tuần có đúng một dòng `leaderboard-week:<YYYY-Www>`; chạy lại trong tuần không tạo dòng mới. Tuần không ai có bài thì không có dòng. Client Secret lộ: **Reset Secret** trên Discord, sửa `.env`, Deploy lại.
+
 ## 4. Việc thường ngày
 
 | Việc | Cách làm |
@@ -364,7 +384,7 @@ Mỗi lần khôi phục database, quay về bản cũ hay site sập lâu, ghi 
 2. Chuyển quyền admin repo/org GitHub, quyền Cloudflare (DNS) và quyền quản trị VPS.
 3. Chuyển OAuth app sang org hoặc tạo lại, rồi sửa `GITHUB_CLIENT_*` trong `.env` và chạy lại Deploy.
 4. Tạo key deploy mới (mục 3.3, 3.5), xóa khóa cũ khỏi `authorized_keys`, cập nhật `VPS_SSH_KEY`.
-5. Kiểm tra lại webhook Discord (mục 3.8). Người cũ rời server thì tạo webhook mới. Nếu đã bật email tóm tắt (mục 3.9): đổi App password/SMTP key của tài khoản gửi và sửa `SMTP_PASSWORD`.
+5. Kiểm tra lại webhook Discord (mục 3.8). Người cũ rời server thì tạo webhook mới. Nếu đã bật email tóm tắt (mục 3.9): đổi App password/SMTP key của tài khoản gửi và sửa `SMTP_PASSWORD`. Nếu đã bật kết nối Discord (mục 3.10): chuyển quyền Discord application (Developer Portal → Team) hoặc **Reset Secret** và sửa `DISCORD_CLIENT_SECRET`.
 6. Người mới làm phần cài đặt ở mục 5.2 với khóa `age` và SSH key của **họ**, thay dòng `age1…` trong `offsite-recipients.txt`, rồi tự chạy cả hai kiểm tra ở mục 5.3 một lần. Người cũ xóa dòng `learning-hub-backup-pull` của mình trong `authorized_keys`, gỡ task trong Task Scheduler, xóa các bản sao và khóa `age` trên máy mình.
 7. GitHub App `hcmute-dsc-learning-hub` (tự thêm issue/PR vào project) thuộc org, không cần tạo lại. Chỉ cần người mới là owner của org; nghi lộ private key thì đổi key theo [WORKFLOW §4](WORKFLOW.md#4-cài-đặt-làm-bằng-tay-trên-web-api-của-github-chưa-hỗ-trợ).
 8. Cập nhật bảng "Hiện trạng production" ở mục 1 và ngày "Cập nhật lần cuối".

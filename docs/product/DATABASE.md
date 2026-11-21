@@ -1,7 +1,7 @@
 # DATABASE — Thiết kế PostgreSQL
 
 > PostgreSQL 16 + Prisma. Quy ước: bảng `snake_case` số nhiều, cột `snake_case` (Prisma map bằng `@map`). Khóa chính `uuid` (v7 sinh ở ứng dụng, để sắp xếp theo thời gian). Thời gian `timestamptz` (UTC). Nhãn: **[MVP]**, **[MVP-Full]** (thuộc MVP, làm sau MVP-Lite) hoặc **[P2]**.
-> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng view, không lưu điểm. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration, trừ `user_badges` (§3.16d), `certificates` (§3.16e) và `notifications`, `notification_preferences` (§3.16f), đã làm.
+> Nguyên tắc: **schema MVP gọn** — 18 bảng domain (kể cả bảng nối và `approved_emails`) + 3 bảng hạ tầng nhỏ (`sessions`, `webhook_deliveries`, `outbox_events`). MVP-Full thêm bảng `push_subscriptions` và cột `users.leaderboard_opt_in` (quyết định 16/11/2026, DECISIONS ADR-08); bảng xếp hạng tính bằng một truy vấn lúc đọc, không lưu điểm; learning-hub#76 thêm `users.discord_user_id`, `users.discord_username` và `outbox_events.idempotency_key`. Các bảng P2 chỉ mô tả ngắn, chưa tạo migration, trừ `user_badges` (§3.16d), `certificates` (§3.16e) và `notifications`, `notification_preferences` (§3.16f), đã làm.
 
 ## 1. Phân loại dữ liệu
 
@@ -73,7 +73,9 @@ Ký hiệu: PK, FK, UQ (unique), IX (index). Mọi bảng có `created_at timest
 | avatar_url | text | null |
 | status | text | `pending` (chờ duyệt) \| `active` \| `suspended`; default `pending`, tự thành `active` nếu có email đã xác minh trên GitHub khớp `approved_emails` (hoặc là admin bootstrap) |
 | last_login_at | timestamptz | null |
-| leaderboard_opt_in | boolean | not null default false — [MVP-Full] chỉ người tự bật mới xuất hiện trên bảng xếp hạng (ADR-08) |
+| leaderboard_opt_in | boolean | not null default false — [MVP-Full] chỉ người tự bật mới xuất hiện trên bảng xếp hạng (ADR-08); đã làm ([learning-hub#5](https://github.com/hcmute-dsc/learning-hub/issues/5)) |
+| discord_user_id | text | null, UQ, CHECK chỉ chữ số (snowflake) — [MVP-Full] tài khoản Discord thành viên tự kết nối trong `/settings` (OAuth2 scope `identify`), chỉ để tag trong bài đăng bảng xếp hạng tuần; **không** phải đồng ý lên bảng ([learning-hub#76](https://github.com/hcmute-dsc/learning-hub/issues/76)) |
+| discord_username | text | null — tên Discord lúc kết nối, hiện trong `/settings` |
 | show_achievements | boolean | not null default true — [P2] `false` ẩn huy hiệu và streak trên dashboard và hồ sơ (PRD §6.1, F12) |
 | updated_at, deleted_at | timestamptz | `deleted_at` = xóa mềm |
 
@@ -333,7 +335,7 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 | --- | --- | --- |
 | `sessions` | `id` (text, token ngẫu nhiên đã băm sha256) PK, `user_id` FK→users cascade, `expires_at`, `last_seen_at`, `user_agent`, `ip` | IX `(user_id)`, IX `(expires_at)` để dọn dẹp |
 | `webhook_deliveries` | `delivery_id` (text) PK — `X-GitHub-Delivery`, `event`, `received_at`, `processed_at` null | chống xử lý trùng; dọn sau 30 ngày |
-| `outbox_events` | `id` bigint identity PK, `type`, `payload jsonb`, `status` (`pending`\|`sent`\|`failed`), `attempts` int, `next_attempt_at`, `last_error` | IX `(status, next_attempt_at)`; hàng đợi thông báo có retry (§3.16f). `type`: `inbox.review_completed`, `inbox.review_requested`, `inbox.track_published`, `email.digest`. Discord hiện gửi thẳng, chưa qua bảng này |
+| `outbox_events` | `id` bigint identity PK, `type`, `payload jsonb`, `status` (`pending`\|`sent`\|`failed`), `attempts` int, `next_attempt_at`, `last_error` | IX `(status, next_attempt_at)`; hàng đợi thông báo có retry (§3.16f). `type`: `inbox.review_completed`, `inbox.review_requested`, `inbox.track_published`, `email.digest`, `discord.leaderboard_week` (bài đăng bảng xếp hạng tuần, learning-hub#76). `idempotency_key` text null UQ: dòng thứ hai cùng key không được ghi (vd `leaderboard-week:2026-W47`). Các tin Discord khác vẫn gửi thẳng, chưa qua bảng này |
 
 ### 3.16c `push_subscriptions` [MVP-Full]
 **Mục đích:** subscription Web Push của từng thiết bị/trình duyệt (DECISIONS ADR-08, ARCHITECTURE §10).
@@ -448,7 +450,7 @@ IX một phần `(last_digest_at) where email_digest`. Email gửi sau 8:00 gi�
 
 - `v_exercise_progress(user_id, exercise_id, state)` — `completed` nếu có submission `approved`, hoặc `passed` khi `requires_review = false`; ngược lại `attempted`/`not_started`.
 - `v_track_progress(user_id, track_id, completed, total)` — đếm lesson hoàn thành + exercise completed.
-- `v_leaderboard_term(term, cohort, user_id, score, rank)` [MVP-Full] — chỉ user `active` có `leaderboard_opt_in = true`; đếm exercise hoàn thành lần đầu **trong kỳ** (submission `approved`, hoặc `passed` khi `requires_review = false`), trọng số theo loại: `self_check` thấp hơn bài chấm tự động/mentor duyệt (vd 1 và 3; cấu hình, chốt theo học kỳ); `rank` = `dense_rank()` theo `score`, **không** dùng thời gian/tốc độ để phân hạng. Kỳ lấy từ cấu hình học kỳ (ngày bắt đầu/kết thúc), lọc thêm theo `enrollments.cohort` nếu có. API chỉ trả top 10 + dòng của người xem. Không bảng điểm lưu trữ, không xếp hạng toàn thời gian.
+- Bảng xếp hạng [MVP-Full] (đã làm, [learning-hub#5](https://github.com/hcmute-dsc/learning-hub/issues/5)): một truy vấn trong API (`modules/leaderboard/leaderboard.repository.ts`) thay cho view `v_leaderboard_term`, cùng quy tắc: chỉ user `active` có `leaderboard_opt_in = true`; đếm exercise hoàn thành **lần đầu** trong khoảng thời gian (submission `approved`, hoặc `passed` khi `requires_review = false`; thời điểm = lúc review `approved`, nếu không thì `submissions.updated_at`); trọng số `self_check` thấp hơn (env `LEADERBOARD_WEIGHT_SELF_CHECK` = 1, `LEADERBOARD_WEIGHT_GRADED` = 3, chốt theo học kỳ); `rank` = dense rank theo điểm, **không** dùng thời gian/tốc độ. Kỳ tính theo giờ VN: HK1 1/9–31/1, HK2 1/2–30/6, hè 1/7–31/8 (`term.ts`). API trả top 10 + dòng của người xem. Bài đăng Discord hằng tuần (learning-hub#76) dùng lại truy vấn này với cửa sổ 7 ngày (thứ Hai → thứ Hai), top 5. Chưa lọc theo `cohort`. Không bảng điểm lưu trữ, không xếp hạng toàn thời gian.
 
 ## 7. Chiến lược migration
 
