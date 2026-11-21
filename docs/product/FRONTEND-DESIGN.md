@@ -53,7 +53,8 @@ Khớp INFORMATION-ARCHITECTURE. Đường dẫn dùng `slug` (đọc được) 
 | `/submissions/[id]` | Chi tiết bài nộp, test run, review | dynamic, polling |
 | `/me/submissions`, `/me/mentorship` | Lịch sử, mentor của tôi | dynamic |
 | `/me/settings` | Cài đặt: thông báo (Web Push theo thiết bị), hiện mình trên bảng xếp hạng (opt-in) — MVP-Full | dynamic |
-| `/leaderboard` | Bảng xếp hạng theo kỳ/đợt: top 10 + hạng của mình — MVP-Full | dynamic |
+| `/leaderboard` | Bảng xếp hạng theo học kỳ hoặc tuần, lọc theo lộ trình: bục top 3, hạng 4–10, hạng của mình, lưu ảnh — MVP-Full | dynamic |
+| `/leaderboard/image` | Ảnh PNG của bảng (vuông 1080×1080 hoặc ngang 1200×630) để đăng fanpage/website — learning-hub#88 | dynamic |
 | `/review`, `/review/[submissionId]` | Hàng đợi, màn hình review | dynamic (mentor) |
 | `/admin/...` | Users, mentorship, content versions, audit | dynamic (admin) |
 
@@ -131,8 +132,10 @@ Lesson/track render server + cache; tách code theo route; ảnh dùng `next/ima
 
 **Bảng xếp hạng opt-in (MVP-Full, DECISIONS ADR-08).** Trang `/leaderboard`, chỉ thành viên đã đăng nhập:
 - Chỉ hiện người đã bật "Hiện tôi trên bảng xếp hạng" ở `/me/settings` (mặc định **tắt**); người chưa bật thấy lời mời bật kèm giải thích ngắn.
-- Theo học kỳ/đợt (bộ chọn kỳ/`cohort`, mặc định kỳ hiện tại), reset mỗi kỳ; **không** có tab "mọi thời đại".
+- Theo **học kỳ** (mặc định kỳ hiện tại, reset mỗi kỳ) hoặc **tuần** (thứ Hai → thứ Hai giờ VN, giống bài đăng Discord), nút kỳ/tuần trước–sau, lọc theo **lộ trình**; bộ lọc nằm trong URL. **Không** có tab "mọi thời đại", không có kỳ/tuần tương lai. Lọc theo `cohort`: chưa làm.
 - Xếp theo số bài hoàn thành có trọng số (`self_check` thấp hơn bài chấm tự động/mentor duyệt); **không** hiển thị thời gian hay tốc độ; đồng hạng hiển thị cùng hạng.
-- Hiện **top 10** + một dòng "Hạng của bạn" (nếu đã bật). Không dùng màu/hiệu ứng "thua cuộc"; có liên kết về tiến độ cá nhân.
+- Hiện **top 10**: top 3 trên **bục** vàng/bạc/đồng (kiểu huy chương của huy hiệu), hạng 4–10 là danh sách; dòng của mình được tô sáng, ngoài top 10 thì có mục "Hạng của bạn". Không dùng màu/hiệu ứng "thua cuộc"; có liên kết về tiến độ cá nhân.
+- Hiệu ứng vào trang nhẹ (bục mọc lên, huy chương bật ra); tắt hết khi `prefers-reduced-motion`.
+- **Lưu ảnh** ([learning-hub#88](https://github.com/hcmute-dsc/learning-hub/issues/88)): PNG vẽ phía server bằng `next/og`, cỡ vuông 1080×1080 (fanpage) hoặc ngang 1200×630 (website), có logo DSC, kỳ/tuần, lộ trình, top 10. Ảnh chỉ có người đã bật, không bao giờ có dòng riêng của người lưu, nên chia sẻ được. Font Be Vietnam Pro (OFL) đi kèm để chữ Việt đúng.
 
 **Web Push (MVP-Full).** `/me/settings` có công tắc "Nhận thông báo trên thiết bị này" (xin quyền `Notification` chỉ khi người dùng bấm, không hỏi lúc tải trang); service worker `public/sw.js` + `manifest.webmanifest`. Trên iOS/iPadOS hiển thị hướng dẫn "Thêm vào Màn hình chính" trước khi bật. Bấm thông báo mở đúng trang (submission, hàng đợi review, track).
