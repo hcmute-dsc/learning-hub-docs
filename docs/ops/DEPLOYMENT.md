@@ -25,7 +25,7 @@ Cập nhật lần cuối: 18/11/2026.
 | Giám sát | workflow `Uptime` mỗi 15 phút; cảnh báo lỗi 500 vào kênh Discord vận hành |
 | Discord | bật 17/11/2026: kênh CLB + kênh vận hành riêng tư |
 | Email tóm tắt (SMTP) | chưa bật: `SMTP_*` trong `.env` còn trống (mục 3.9) |
-| Kết nối Discord + bảng xếp hạng tuần | chưa bật kết nối: `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET` còn trống (mục 3.10); bài tuần vẫn đăng qua webhook kênh CLB khi có người bật bảng xếp hạng |
+| Kết nối Discord + bảng xếp hạng tuần | bật 21/11/2026 (Discord application "HCMUTE DSC Learning Hub", mục 3.10); bài tuần đăng sáng thứ Hai 9:00 qua webhook kênh CLB |
 
 **Secret và biến trên GitHub** (repo `hcmute-dsc/learning-hub`):
 
