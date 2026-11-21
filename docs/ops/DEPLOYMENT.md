@@ -223,6 +223,13 @@ docker compose -f docker-compose.prod.yml exec -T db psql -U hub -d learning_hub
 
 Mỗi tuần có đúng một dòng `leaderboard-week:<YYYY-Www>`; chạy lại trong tuần không tạo dòng mới. Tuần không ai có bài thì không có dòng. Client Secret lộ: **Reset Secret** trên Discord, sửa `.env`, Deploy lại.
 
+**Đăng ngay và cập nhật (admin, [learning-hub#83](https://github.com/hcmute-dsc/learning-hub/issues/83)).** **Quản trị → Bảng xếp hạng** hiện bài của tuần trước (đã đăng chưa, bảng tính lại lúc này). Không cần cấu hình thêm. Chi tiết: `deploy/README.md` Bước 14.
+
+- **Đăng ngay**: đăng tuần trước luôn, không chờ thứ Hai. Dùng chung khoá `leaderboard-week:<YYYY-Www>` với job, nên mỗi tuần chỉ 1 bài (bấm lại bị từ chối, job thứ Hai bỏ qua).
+- **Cập nhật**: tính lại bảng rồi sửa chính tin cũ (`PATCH` webhook message, `allowed_mentions` như lúc đăng, không tag lại ai). Id tin lưu trong bảng `leaderboard_week_posts` (đăng bằng `?wait=true`).
+- Tin bị xoá trên Discord: "Cập nhật" báo đã bị xoá và cho đăng lại. Discord lỗi lúc đăng: bài vào `outbox_events` và tự thử lại.
+- Mỗi lần đăng tay và cập nhật ghi vào **Nhật ký**. Chỉ admin.
+
 ## 4. Việc thường ngày
 
 | Việc | Cách làm |
