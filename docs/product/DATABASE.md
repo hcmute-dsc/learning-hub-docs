@@ -336,6 +336,7 @@ Ba bảng kỹ thuật nhỏ, không thuộc domain học tập:
 | `sessions` | `id` (text, token ngẫu nhiên đã băm sha256) PK, `user_id` FK→users cascade, `expires_at`, `last_seen_at`, `user_agent`, `ip` | IX `(user_id)`, IX `(expires_at)` để dọn dẹp |
 | `webhook_deliveries` | `delivery_id` (text) PK — `X-GitHub-Delivery`, `event`, `received_at`, `processed_at` null | chống xử lý trùng; dọn sau 30 ngày |
 | `outbox_events` | `id` bigint identity PK, `type`, `payload jsonb`, `status` (`pending`\|`sent`\|`failed`), `attempts` int, `next_attempt_at`, `last_error` | IX `(status, next_attempt_at)`; hàng đợi thông báo có retry (§3.16f). `type`: `inbox.review_completed`, `inbox.review_requested`, `inbox.track_published`, `email.digest`, `discord.leaderboard_week` (bài đăng bảng xếp hạng tuần, learning-hub#76). `idempotency_key` text null UQ: dòng thứ hai cùng key không được ghi (vd `leaderboard-week:2026-W47`). Các tin Discord khác vẫn gửi thẳng, chưa qua bảng này |
+| `leaderboard_week_posts` | `week_id` text PK (CHECK `YYYY-Www`), `discord_message_id` text not null (CHECK snowflake), `posted_at`, `updated_at` | [MVP-Full] một dòng mỗi tuần đã đăng bảng xếp hạng lên Discord: giữ id tin để admin sửa bài ("Cập nhật", learning-hub#83). Tin bị xoá trên Discord thì dòng bị xoá cùng dòng outbox của tuần đó để đăng lại |
 
 ### 3.16c `push_subscriptions` [MVP-Full]
 **Mục đích:** subscription Web Push của từng thiết bị/trình duyệt (DECISIONS ADR-08, ARCHITECTURE §10).
