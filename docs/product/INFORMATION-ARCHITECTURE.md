@@ -4,13 +4,28 @@
 
 ## 1. Điều hướng chính
 
+Thanh menu trên cùng (learning-hub#97) có ba phần, giống nhau trên mọi trang:
+
+```
+[logo DSC → trang chủ]   link chính (≤ 4)                 [🔔] [avatar ▾ menu tài khoản]
+```
+
 | Vị trí | Mục | Hiển thị cho |
 | --- | --- | --- |
-| Sidebar (desktop) / thanh dưới (mobile) | **Bảng điều khiển** · **Lộ trình** (tracks) · **Bài nộp của tôi** · **Mentor** · **Bảng xếp hạng** [MVP-Full] | member |
-| Sidebar | **Hàng đợi review** | mentor |
-| Sidebar | **Quản trị** (Người dùng, Mentoring, Nội dung, Nhật ký) | admin; mục **Nội dung** cho cả content_maintainer |
-| Topbar | Tìm kiếm [P2], hộp thông báo trong app [P2], menu hồ sơ (hồ sơ, **cài đặt** — thông báo push & bảng xếp hạng [MVP-Full], theme, đăng xuất) | tất cả |
-| Footer / Topbar phụ | Liên kết: Site CLB, Mentoring Program, Discord, GitHub org, Đóng góp nội dung | tất cả |
+| Link chính | **Bảng điều khiển** · **Lộ trình** · **Xếp hạng** | member trở lên (khách: không có link, chỉ nút **Đăng nhập**, vì mọi trang đều cần đăng nhập) |
+| Link chính | **Review** + số bài đang chờ chưa ai nhận (`GET /reviews/queue/count`) | mentor, admin |
+| Bên phải | 🔔 thông báo trong app | tài khoản `active` |
+| Menu tài khoản (avatar) | tên, @login · **Hồ sơ của tôi** · **Cài đặt** (theme, thông báo, bảng xếp hạng, Discord) · **Quản trị** · **Đăng xuất** | mọi người đã đăng nhập; **Quản trị** chỉ khi có ít nhất một tab quản trị (admin → Tổng quan, mentor → Thành viên, content_maintainer → Nội dung) |
+| Footer | Site CLB, Đóng góp nội dung, GitHub | tất cả |
+
+Quy tắc:
+
+- Thanh chính tối đa **4 link**. Mục mới cho một vai trò hẹp đi vào menu tài khoản hoặc khu Quản trị, không thêm link lên thanh.
+- **Điện thoại (< md, 768px)**: thanh chỉ còn logo, 🔔 và nút avatar (☰). Link chính nằm ở đầu menu tài khoản, nên không link nào bị mất.
+- Menu tài khoản theo mẫu *menu button* của WAI-ARIA: Enter/Space/↓ mở và focus mục đầu, ↑ mở ở mục cuối, ↓/↑/Home/End di chuyển, Esc đóng và trả focus về nút, Tab hoặc bấm ra ngoài thì đóng.
+- **Tab quản trị** (§9) là hàng tab riêng trong khu `/admin`. Trên điện thoại hàng tab cuộn ngang, không có thanh cuộn, mép mờ để báo còn tab, tab đang mở tự cuộn vào giữa.
+- Ẩn một link chỉ để gọn; trang và API vẫn tự kiểm tra vai trò.
+- Quy tắc vai trò nằm ở `apps/web/src/components/site/nav.ts` (có test).
 
 ## 2. Sitemap
 

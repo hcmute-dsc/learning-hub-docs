@@ -29,7 +29,7 @@ apps/web/
       learn/               # TrackCard, LessonNav, ExerciseHeader, ProgressRing…
       submit/              # SubmitForm, TestRunPanel, AttemptHistory
       review/              # DiffViewer, CommentThread, ReviewForm
-      layout/              # Sidebar, Topbar, Breadcrumbs
+      site/                # SiteHeader, UserMenu, nav.ts (link theo vai trò), SiteFooter
     features/              # logic theo miền: hooks + query keys + mappers
     lib/                   # api client (sinh từ OpenAPI), auth, i18n, utils
     styles/                # tokens, globals
@@ -114,8 +114,9 @@ Mỗi empty state có câu hướng dẫn hành động kế tiếp; không đ�
 ## 10. Responsive
 
 Mobile-first. Breakpoint: `sm 640`, `md 768`, `lg 1024`, `xl 1280`.
-- ≤ md: sidebar thành menu dưới/hamburger; trang lesson một cột; bảng chuyển thành danh sách thẻ; nộp bài dùng form dọc.
-- ≥ lg: sidebar cố định; trang lesson có mục lục bên phải; màn hình review dùng 2 cột (diff | nhận xét).
+- Thanh menu trên cùng (INFORMATION-ARCHITECTURE §1): < md thì link chính chuyển vào menu tài khoản (nút avatar ☰), thanh không bao giờ xuống dòng hay cuộn ngang; ≥ md hiện tối đa 4 link chính; ≥ lg hiện thêm @login cạnh avatar. Không dùng sidebar.
+- ≤ md: trang lesson một cột; bảng chuyển thành danh sách thẻ; nộp bài dùng form dọc.
+- ≥ lg: trang lesson có mục lục bên phải; màn hình review dùng 2 cột (diff | nhận xét).
 - Đọc lesson trên điện thoại là kịch bản chính của sinh viên → ưu tiên cỡ chữ/độ rộng dòng; nhập code/PR chủ yếu trên desktop (ghi chú trong UI).
 
 ## 11. i18n & nội dung
