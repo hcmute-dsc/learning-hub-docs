@@ -224,6 +224,8 @@ Theo tinh thần RFC 9457 (problem+json):
 | `POST /admin/content/sync` | content_maintainer, admin | MVP | `{commitSha?}` → version `draft` + diff; 422 + danh sách lỗi (version `rejected`); không ghi catalog |
 | `POST /admin/content/versions/{id}/publish` | admin | MVP | đọc lại tại commit SHA đã ghim, validate lại, ghi catalog trong 1 giao dịch; 422 nếu không còn hợp lệ |
 | `GET /admin/overview` | admin | MVP-Full | chỉ số đếm: thành viên theo trạng thái, bản publish + số bản nháp, số bài chờ review + bài chờ lâu nhất, hoạt động 7 ngày (đăng nhập, bài nộp, dòng audit); không có tên hay email |
+| `GET /admin/reports` | admin | P2 | `?from=&to=` (ngày giờ VN, gồm cả hai đầu, mặc định thứ Hai tuần này → hôm nay, tối đa 366 ngày; sai → 422) `&track=&cohort=` (`cohort=-` = chưa gắn đợt). Tiến độ theo track + đợt (M1–M8 của TRIAL-P0) và bảng từng người học; người học = ghi danh, không phải admin/mentor; chỉ GitHub login, không email; tính trực tiếp, không lưu ([learning-hub#34](https://github.com/hcmute-dsc/learning-hub/issues/34)) |
+| `GET /admin/reports/export` | admin | P2 | cùng tham số + `table=summary\|members`, `anonymize=true` (login → "Người học 001"); `text/csv` UTF-8 có BOM, ô chữ bắt đầu bằng `= + - @` (cả dạng full-width) được thêm `'` chống CSV injection; ghi audit `report.export` (bảng, bộ lọc, số dòng; không chép dữ liệu) |
 | `PUT /admin/users/{id}/roles` | admin | MVP | ghi audit |
 | `POST /admin/users/{id}/approve` | admin, mentor | MVP | `pending` → `active`, ghi audit |
 | `GET /admin/approved-emails` | admin | MVP | danh sách email được duyệt; không mở cho vai trò khác |

@@ -130,7 +130,7 @@ Bố cục hai cột (desktop):
 | Mentoring | `/admin/mentorship` | gán/đổi mentor, xem giới hạn mentee |
 | Nội dung | `/admin/content` | danh sách version (draft/published), nút Sync, xem diff & lỗi validate, Publish/Reject |
 | Nhật ký | `/admin/audit` | tìm theo người/hành động/thời gian |
-| Báo cáo [P2] | `/admin/reports` | tiến độ theo đợt/track, xuất CSV |
+| Báo cáo [P2] | `/admin/reports` | chỉ admin: khoảng ngày (nút nhanh Tuần này / Tuần trước / 30 ngày qua / Tháng này), lọc track và đợt; số tổng M1–M8 (TRIAL-P0 §4.1), bảng theo track + đợt, bảng từng người học (GitHub login, không email); tải CSV tổng hợp hoặc từng người, có tùy chọn ẩn danh; mỗi lần tải ghi Nhật ký. Đã làm ([learning-hub#34](https://github.com/hcmute-dsc/learning-hub/issues/34)) |
 
 ## 10. Trang đóng góp `/contribute` [MVP đơn giản]
 
