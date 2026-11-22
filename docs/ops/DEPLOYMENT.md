@@ -32,7 +32,7 @@ Cập nhật lần cuối: 18/11/2026.
 | Tên | Loại | Dùng cho |
 | --- | --- | --- |
 | `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS` (`VPS_PORT` nếu không phải 22) | secret của environment `production` | workflow Deploy SSH vào VPS |
-| `DISCORD_ALERT_WEBHOOK_URL` | secret của repo | workflow Uptime báo site sập |
+| `DISCORD_ALERT_WEBHOOK_URL` | secret của repo | workflow Uptime báo site sập; thử bằng **Actions → Uptime → Run workflow** với **test_alert** (không cần tắt `api`) |
 | `DEPLOY_ENABLED` = `true` | biến của repo | bật bước SSH của Deploy (đặt `false` để tạm tắt) |
 
 **Secret trên VPS** (chỉ trong `/opt/learning-hub/.env`, quyền `600`): `POSTGRES_PASSWORD` / `DATABASE_URL`, `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` (OAuth app production), `BOOTSTRAP_ADMIN_GITHUB_LOGIN`, `WEB_ORIGIN`, `TRUST_PROXY_HOPS`, `DISCORD_WEBHOOK_URL`, `DISCORD_ALERT_WEBHOOK_URL`, `SMTP_PASSWORD` (cùng `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_FROM`; tuỳ chọn), `IMAGE_TAG` (workflow tự ghi).
