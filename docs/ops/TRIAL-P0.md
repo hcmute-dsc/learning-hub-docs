@@ -117,16 +117,18 @@ Bạn vẫn học tiếp được trên web như bình thường.
 
 | # | Số liệu | Nghĩa | Lấy ở đâu | Đo được hôm nay? |
 | --- | --- | --- | --- | --- |
-| M1 | Người đăng ký | Số người học (tích lũy) | Truy vấn §5.2 | Có (truy vấn) |
-| M2 | Người học hoạt động | Người học có đánh dấu bài học hoặc nộp bài trong tuần | Truy vấn §5.2 | Có (truy vấn). Chưa có trên trang quản trị — [learning-hub#29](https://github.com/hcmute-dsc/learning-hub/issues/29) |
-| M3 | Bài học hoàn thành | Lượt bài học được đánh dấu "đã học" trong tuần | Truy vấn §5.2 | Có (truy vấn) |
-| M4 | Bài tập hoàn thành | Lượt bài tập lần đầu xong trong tuần (bài tự đánh giá, quiz đạt, dự án được duyệt) | Truy vấn §5.2 | Có (truy vấn) |
-| M5 | Người học có ≥ 5 bài tập xong | Tích lũy từ đầu đợt; dùng cho tiêu chí 1 | Truy vấn §5.2 | Có (truy vấn) |
-| M6 | Bài chờ review | Bài nộp đang chờ mentor, tại lúc chạy | **Review** (trang hàng đợi: "N bài đang chờ, trong đó M bài quá hạn") hoặc truy vấn §5.2 | Có (trang Review) |
-| M7 | Thời gian review | Trung vị và lâu nhất (giờ) từ lúc nộp tới lúc mentor kết luận, các review xong trong tuần | Truy vấn §5.2 | Có (truy vấn) |
-| M8 | Mentor có review | Số mentor kết luận ≥ 1 review trong tuần | Truy vấn §5.2 | Có (truy vấn) |
+| M1 | Người đăng ký | Số người học (tích lũy) | **Quản trị → Báo cáo** hoặc truy vấn §5.2 | Có |
+| M2 | Người học hoạt động | Người học có đánh dấu bài học hoặc nộp bài trong tuần | **Quản trị → Báo cáo** hoặc truy vấn §5.2 | Có |
+| M3 | Bài học hoàn thành | Lượt bài học được đánh dấu "đã học" trong tuần | **Quản trị → Báo cáo** hoặc truy vấn §5.2 | Có |
+| M4 | Bài tập hoàn thành | Lượt bài tập lần đầu xong trong tuần (bài tự đánh giá, quiz đạt, dự án được duyệt) | **Quản trị → Báo cáo** hoặc truy vấn §5.2 | Có |
+| M5 | Người học có ≥ 5 bài tập xong | Tích lũy từ đầu đợt; dùng cho tiêu chí 1 | **Quản trị → Báo cáo** hoặc truy vấn §5.2 | Có |
+| M6 | Bài chờ review | Bài nộp đang chờ mentor, tại lúc chạy | **Review** (trang hàng đợi: "N bài đang chờ, trong đó M bài quá hạn"), **Quản trị → Báo cáo** hoặc truy vấn §5.2 | Có (trang Review) |
+| M7 | Thời gian review | Trung vị và lâu nhất (giờ) từ lúc nộp tới lúc mentor kết luận, các review xong trong tuần | **Quản trị → Báo cáo** hoặc truy vấn §5.2 | Có |
+| M8 | Mentor có review | Số mentor kết luận ≥ 1 review trong tuần | **Quản trị → Báo cáo** hoặc truy vấn §5.2 | Có |
 | M9 | Lượt mentor hỗ trợ trên Discord | Câu hỏi được mentor trả lời trong tuần | Mentor tự ghi (§4.3) | Chỉ ghi tay |
 | M10 | PR nội dung từ thành viên ngoài Ban | PR vào repo track trong tuần (mở / đã merge) | `gh pr list` (§5.3) | Có (lệnh `gh`) |
+
+**Lấy M1–M8 trên app** ([learning-hub#34](https://github.com/hcmute-dsc/learning-hub/issues/34)). Admin mở **Quản trị → Báo cáo**, bấm **Tuần trước** (thứ Hai → Chủ nhật vừa qua), chọn track `sql-30-days` và đợt của đợt thử, rồi chép dòng tổng vào bảng §4.2, hoặc tải **CSV tổng hợp** (mỗi dòng có sẵn cột từ ngày / đến ngày nên dán các tuần nối nhau được). Cách đếm giống truy vấn §5.2, khác hai điểm nhỏ: M5 đếm mọi bài tập xong tới cuối tuần kể từ lúc ghi danh (lọc theo đợt để chỉ tính người của đợt thử); M6 là số lúc mở trang. Gắn nhãn đợt lúc ghi danh (`enrollments.cohort`) thì lọc được theo đợt; ai chưa có nhãn nằm ở "Chưa gắn đợt". Khi gửi CSV ra ngoài Ban chủ nhiệm, chọn **Ẩn danh**: bảng từng người học chỉ còn "Người học 001"…. Mỗi lần tải được ghi vào **Nhật ký**.
 
 **Vì sao cần M9.** Trong track `sql-30-days` hiện có 33 bài tập: 31 bài tự đánh giá (`self_check`, tự xong khi nộp), 1 quiz (app tự chấm) và **chỉ 1 bài cần mentor review** là dự án cuối khóa (`project`). Nên trong các tuần đầu hàng đợi review gần như trống và M6–M8 bằng 0 là bình thường. Tiêu chí 2 ("mentor review ≥ 1 bài/tuần") vì vậy được đánh giá bằng **M8 + M9**: mentor review bài trong app khi có, còn lại tính lượt hỗ trợ trên Discord.
 

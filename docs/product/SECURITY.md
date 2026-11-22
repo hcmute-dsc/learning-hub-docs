@@ -130,7 +130,7 @@ Bật 2FA bắt buộc cho tất cả thành viên Ban kỹ thuật và chủ or
 
 ## 11. Audit logging
 
-Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường [P2], cấp/thu hồi vai trò, duyệt/khóa user, thu hồi chứng nhận (`certificate.revoke`, kèm lý do), thay đổi danh sách email được duyệt, gán/đổi mentor, sync/publish/reject content, chạy lại test do admin, xóa/ẩn danh dữ liệu, thay đổi cấu hình. Trường: ai, hành động, đối tượng, thời điểm, IP/User-Agent (băm hoặc rút gọn), metadata (không chứa secret). Chỉ admin đọc. Giữ 24 tháng (DATABASE §9).
+Ghi vào `audit_logs` (append-only): đăng nhập thất bại bất thường [P2], cấp/thu hồi vai trò, duyệt/khóa user, thu hồi chứng nhận (`certificate.revoke`, kèm lý do), xuất báo cáo CSV (`report.export`: bảng, khoảng ngày, track, đợt, số dòng, có ẩn danh không; không chép dữ liệu), thay đổi danh sách email được duyệt, gán/đổi mentor, sync/publish/reject content, chạy lại test do admin, xóa/ẩn danh dữ liệu, thay đổi cấu hình. Trường: ai, hành động, đối tượng, thời điểm, IP/User-Agent (băm hoặc rút gọn), metadata (không chứa secret). Chỉ admin đọc. Giữ 24 tháng (DATABASE §9).
 
 ## 12. Bảo mật hạ tầng & chuỗi cung ứng
 
