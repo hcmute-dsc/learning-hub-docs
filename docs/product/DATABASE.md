@@ -147,6 +147,7 @@ Sync idempotent nhờ UQ `(source_repo, commit_sha)`. Publish (1 giao dịch): v
 | starter_repo | text | null — `owner/repo` của repo mẫu của track (một repo cho cả track, mỗi bài `code` một thư mục) |
 | setup_md | text | null — `docs/setup.md` của track, trang "Cài đặt" (CONTENT-SPECIFICATION §3.1b). Migration `20261119190000_track_docs` |
 | resources_md | text | null — `docs/resources.md` của track, trang "Tài liệu thêm" (§3.1b) |
+| glossary | jsonb | null — `glossary.yaml` của track, trang "Từ vựng" (CONTENT-SPECIFICATION §3.1c): mảng `{term, anchor, expansion, literal, meaning, example, see}` theo thứ tự trong file; null khi track không có. Migration `20261123120000_track_glossary` |
 | status | text | `active` \| `archived` (bị gỡ khỏi Git khi publish, hoặc `status: archived` trong track.yaml) |
 | content_version_id | uuid | FK → content_versions (version **published** gần nhất thêm/sửa bản ghi; sync không đổi cột này) |
 | source_path | text | đường dẫn trong repo |
@@ -174,6 +175,7 @@ IX: `(status, position)`, GIN `(tags)`.
 | title | text | |
 | body_md | text | Markdown đã đọc từ Git (nội dung lớn, nhưng < ~200 KB) |
 | est_minutes | smallint | |
+| terms | text[] | default `{}` — `terms:` trong front matter: từ bài này giới thiệu, viết như trong file (§3.1c). Migration `20261123120000_track_glossary` |
 | position | int | UQ `(module_id, position)` deferrable |
 | status, content_version_id, source_path, content_hash, updated_at | | |
 

@@ -95,7 +95,7 @@ Dashboard admin (`/admin`): số thành viên `pending`, số track published, v
 ```
 Track  (catalog card: tiêu đề, level, giờ ước tính, tags, số bài, người đóng góp)
  └─ Trang Track
-     • Tab: Tổng quan · Cài đặt · Tài liệu thêm (chỉ khi track có docs/setup.md hoặc docs/resources.md)
+     • Tab: Tổng quan · Cài đặt · Tài liệu thêm · Từ vựng (mỗi tab chỉ có khi track có docs/setup.md, docs/resources.md, glossary.yaml)
      • Giới thiệu + "Sau khi học bạn có thể…" (outcomes)
      • Điều kiện tiên quyết (track khuyến nghị)
      • Lộ trình: danh sách Module (có % tiến độ)
@@ -110,7 +110,7 @@ Module
  ├─ Lesson 1 … n   (đọc)
  └─ Exercise 1 … n (làm)
 ```
-Trang **Lesson** gồm: breadcrumb (Track › Module › Lesson), mục tiêu bài, nội dung Markdown, mục lục (desktop), khối "Bài tập liên quan", điều hướng Trước/Sau, nút **Đánh dấu đã học**, liên kết "Sửa trên GitHub" [P2], dấu thời gian cập nhật.
+Trang **Lesson** gồm: breadcrumb (Track › Module › Lesson), mục tiêu bài, hộp "Từ mới trong bài" (khi bài có `terms:`, CONTENT-SPECIFICATION §3.1c), nội dung Markdown (lần đầu mỗi từ mới có gạch chân chấm và chú thích), mục lục (desktop), khối "Bài tập liên quan", điều hướng Trước/Sau, nút **Đánh dấu đã học**, liên kết "Sửa trên GitHub" [P2], dấu thời gian cập nhật.
 Trang **Module**: danh sách xen kẽ lesson/exercise theo thứ tự đề xuất, trạng thái từng mục (khóa/chưa/đang/xong).
 
 ## 6. Trải nghiệm bài tập (Exercise)

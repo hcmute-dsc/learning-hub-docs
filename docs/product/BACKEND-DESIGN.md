@@ -201,11 +201,12 @@ Theo tinh thần RFC 9457 (problem+json):
 | `GET /auth/github/login` | public | MVP | redirect GitHub |
 | `GET /auth/me` | đã đăng nhập | MVP | user + roles |
 | `GET /tracks?level=&tag=&page=` | đã đăng nhập | MVP | chỉ published |
-| `GET /tracks/{slug}` | đã đăng nhập | MVP | gồm module + lesson + exercise tóm tắt, trạng thái mở khóa; `docs: {setup, resources}` cho biết track có trang nào |
+| `GET /tracks/{slug}` | đã đăng nhập | MVP | gồm module + lesson + exercise tóm tắt, trạng thái mở khóa; `docs: {setup, resources}` cho biết track có trang nào; `hasGlossary` cho biết có tab "Từ vựng" |
 | `GET /tracks/{slug}/docs/{page}` | đã đăng nhập | MVP-Full | `page` = `setup` \| `resources`: Markdown của trang "Cài đặt"/"Tài liệu thêm" kèm `source` (repo, commit, đường dẫn file). 404 nếu track không có trang đó (learning-hub#44) |
+| `GET /tracks/{slug}/glossary` | đã đăng nhập | MVP-Full | Từ vựng của track (`glossary.yaml`, CONTENT-SPECIFICATION §3.1c): từng từ kèm `anchor`, `see` (từ + anchor) và `lessons` (bài có từ đó trong `terms:`, theo thứ tự đọc), cùng `source` của file. 404 nếu track không có từ điển (learning-hub#106) |
 | `POST /tracks/{slug}/enrollments` | member | MVP | idempotent |
 | `GET /me/enrollments` | member | MVP | kèm % tiến độ; `hasSetup` khi track có trang "Cài đặt" |
-| `GET /lessons/{id}` | member | MVP | body Markdown |
+| `GET /lessons/{id}` | member | MVP | body Markdown; `terms`: mục từ điển của các từ bài này giới thiệu, theo thứ tự `terms:` (hộp "Từ mới trong bài", chú thích lần đầu) |
 | `PUT /lessons/{id}/progress` | member | MVP | `{status}` |
 | `GET /exercises/{id}` | member | MVP | 403/409 nếu khóa |
 | `POST /exercises/{id}/submissions` | member | MVP | header Idempotency-Key |

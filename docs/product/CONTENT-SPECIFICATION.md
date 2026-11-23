@@ -48,6 +48,7 @@ learning-hub-track-<slug>/
       docs/                             # (tuỳ chọn) trang cấp track, §3.1b
         setup.md                        # trang "Cài đặt"
         resources.md                    # trang "Tài liệu thêm"
+      glossary.yaml                     # (tuỳ chọn) từ vựng của track, §3.1c
       modules/
         01-foundations/
           module.yaml
@@ -119,6 +120,38 @@ Hai file **tuỳ chọn** trong thư mục track, giống trang "Installation" v
 - Sync/publish lưu hai trang theo phiên bản nội dung như mọi trường của track (DATABASE `tracks.setup_md`, `tracks.resources_md`). Sửa trang làm track hiện "Sửa" trong bản nháp.
 - Ví dụ: `learning-hub/content-example/tracks/sql-sample/docs/` và `tracks/example-track/docs/` trong `learning-hub-track-template`.
 
+### 3.1c Từ vựng — `glossary.yaml` (learning-hub#106)
+
+File **tuỳ chọn** cạnh `track.yaml`: danh sách chữ tiếng Anh của track, mỗi chữ có dạng đầy đủ và nghĩa đen tiếng Việt. Đây là chỗ để track làm đúng tiêu chí T1 của `TEACHING.md` (template track): người học biết `init` là *initialize*, "khởi tạo", chứ không chỉ thuộc lệnh.
+
+```yaml
+- term: init                 # *  chữ người học gặp, giữ tiếng Anh
+  expansion: initialize      #    dạng đầy đủ, khi term là viết tắt hoặc rút gọn
+  literal: khởi tạo          #    nghĩa đen của chữ
+  meaning: Tạo thư mục ẩn .git để Git bắt đầu theo dõi thư mục này.   # *  nghĩa trong track
+  example: git init          #    một lệnh hoặc một dòng có dùng chữ này
+  see: [repository]          #    từ liên quan, phải có trong cùng file
+```
+
+| Trường | Bắt buộc | Giới hạn |
+| --- | --- | --- |
+| `term` | có | 1–60 ký tự, không có khoảng trắng ở đầu/cuối, có ít nhất một chữ cái hoặc chữ số |
+| `expansion`, `literal` | không | ≤ 120 ký tự |
+| `meaning` | có | ≤ 500 ký tự, văn bản thường (không render Markdown) |
+| `example` | không | ≤ 200 ký tự, hiện dạng code |
+| `see` | không | ≤ 10 từ |
+
+- Thứ tự trong file không quan trọng: site xếp A–Z. Tối đa 500 từ; file rỗng (`[]`) là lỗi, không cần từ điển thì xoá file.
+- **So khớp từ**: `see:` và `terms:` của bài học (§3.3) so với `term` **không phân biệt hoa thường và dấu câu**: `Pull request`, `pull-request` và `PULL REQUEST` là cùng một từ. Vì vậy hai `term` chỉ khác hoa thường/dấu câu bị báo trùng. Cùng quy tắc đó tạo **anchor** của từ trên trang: `pull request` → `#pull-request`, `HEAD~1` → `#head-1`.
+- Bài học khai báo từ nó giới thiệu bằng `terms:` trong front matter (§3.3). Từ đó site làm ba việc:
+  - tab **Từ vựng** (`/tracks/<slug>/glossary`) cạnh "Cài đặt" và "Tài liệu thêm": từ xếp A–Z, có ô tìm (không cần gõ dấu), mỗi từ có anchor và dòng "Học ở bài …" (các bài có từ đó trong `terms:`, theo thứ tự đọc);
+  - hộp **Từ mới trong bài** ở đầu bài học, theo thứ tự trong `terms:`;
+  - **chú thích lần đầu**: lần đầu mỗi từ trong `terms:` xuất hiện trong nội dung bài, chữ đó có gạch chân chấm; chạm hoặc nhấn Enter thì hiện chú thích (dạng đầy đủ, nghĩa đen, nghĩa, ví dụ, link sang tab Từ vựng). Không gạch chân trong khối code, inline code, tiêu đề và link. Chỉ những từ trong `terms:` của **chính bài đó** được chú thích, để trang không gạch chân khắp nơi.
+- Muốn từ được chú thích thì phải viết nó trong câu văn thường, không chỉ trong code: "Lệnh `git init` *khởi tạo* … một **repository**" chú thích được `repository`, còn `init` chỉ nằm trong code nên chỉ có ở hộp Từ mới.
+- Không có file thì không có tab Từ vựng. Bài có `terms:` mà track không có `glossary.yaml` là lỗi.
+- Sync/publish lưu từ điển theo phiên bản nội dung như mọi trường của track (DATABASE `tracks.glossary`, `lessons.terms`). Sửa `glossary.yaml` làm track hiện "Sửa"; sửa `terms:` làm bài đó hiện "Sửa".
+- Ví dụ: `learning-hub/content-example/tracks/git-github-basics/glossary.yaml` và `tracks/example-track/glossary.yaml` trong `learning-hub-track-template`.
+
 ### 3.2 Module — `module.yaml`
 
 ```yaml
@@ -144,6 +177,7 @@ prerequisites:             # lesson hoặc exercise cần biết trước, dạn
   - sql-30-days/foundations/intro-to-sql
 authors: [github:tiennhm]
 license: CC-BY-SA-4.0
+terms: [SELECT, WHERE, row]  # từ bài này giới thiệu, phải có trong glossary.yaml của track (§3.1c)
 ---
 
 Nội dung Markdown (CommonMark + bảng + khối code có ngôn ngữ). Ảnh dùng đường dẫn tương đối `./assets/…`.
@@ -282,6 +316,7 @@ Validator không dừng ở lỗi đầu tiên: trả về **toàn bộ** lỗi 
 | Quiz | `answer` ngoài phạm vi option, ít hơn 2 option, `id` câu hỏi trùng | Đã làm |
 | Hint | tên file không phải `NN.md`; số thứ tự có chỗ trống; quá 10 hint; hint rỗng; front matter sai (`cost` ngoài 0–100, trường lạ) | Đã làm |
 | Trang track | file `.md` khác `setup.md`/`resources.md` trong `docs/` của track (thường do gõ sai tên); trang rỗng; trang có front matter; Markdown vi phạm luật nội dung | Đã làm |
+| Từ vựng | `glossary.yaml` sai schema hoặc rỗng; `term` trùng (không phân biệt hoa thường/dấu câu); `see:` trỏ tới từ không có hoặc tới chính nó; `terms:` của bài trỏ tới từ không có, liệt kê một từ hai lần, hoặc track không có `glossary.yaml` (§3.1c) | Đã làm |
 | Lời giải | `solution.md`/`solution/` nằm trong repo nội dung công khai; lời giải trong repo checker trùng hai exercise cùng slug; Markdown của lời giải vi phạm luật nội dung | Đã làm |
 | Ghi chú mentor | `mentor-notes.md` rỗng, có front matter, hoặc vi phạm luật Markdown (§3.10) | Đã làm |
 | Khóa tự nhiên (lúc sync/publish, cần DB) | item mới dùng lại khóa tự nhiên (cha + slug, hoặc track slug) của bản ghi đang có với `id` khác ⇒ thường do `uid` bị sửa | Đã làm (API) |
