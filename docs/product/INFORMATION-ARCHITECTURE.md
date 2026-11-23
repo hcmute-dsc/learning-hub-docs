@@ -110,7 +110,7 @@ Module
  ├─ Lesson 1 … n   (đọc)
  └─ Exercise 1 … n (làm)
 ```
-Trang **Lesson** gồm: breadcrumb (Track › Module › Lesson), mục tiêu bài, hộp "Từ mới trong bài" (khi bài có `terms:`, CONTENT-SPECIFICATION §3.1c), nội dung Markdown (lần đầu mỗi từ mới có gạch chân chấm và chú thích), mục lục (desktop), khối "Bài tập liên quan", điều hướng Trước/Sau, nút **Đánh dấu đã học**, liên kết "Sửa trên GitHub" [P2], dấu thời gian cập nhật.
+Trang **Lesson** gồm: breadcrumb (Track › Module › Lesson), mục tiêu bài, nội dung Markdown (lần đầu mỗi từ mới có gạch chân chấm và chú thích), hộp "Từ mới trong bài" thu gọn ở cuối nội dung (khi bài có `terms:`, CONTENT-SPECIFICATION §3.1c), mục lục (desktop), khối "Bài tập liên quan", điều hướng Trước/Sau, nút **Đánh dấu đã học**, liên kết "Sửa trên GitHub" [P2], dấu thời gian cập nhật.
 Trang **Module**: danh sách xen kẽ lesson/exercise theo thứ tự đề xuất, trạng thái từng mục (khóa/chưa/đang/xong).
 
 ## 6. Trải nghiệm bài tập (Exercise)

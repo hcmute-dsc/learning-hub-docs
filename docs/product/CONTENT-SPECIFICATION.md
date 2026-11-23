@@ -145,7 +145,7 @@ File **tuỳ chọn** cạnh `track.yaml`: danh sách chữ tiếng Anh của tr
 - **So khớp từ**: `see:` và `terms:` của bài học (§3.3) so với `term` **không phân biệt hoa thường và dấu câu**: `Pull request`, `pull-request` và `PULL REQUEST` là cùng một từ. Vì vậy hai `term` chỉ khác hoa thường/dấu câu bị báo trùng. Cùng quy tắc đó tạo **anchor** của từ trên trang: `pull request` → `#pull-request`, `HEAD~1` → `#head-1`.
 - Bài học khai báo từ nó giới thiệu bằng `terms:` trong front matter (§3.3). Từ đó site làm ba việc:
   - tab **Từ vựng** (`/tracks/<slug>/glossary`) cạnh "Cài đặt" và "Tài liệu thêm": từ xếp A–Z, có ô tìm (không cần gõ dấu), mỗi từ có anchor và dòng "Học ở bài …" (các bài có từ đó trong `terms:`, theo thứ tự đọc);
-  - hộp **Từ mới trong bài** ở đầu bài học, theo thứ tự trong `terms:`;
+  - hộp **Từ mới trong bài** ở cuối nội dung bài, thu gọn sẵn (bấm để mở), theo thứ tự trong `terms:`: chú thích lần đầu đã giải nghĩa trong lúc đọc, hộp để ôn lại (learning-hub#114);
   - **chú thích lần đầu**: lần đầu mỗi từ trong `terms:` xuất hiện trong nội dung bài, chữ đó có gạch chân chấm; chạm hoặc nhấn Enter thì hiện chú thích (dạng đầy đủ, nghĩa đen, nghĩa, ví dụ, link sang tab Từ vựng). Không gạch chân trong khối code, inline code, tiêu đề và link. Chỉ những từ trong `terms:` của **chính bài đó** được chú thích, để trang không gạch chân khắp nơi.
 - Muốn từ được chú thích thì phải viết nó trong câu văn thường, không chỉ trong code: "Lệnh `git init` *khởi tạo* … một **repository**" chú thích được `repository`, còn `init` chỉ nằm trong code nên chỉ có ở hộp Từ mới.
 - Không có file thì không có tab Từ vựng. Bài có `terms:` mà track không có `glossary.yaml` là lỗi.
