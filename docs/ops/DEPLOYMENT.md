@@ -182,7 +182,7 @@ URL webhook lộ ra thì vào lại chỗ tạo, **Delete Webhook** rồi tạo 
 Chuông thông báo luôn chạy. Email tóm tắt hằng ngày chỉ gửi khi có SMTP **và** thành viên tự bật trong `/settings` (mặc định tắt). Thiếu `SMTP_HOST` hoặc `SMTP_FROM` thì không gửi gì, công tắc bị khoá kèm lời giải thích. Chi tiết đầy đủ: `deploy/README.md` Bước 13.
 
 1. Chọn tài khoản gửi của CLB (không dùng email cá nhân):
-   - Gmail/Google Workspace của CLB: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER` = địa chỉ Gmail, `SMTP_PASSWORD` = **App password** (cần bật xác minh 2 bước), `SMTP_FROM` = `DSC Learning Hub <chính địa chỉ đó>`. Khoảng 500 email/ngày.
+   - Gmail/Google Workspace của CLB: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER` = địa chỉ Gmail, `SMTP_PASSWORD` = **App password** (cần bật xác minh 2 bước), `SMTP_FROM` = `HCMUTE DSC Learning Hub <chính địa chỉ đó>`. Khoảng 500 email/ngày.
    - Hoặc dịch vụ gửi email (Brevo, Resend, Mailgun, SES…): host/cổng `587`/login/key theo trang SMTP của dịch vụ; xác minh tên miền gửi (SPF/DKIM) theo hướng dẫn của họ.
 2. SSH bằng `learnhub`, `nano /opt/learning-hub/.env`, điền 5 dòng `SMTP_*` (mẫu ở `deploy/.env.example`). Không dán mật khẩu vào chat, issue hay PR.
 3. Chạy lại Deploy để API đọc `.env`.
@@ -207,7 +207,7 @@ Mật khẩu SMTP lộ: thu hồi App password/SMTP key, tạo cái mới, sửa
 ### 3.10. Kết nối Discord và bảng xếp hạng tuần (không bắt buộc)
 Thành viên bấm **Kết nối Discord** trong `/settings` (OAuth2, chỉ scope `identify`: đọc id và tên Discord, không đọc tin nhắn hay server). Sáng thứ Hai 9:00 giờ VN, API đăng top 5 bảng xếp hạng tuần trước lên **kênh CLB** qua `DISCORD_WEBHOOK_URL` (mục 3.8) và tag người đã kết nối ([learning-hub#76](https://github.com/hcmute-dsc/learning-hub/issues/76), [ADR-08](../product/DECISIONS.md#adr-08--loại-khỏi-mvp)). Không cần bot. Chỉ người đã bật bảng xếp hạng mới có tên; kết nối Discord không phải đồng ý lên bảng. Chi tiết đầy đủ: `deploy/README.md` Bước 14.
 
-1. https://discord.com/developers/applications → **New Application** (`DSC Learning Hub`).
+1. https://discord.com/developers/applications → **New Application** (`HCMUTE DSC Learning Hub`).
 2. Tab **OAuth2 → Redirects → Add Redirect**: `https://learn.hcmute-dsc.io.vn/api/v1/me/discord/callback`, **Save Changes**. Local dùng application riêng với `http://localhost:3000/api/v1/me/discord/callback`.
 3. Cũng tab **OAuth2**: chép **Client ID**, bấm **Reset Secret** lấy **Client Secret** (chỉ hiện một lần). Không cần bot, không mời app vào server.
 4. SSH bằng `learnhub`, `nano /opt/learning-hub/.env`, điền `DISCORD_CLIENT_ID=` và `DISCORD_CLIENT_SECRET=`. Không commit, không dán vào chat, issue hay PR.

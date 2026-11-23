@@ -32,7 +32,7 @@ flowchart LR
     Tracks["learning-hub-track-*<br/>mỗi track một repo"]
     Tpl["learning-hub-track-template"]
     Docs["learning-hub-docs<br/>tài liệu"]
-    Board["Project #1<br/>DSC Learning Hub"]
+    Board["Project #1<br/>HCMUTE DSC Learning Hub"]
     GApp["GitHub App<br/>hcmute-dsc-learning-hub"]
     OAuth["OAuth app<br/>đăng nhập"]
     GHCR["GHCR<br/>image api, web"]
