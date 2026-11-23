@@ -47,6 +47,7 @@ Khớp INFORMATION-ARCHITECTURE. Đường dẫn dùng `slug` (đọc được) 
 | `/dashboard` | Tiếp tục học, tiến độ, việc cần làm | dynamic |
 | `/tracks`, `/tracks/[slug]` | Catalog, chi tiết track | server component + revalidate ngắn |
 | `/tracks/[slug]/setup`, `/tracks/[slug]/resources` | Trang "Cài đặt", "Tài liệu thêm" của track (tuỳ chọn, learning-hub#44) | server |
+| `/tracks/[slug]/glossary` | Trang "Từ vựng" của track: A–Z, ô tìm, anchor từng từ (tuỳ chọn, learning-hub#106) | server + ô tìm client |
 | `/tracks/[slug]/[module]` | Module | server |
 | `/lessons/[id]` | Lesson | server, cache theo `ETag` |
 | `/exercises/[id]` | Đề + trạng thái + nộp bài | hybrid |

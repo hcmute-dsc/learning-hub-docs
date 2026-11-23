@@ -71,6 +71,7 @@ tracks/<slug>/
   track.yaml                       # tóm tắt, cấp độ, thẻ, mục tiêu, danh sách chương
   docs/setup.md                    # (tuỳ chọn) trang "Cài đặt": cài công cụ, tự kiểm tra bài
   docs/resources.md                # (tuỳ chọn) trang "Tài liệu thêm"
+  glossary.yaml                    # (tuỳ chọn) trang "Từ vựng": chữ tiếng Anh, dạng đầy đủ, nghĩa đen
   assets/                          # ảnh (≤ 500 KB/ảnh)
   modules/01-<tên-chương>/
     module.yaml                    # thứ tự bài học và bài tập của chương
