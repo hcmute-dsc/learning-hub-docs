@@ -10,7 +10,7 @@
 | Nội dung (đọc là chính) | `tracks`, `modules`, `lessons`, `exercises`, `exercise_prerequisites`, `content_versions` | **Git** (DB là bản sao có chỉ mục; catalog chỉ được ghi khi **publish** một content version, sync chỉ ghi `content_versions`) |
 | Người dùng & quyền | `users`, `roles`, `user_roles`, `approved_emails` | DB |
 | Học tập | `enrollments`, `lesson_progress`, `submissions`, `test_runs` | DB |
-| Mentoring | `mentor_assignments`, `reviews`, `review_comments` | DB |
+| Mentoring | `mentor_assignments`, `reviews`, `review_comments`, `review_thanks` | DB |
 | Vận hành | `audit_logs` | DB |
 | Thông báo (MVP-Full) | `push_subscriptions` | DB |
 | Thông báo trong app (P2, F13) | `notifications`, `notification_preferences` | DB |
@@ -42,6 +42,7 @@ erDiagram
   submissions ||--o{ reviews : "reviewed in"
   users ||--o{ reviews : writes
   reviews ||--o{ review_comments : has
+  reviews ||--o| review_thanks : "thanked in"
   users ||--o{ mentor_assignments : "mentee"
   users ||--o{ mentor_assignments : "mentor"
   tracks |o--o{ mentor_assignments : "scoped to"
@@ -297,9 +298,26 @@ IX: `(submission_id, created_at desc)`.
 | author_id | uuid | FK → users |
 | file_path | text | null (comment chung) |
 | line_start, line_end | int | null |
-| body_md | text | |
+| body_md | text | CHECK 1–2000 ký tự (migration `20261123000000_review_thread`) |
 | parent_id | uuid | FK → review_comments, null (trả lời) |
 | resolved_at | timestamptz | |
+
+**Trao đổi sau review (learning-hub#41):** sau khi mentor hoàn thành review, thành viên nộp bài, mentor đã review và admin viết tin nhắn trên review đó. Tin nhắn là dòng `review_comments` với `file_path` null; tối đa 100 tin mỗi review. Mentor khác không đọc được. Tin mới báo qua chuông cho phía còn lại, không chép nội dung tin vào thông báo.
+
+### 3.14b `review_thanks` [MVP-Full, learning-hub#41]
+Lời cảm ơn của thành viên cho mentor, một lần cho mỗi review đã xong.
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| id | uuid | PK |
+| review_id | uuid | FK → reviews, cascade; UQ (một lời cảm ơn mỗi review) |
+| mentee_id | uuid | FK → users (người nộp bài) |
+| mentor_id | uuid | FK → users (người review) |
+| body | text | CHECK 1–280 ký tự, chữ thường (không Markdown) |
+| is_public | boolean | default false. Chỉ mentor bật; bật thì hiện trên hồ sơ `/u/[login]` của mentor, kèm tên người gửi |
+| created_at | timestamptz | |
+
+IX `(mentor_id, is_public, created_at desc)`.
 
 ### 3.15 `mentor_assignments` [MVP]
 | Cột | Kiểu | Ghi chú |
@@ -400,13 +418,13 @@ Luồng: domain event → listener ghi `outbox_events` (chỉ id) → worker tro
 | --- | --- | --- |
 | id | uuid | PK (v7) |
 | user_id | uuid | FK → users, on delete cascade |
-| type | text | CHECK `review_completed` \| `review_requested` \| `track_published` |
+| type | text | CHECK `review_completed` \| `review_requested` \| `track_published` \| `review_message` \| `review_thanks` |
 | payload | jsonb | `{title, body, link}`: chữ dựng sẵn lúc ghi, `link` là đường dẫn trong web; đọc chuông không cần join |
 | source_event_id | bigint | null — dòng `outbox_events` đã sinh ra nó; UQ `(source_event_id, user_id)` nên chạy lại không tạo trùng |
 | read_at | timestamptz | null = chưa đọc |
 | created_at | timestamptz | |
 
-IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor và admin đang active (admin mở được trang review), trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord).
+IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor và admin đang active (admin mở được trang review), trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord); `review_message` → thành viên và mentor của review, trừ người viết (admin viết thì cả hai nhận); `review_thanks` → mentor được cảm ơn (learning-hub#41).
 
 `notification_preferences` — lựa chọn email tóm tắt; không có dòng = tắt (mặc định):
 
