@@ -218,8 +218,13 @@ Theo tinh thần RFC 9457 (problem+json):
 | `GET /reviews/queue/count` | mentor | MVP | `{ unclaimed }`: số bài đang chờ mà chưa mentor nào nhận, mọi track. Số trên link "Review" ở thanh menu (learning-hub#97); một câu `count`, không trả dòng |
 | `GET /reviews/submissions/{submissionId}` | mentor | MVP | trang review một bài nộp: bài nộp, các lần trước, đề bài, rubric và `exercise.mentorNotesMd` (ghi chú cho mentor, CONTENT-SPECIFICATION §3.10; `null` nếu bài không có). Đây là endpoint duy nhất trả ghi chú mentor |
 | `POST /submissions/{id}/reviews` | mentor | MVP | mở review (409 nếu đã có) |
-| `POST /reviews/{id}/comments` | reviewer | MVP | |
+| `POST /reviews/{id}/comments` | reviewer | MVP | chưa làm (comment theo dòng code). Trao đổi sau review dùng `/reviews/{id}/messages` bên dưới |
 | `POST /reviews/{id}/complete` | reviewer | MVP | `{status: approved\|changes_requested, summary}` |
+| `GET /reviews/{id}/thread` | thành viên nộp bài, mentor đã review, admin | MVP-Full | trao đổi sau review (learning-hub#41): tin nhắn cũ trước, lời cảm ơn, `canPost`/`canThank`/`canShowThanks`; 403 với người khác, kể cả mentor khác |
+| `POST /reviews/{id}/messages` | như trên | MVP-Full | `{bodyMd}` 1–2000 ký tự; 409 khi review chưa xong hoặc đã đủ 100 tin |
+| `POST /reviews/{id}/thanks` | thành viên nộp bài | MVP-Full | `{body}` 1–280 ký tự, một lần mỗi review (409 lần hai) |
+| `PUT /reviews/{id}/thanks/visibility` | mentor đã review | MVP-Full | `{isPublic}`: hiện/ẩn lời cảm ơn trên hồ sơ; admin cũng không đổi được |
+| `GET /members/{login}/thanks` | thành viên | MVP-Full | lời cảm ơn mentor đã cho hiện, mới nhất trước, tối đa 20 |
 | `GET /mentor/mentees` | mentor | MVP | |
 | `POST /admin/mentorship/{id}/assign` | admin | MVP | |
 | `POST /admin/content/sync` | content_maintainer, admin | MVP | `{commitSha?}` → version `draft` + diff; 422 + danh sách lỗi (version `rejected`); không ghi catalog |
