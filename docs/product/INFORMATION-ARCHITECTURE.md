@@ -7,7 +7,7 @@
 Thanh menu trên cùng (learning-hub#97) có ba phần, giống nhau trên mọi trang:
 
 ```
-[logo DSC → trang chủ]   link chính (≤ 4)                 [🔔] [avatar ▾ menu tài khoản]
+[logo HCMUTE DSC → trang chủ]   link chính (≤ 4)                 [🔔] [avatar ▾ menu tài khoản]
 ```
 
 | Vị trí | Mục | Hiển thị cho |

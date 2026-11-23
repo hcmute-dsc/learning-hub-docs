@@ -1,6 +1,6 @@
 # FRONTEND-DESIGN — Next.js
 
-> Cảm giác mong muốn: **hiện đại, hướng lập trình viên, thân thiện, hợp cộng đồng sinh viên**. Không giống LMS doanh nghiệp (bảng biểu dày, màu xám xanh), không gamification ồn ào. Gợi ý thị giác: nền sáng/tối theo hệ thống, font mono cho mã & nhãn, khối code nổi bật, nhiều khoảng trắng, màu nhấn theo nhận diện DSC. Có sẵn kinh nghiệm: `mentoring-program` đã có dark/light + vi/en + bố cục gọn, tái sử dụng token màu/logo.
+> Cảm giác mong muốn: **hiện đại, hướng lập trình viên, thân thiện, hợp cộng đồng sinh viên**. Không giống LMS doanh nghiệp (bảng biểu dày, màu xám xanh), không gamification ồn ào. Gợi ý thị giác: nền sáng/tối theo hệ thống, font mono cho mã & nhãn, khối code nổi bật, nhiều khoảng trắng, màu nhấn theo nhận diện HCMUTE DSC. Có sẵn kinh nghiệm: `mentoring-program` đã có dark/light + vi/en + bố cục gọn, tái sử dụng token màu/logo.
 
 ## 1. Công nghệ
 
@@ -137,6 +137,6 @@ Lesson/track render server + cache; tách code theo route; ảnh dùng `next/ima
 - Xếp theo số bài hoàn thành có trọng số (`self_check` thấp hơn bài chấm tự động/mentor duyệt); **không** hiển thị thời gian hay tốc độ; đồng hạng hiển thị cùng hạng.
 - Hiện **top 10**: top 3 trên **bục** vàng/bạc/đồng (kiểu huy chương của huy hiệu), hạng 4–10 là danh sách; dòng của mình được tô sáng, ngoài top 10 thì có mục "Hạng của bạn". Không dùng màu/hiệu ứng "thua cuộc"; có liên kết về tiến độ cá nhân.
 - Hiệu ứng vào trang nhẹ (bục mọc lên, huy chương bật ra); tắt hết khi `prefers-reduced-motion`.
-- **Lưu ảnh** ([learning-hub#88](https://github.com/hcmute-dsc/learning-hub/issues/88)): PNG vẽ phía server bằng `next/og`, cỡ vuông 1080×1080 (fanpage) hoặc ngang 1200×630 (website), có logo DSC, kỳ/tuần, lộ trình, top 10. Ảnh chỉ có người đã bật, không bao giờ có dòng riêng của người lưu, nên chia sẻ được. Font Be Vietnam Pro (OFL) đi kèm để chữ Việt đúng.
+- **Lưu ảnh** ([learning-hub#88](https://github.com/hcmute-dsc/learning-hub/issues/88)): PNG vẽ phía server bằng `next/og`, cỡ vuông 1080×1080 (fanpage) hoặc ngang 1200×630 (website), có logo HCMUTE DSC, kỳ/tuần, lộ trình, top 10. Ảnh chỉ có người đã bật, không bao giờ có dòng riêng của người lưu, nên chia sẻ được. Font Be Vietnam Pro (OFL) đi kèm để chữ Việt đúng.
 
 **Web Push (MVP-Full).** `/me/settings` có công tắc "Nhận thông báo trên thiết bị này" (xin quyền `Notification` chỉ khi người dùng bấm, không hỏi lúc tải trang); service worker `public/sw.js` + `manifest.webmanifest`. Trên iOS/iPadOS hiển thị hướng dẫn "Thêm vào Màn hình chính" trước khi bật. Bấm thông báo mở đúng trang (submission, hàng đợi review, track).

@@ -2,7 +2,7 @@
 
 Mọi việc của Learning Hub (code, nội dung, tài liệu, vận hành, việc của CLB) được theo dõi trên một bảng chung:
 
-**[DSC Learning Hub · GitHub Project #1](https://github.com/orgs/hcmute-dsc/projects/1)** (project của org `hcmute-dsc`, chỉ thành viên org xem được)
+**[HCMUTE DSC Learning Hub · GitHub Project #1](https://github.com/orgs/hcmute-dsc/projects/1)** (project của org `hcmute-dsc`, chỉ thành viên org xem được)
 
 Đã liên kết 3 repo: `learning-hub`, `learning-hub-content`, `learning-hub-docs`. Tạo ngày 18/11/2026.
 
@@ -159,7 +159,7 @@ Action lấy token từ một **GitHub App của org**, không dùng token cá n
 
    Rồi xóa token classic `learning-hub add-to-project` tại https://github.com/settings/tokens.
 
-**Bàn giao:** App thuộc org nên không phải làm gì khi đổi tech lead; người mới chỉ cần là owner của org để sửa App. Nghi lộ private key: trang App → **Private keys** → tạo key mới, đặt lại secret cấp org ở bước 4, rồi xóa key cũ. Nếu cần thêm việc thủ công: khung **Projects** bên phải issue → DSC Learning Hub.
+**Bàn giao:** App thuộc org nên không phải làm gì khi đổi tech lead; người mới chỉ cần là owner của org để sửa App. Nghi lộ private key: trang App → **Private keys** → tạo key mới, đặt lại secret cấp org ở bước 4, rồi xóa key cũ. Nếu cần thêm việc thủ công: khung **Projects** bên phải issue → HCMUTE DSC Learning Hub.
 
 **Quyền** (⋯ → Settings → Manage access): thêm team `mentors` / Ban chủ nhiệm với quyền *Write*. Thành viên chỉ cần *Read*.
 
@@ -168,7 +168,7 @@ Action lấy token từ một **GitHub App của org**, không dùng token cá n
 Cần quyền `project` cho `gh`: `gh auth refresh -s project` (cách cài và các quyền khác: [GH-CLI.md](GH-CLI.md)).
 
 ```bash
-gh project create --owner hcmute-dsc --title "DSC Learning Hub"
+gh project create --owner hcmute-dsc --title "HCMUTE DSC Learning Hub"
 gh project field-create <số> --owner hcmute-dsc --name Priority --data-type SINGLE_SELECT \
   --single-select-options "P0 - Gấp,P1 - Cao,P2 - Bình thường"
 # tương tự cho Area, Epic, Size; Status sửa option bằng GraphQL updateProjectV2Field;

@@ -34,7 +34,7 @@ Thay `<slug>`, `<Tên track>` và `<mentor>` (tài khoản GitHub) rồi chạy:
 ```bash
 R=hcmute-dsc/learning-hub-track-<slug>
 gh repo create $R --public --template hcmute-dsc/learning-hub-track-template \
-  --description "Track <slug> của DSC Learning Hub: <Tên track> (ADR-10)"
+  --description "Track <slug> của HCMUTE DSC Learning Hub: <Tên track> (ADR-10)"
 gh repo edit $R --enable-wiki=false
 gh label create content -R $R --color 1D76DB --description "Nội dung bài học, bài tập" --force
 gh label create ops -R $R --color 0E8A16 --description "Vận hành: CI/CD, GitHub Actions, hạ tầng" --force

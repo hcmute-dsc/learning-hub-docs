@@ -45,7 +45,7 @@ Thay các chỗ `<…>` rồi dán. Không nêu tên hay email thành viên tron
 ### 3.1 Tin mở đăng ký
 
 ```text
-📢 DSC mở đợt HỌC THỬ "30 ngày học SQL" trên Learning Hub của CLB!
+📢 HCMUTE DSC mở đợt HỌC THỬ "30 ngày học SQL" trên Learning Hub của CLB!
 
 🗓️ Thời gian: <N> tuần, từ <DD/MM> đến <DD/MM>
 🎯 Dành cho: thành viên CLB muốn học SQL từ cơ bản (không cần biết trước)
