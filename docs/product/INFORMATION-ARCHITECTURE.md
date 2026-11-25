@@ -56,6 +56,7 @@ flowchart TD
   AdminContent["admin/content"]
   AdminVer["admin/content/versions/id"]
   AdminAudit["admin/audit"]
+  AdminReportsContent["admin/content-reports"]
   Contribute["contribute"]
   Home --> Login --> Pending
   Login --> Dash
@@ -74,6 +75,7 @@ flowchart TD
   Dash --> AdminMentor
   Dash --> AdminContent --> AdminVer
   Dash --> AdminAudit
+  Dash --> AdminReportsContent
   Dash --> Contribute
 ```
 
@@ -112,7 +114,7 @@ Module
  ├─ Lesson 1 … n   (đọc)
  └─ Exercise 1 … n (làm)
 ```
-Trang **Lesson** gồm: breadcrumb (Track › Module › Lesson), mục tiêu bài, nội dung Markdown (lần đầu mỗi từ mới có gạch chân chấm và chú thích), hộp "Từ mới trong bài" thu gọn ở cuối nội dung (khi bài có `terms:`, CONTENT-SPECIFICATION §3.1c), mục lục (desktop), khối "Bài tập liên quan", điều hướng Trước/Sau, nút **Đánh dấu đã học**, liên kết "Sửa trên GitHub" [P2], dấu thời gian cập nhật.
+Trang **Lesson** gồm: breadcrumb (Track › Module › Lesson), mục tiêu bài, nội dung Markdown (lần đầu mỗi từ mới có gạch chân chấm và chú thích), hộp "Từ mới trong bài" thu gọn ở cuối nội dung (khi bài có `terms:`, CONTENT-SPECIFICATION §3.1c), mục lục (desktop), khối "Bài tập liên quan", điều hướng Trước/Sau, nút **Đánh dấu đã học**, nút **Báo lỗi nội dung** (form nhỏ: loại lỗi, mô tả, đoạn trích lấy từ chữ đang bôi đen; cũng có trên trang bài tập, Từ vựng, Cài đặt / Tài liệu thêm; tối đa 10 lần/24 giờ, learning-hub#121), liên kết "Sửa trên GitHub" [P2], dấu thời gian cập nhật.
 Trang **Module**: danh sách xen kẽ lesson/exercise theo thứ tự đề xuất, trạng thái từng mục (khóa/chưa/đang/xong).
 
 ## 6. Trải nghiệm bài tập (Exercise)
@@ -136,7 +138,7 @@ Bố cục hai cột (desktop):
 - **Màn hình review**: 2 cột — trái: liên kết/diff PR + kết quả test + lịch sử lần nộp; phải: form review (comment theo dòng, nhận xét tổng, chọn `approved`/`changes_requested`).
 - **Mentee của tôi** (`/mentor/mentees`): danh sách, tiến độ từng track, hoạt động gần nhất, ghi chú riêng của mentor [P2].
 - **Yêu cầu mentoring**: danh sách `requested` để nhận/từ chối.
-- **Thống kê track** (`/tracks/<slug>/stats`) [P2]: admin và mọi mentor xem được mọi track (giống hàng đợi review); người khác không thấy tab, mở link thì thấy thông báo không có quyền. Gồm: thẻ tổng (ghi danh, đang học 14 ngày, hoàn thành, bài chờ review, review trung vị), phễu theo chương và từng bài (thanh ngang), biểu đồ 12 tuần (ghi danh, người hoạt động; tuần từ thứ Hai, giờ VN), bài tập khó (nộp lần đầu chưa đạt, chờ review lâu nhất), học viên không hoạt động ≥ 7 ngày hoặc chưa từng hoạt động sau 7 ngày ghi danh (link `/u/<login>`) để mentor hỏi thăm. Admin có link chéo với `/admin/reports?track=…` cùng khoảng ngày. Đã làm ([learning-hub#118](https://github.com/hcmute-dsc/learning-hub/issues/118))
+- **Thống kê track** (`/tracks/<slug>/stats`) [P2]: admin và mọi mentor xem được mọi track (giống hàng đợi review); người khác không thấy tab, mở link thì thấy thông báo không có quyền. Gồm: thẻ tổng (ghi danh, đang học 14 ngày, hoàn thành, bài chờ review, review trung vị), phễu theo chương và từng bài (thanh ngang), biểu đồ 12 tuần (ghi danh, người hoạt động; tuần từ thứ Hai, giờ VN), bài tập khó (nộp lần đầu chưa đạt, chờ review lâu nhất), học viên không hoạt động ≥ 7 ngày hoặc chưa từng hoạt động sau 7 ngày ghi danh (link `/u/<login>`) để mentor hỏi thăm. Admin có link chéo với `/admin/reports?track=…` cùng khoảng ngày; dòng "Báo lỗi nội dung đang mở: N" dẫn tới `/admin/content-reports?track=…&status=open` (learning-hub#121). Đã làm ([learning-hub#118](https://github.com/hcmute-dsc/learning-hub/issues/118))
 
 ## 9. Admin dashboard
 
@@ -149,6 +151,7 @@ Bố cục hai cột (desktop):
 | Nội dung | `/admin/content` | danh sách version (draft/published), nút Sync, xem diff & lỗi validate, Publish/Reject |
 | Nhật ký | `/admin/audit` | tìm theo người/hành động/thời gian |
 | Báo cáo [P2] | `/admin/reports` | chỉ admin: khoảng ngày (nút nhanh Tuần này / Tuần trước / 30 ngày qua / Tháng này), lọc track và đợt; số tổng M1–M8 (TRIAL-P0 §4.1), bảng theo track + đợt, bảng từng người học (GitHub login, không email); tải CSV tổng hợp hoặc từng người, có tùy chọn ẩn danh; mỗi lần tải ghi Nhật ký. Đã làm ([learning-hub#34](https://github.com/hcmute-dsc/learning-hub/issues/34)) |
+| Báo lỗi [MVP-Full] | `/admin/content-reports` | admin và mọi mentor: báo lỗi nội dung thành viên gửi, lọc theo lộ trình và trạng thái (Mới / Đang xử lý / Đã sửa / Không sửa, kèm số lượng); mỗi báo cáo: loại lỗi, bài (link), mô tả, đoạn trích, @login người báo, commit; đổi trạng thái, ghi chú chỉ staff thấy, nút "Tạo issue trên GitHub" (issue không ghi người báo). Đóng báo cáo thì người báo nhận thông báo chuông ([learning-hub#121](https://github.com/hcmute-dsc/learning-hub/issues/121)) |
 
 ## 10. Trang đóng góp `/contribute` [MVP đơn giản]
 
