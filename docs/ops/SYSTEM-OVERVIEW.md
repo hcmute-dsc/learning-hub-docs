@@ -243,7 +243,7 @@ sequenceDiagram
 
 - Sync cùng một commit hai lần không tạo phiên bản mới. Mỗi lần chỉ có đúng một phiên bản ở trạng thái `published`.
 - Không có bài học hay bài tập nào thay đổi thì không gửi Discord (learning-hub#26).
-- Link "Sửa trên GitHub" trên trang bài học trỏ tới repo và commit của phiên bản đang publish (`sourceFor`, learning-hub#21).
+- Link "Sửa trên GitHub" trên trang bài học trỏ tới repo và commit của phiên bản đang publish (`sourceFor`, learning-hub#21); chỉ admin, mentor và content_maintainer thấy (`canEditOnGitHub`, learning-hub#122).
 - Thay vì bấm trên UI, có thể chạy lệnh: `pnpm --filter @hub/api content:sync [--sha <sha>] [--publish]`.
 
 ## 6. Nộp bài và review
