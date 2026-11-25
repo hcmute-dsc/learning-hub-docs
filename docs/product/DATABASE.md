@@ -10,7 +10,7 @@
 | Nội dung (đọc là chính) | `tracks`, `modules`, `lessons`, `exercises`, `exercise_prerequisites`, `content_versions` | **Git** (DB là bản sao có chỉ mục; catalog chỉ được ghi khi **publish** một content version, sync chỉ ghi `content_versions`) |
 | Người dùng & quyền | `users`, `roles`, `user_roles`, `approved_emails` | DB |
 | Học tập | `enrollments`, `lesson_progress`, `submissions`, `test_runs` | DB |
-| Mentoring | `mentor_assignments`, `reviews`, `review_comments`, `review_thanks`, `content_reports` | DB |
+| Mentoring | `mentor_assignments`, `track_mentors`, `reviews`, `review_comments`, `review_thanks`, `content_reports` | DB |
 | Vận hành | `audit_logs` | DB |
 | Thông báo (MVP-Full) | `push_subscriptions` | DB |
 | Thông báo trong app (P2, F13) | `notifications`, `notification_preferences` | DB |
@@ -46,6 +46,8 @@ erDiagram
   users ||--o{ mentor_assignments : "mentee"
   users ||--o{ mentor_assignments : "mentor"
   tracks |o--o{ mentor_assignments : "scoped to"
+  users ||--o{ track_mentors : "looks after"
+  tracks ||--o{ track_mentors : "looked after by"
   users ||--o{ audit_logs : acts
   users ||--o{ certificates : "earns (P2)"
   tracks ||--o{ certificates : "certified in (P2)"
@@ -337,6 +339,24 @@ IX `(mentor_id, is_public, created_at desc)`.
 | check | `mentor_id is null or mentor_id <> mentee_id` | |
 | partial UQ | `(mentee_id, track_id) where status in ('requested','active')` | 1 yêu cầu/assignment mở mỗi track (dùng `coalesce(track_id, '0000…')` cho null) |
 
+### 3.15b `track_mentors` [MVP-Full]
+
+Mentor phụ trách một track ([learning-hub#120](https://github.com/hcmute-dsc/learning-hub/issues/120)). Admin giao ở `/admin/mentors`; trang track hiện tên mentor phụ trách cho thành viên. Một track có nhiều mentor, một mentor phụ trách nhiều track. Không xoá dòng: bỏ giao thì ghi `ended_at`/`ended_by`, nên lịch sử ai phụ trách track nào vẫn còn. Migration `20261126000000_track_mentors`.
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| id | uuid | PK |
+| track_id | uuid | FK → tracks (restrict) |
+| mentor_id | uuid | FK → users (restrict); lúc giao phải `active`, chưa xoá, có vai trò `mentor` (admin không tự đủ điều kiện) |
+| assigned_by | uuid | FK → users (admin giao), set null |
+| started_at | timestamptz | default now() |
+| ended_at | timestamptz | null = đang phụ trách |
+| ended_by | uuid | FK → users (admin bỏ giao), set null |
+| check | `ended_at is null or ended_at >= started_at` | |
+| partial UQ | `(track_id, mentor_id) where ended_at is null` | một dòng mở mỗi track/mentor; hai admin bấm cùng lúc → 409 |
+
+IX `(mentor_id)`. Mentor bị thu vai trò `mentor` hoặc bị tạm khóa vẫn giữ dòng mở nhưng không hiện ở `/admin/mentors` và trang track; cấp lại vai trò thì các track hiện lại. Audit: `mentor.track_assign`, `mentor.track_end` (metadata `mentorId`, `mentorLogin`, `track`).
+
 ### 3.16 `audit_logs` [MVP]
 | Cột | Kiểu | Ghi chú |
 | --- | --- | --- |
@@ -478,7 +498,7 @@ IX một phần `(last_digest_at) where email_digest`. Email gửi sau 8:00 gi�
 3. `submissions (user, exercise, attempt)` duy nhất; `idempotency_key` chống nộp trùng do bấm hai lần.
 4. `test_runs (provider, external_run_id)` duy nhất → webhook gửi lại không tạo bản ghi trùng.
 5. Tối đa 1 `review` đang mở / submission; mentor không tự review bài của chính mình (check ở tầng service + kiểm tra `reviewer_id <> submissions.user_id`).
-6. `mentor_assignments`: không tự làm mentor của mình; một assignment mở mỗi mentee/track.
+6. `mentor_assignments`: không tự làm mentor của mình; một assignment mở mỗi mentee/track. `track_mentors`: một dòng mở mỗi track/mentor.
 7. FK `on delete restrict` cho nội dung ← dữ liệu người dùng (không xóa cứng nội dung đã có bài nộp).
 8. Check enum bằng `check (col in (…))` thay vì Postgres `enum` để migration đổi giá trị dễ hơn (Prisma dùng `String` + Zod/TS union).
 
