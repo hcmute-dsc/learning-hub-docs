@@ -230,6 +230,15 @@ Mỗi tuần có đúng một dòng `leaderboard-week:<YYYY-Www>`; chạy lại 
 - Tin bị xoá trên Discord: "Cập nhật" báo đã bị xoá và cho đăng lại. Discord lỗi lúc đăng: bài vào `outbox_events` và tự thử lại.
 - Mỗi lần đăng tay và cập nhật ghi vào **Nhật ký**. Chỉ admin.
 
+### 3.11. Tạo issue GitHub từ báo lỗi nội dung (không bắt buộc)
+Trang **Quản trị → Báo lỗi** (`/admin/content-reports`, [learning-hub#121](https://github.com/hcmute-dsc/learning-hub/issues/121)) có nút **Tạo issue trên GitHub**: API mở issue trong repo của lộ trình (loại lỗi, mô tả, đoạn trích, link bài, commit; **không** có tên hay email người báo). Thiếu token thì nút bị ẩn, mentor tạo issue bằng tay.
+
+1. Chủ sở hữu org `hcmute-dsc` tạo fine-grained personal access token (tài khoản bot nếu có): resource owner `hcmute-dsc`, repo `learning-hub-track-*` (hoặc tất cả), quyền Repository → **Issues: Read and write**, hạn tối đa 1 năm (ghi ngày hết hạn vào mục 1).
+2. Trên VPS, tự gõ vào `.env`: `CONTENT_ISSUES_GITHUB_TOKEN=<token>`; `docker compose -f docker-compose.prod.yml up -d api`.
+3. Thử: mở một báo lỗi, bấm nút. Lỗi 502 "không có quyền Issues: write" là token thiếu repo hoặc quyền.
+
+Khi chuyển sang GitHub App (SECURITY §10): App cần **Issues: Read and write** trên các repo track; chỉ đổi adapter `apps/api/src/integrations/github/github-issue.tracker.ts`. Chi tiết: `deploy/README.md` Bước 15.
+
 ## 4. Việc thường ngày
 
 | Việc | Cách làm |
