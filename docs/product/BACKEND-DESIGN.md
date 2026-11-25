@@ -20,7 +20,7 @@ learning-hub/                  # monorepo (pnpm workspace)
           submissions/         # nộp bài, vòng đời submission
           assessments/         # test_runs, chấm quiz, nhận kết quả CI
           reviews/             # review + comment
-          mentorship/          # mentor_assignments
+          mentorship/          # track_mentors (mentor phụ trách track), mentor_assignments
           notifications/       # phát thông báo (port NotificationChannel)
           audit/               # ghi/đọc audit_logs
         integrations/
@@ -240,6 +240,10 @@ Theo tinh thần RFC 9457 (problem+json):
 | `PATCH /content-reports/{id}` | mentor, admin | MVP-Full | `{status?, staffNote?, updatedAt}` (`updatedAt` = bản người sửa đã thấy); chuyển trạng thái sai, hoặc báo cáo đã bị người khác sửa → 409; đóng (`resolved`/`dismissed`) thì báo chuông cho người gửi; ghi audit `content_report.status` |
 | `POST /content-reports/{id}/github-issue` | mentor, admin | MVP-Full | tạo issue trong repo của track (loại lỗi, mô tả, đoạn trích, link bài, commit; **không** có người báo). Mô tả (Markdown) và đoạn trích đều nằm trong fence `~` dài hơn mọi chuỗi `~` trong chữ (mô tả có info string `markdown`), nên GitHub không render gì của thành viên: không `@mention`, không liên kết `#123`, không HTML, kể cả qua entity như `&commat;` (learning-hub#125: lọc Markdown của GitHub bằng regex không an toàn). Issue có dòng dẫn tới trang Báo lỗi của Learning Hub (`/admin/content-reports?track=<slug>`, chỉ staff) để xem mô tả đã render qua port `IssueTracker`, bằng **GitHub App của org** (`GITHUB_APP_CLIENT_ID`, `GITHUB_APP_PRIVATE_KEY`; token cài đặt chỉ cho repo đó, quyền `issues: write`; thiếu cấu hình → 503, nút bị ẩn). Giữ chỗ trước khi gọi GitHub nên bấm hai lần chỉ có một issue (lần sau 409); đã có issue hoặc báo cáo đã đóng → 409; nội dung local → 422; ghi audit `content_report.issue` |
 | `PUT /admin/users/{id}/roles` | admin | MVP | ghi audit |
+| `GET /admin/mentors` | admin | MVP-Full | "Mentor" ([learning-hub#120](https://github.com/hcmute-dsc/learning-hub/issues/120)): `{ mentors: [{ mentor, tracks: [{slug, title, since}], activeMentees }], tracks }`. Mentor = tài khoản `active` có vai trò `mentor`, kể cả chưa phụ trách track nào; `tracks` là các track đang hoạt động để chọn |
+| `POST /admin/mentors/{mentorId}/tracks` | admin | MVP-Full | `{ trackSlug }` → 204. Track không có hoặc đã lưu trữ → 404; tài khoản không phải mentor đang hoạt động → 409; đã phụ trách track đó → 409; ghi audit `mentor.track_assign` |
+| `DELETE /admin/mentors/{mentorId}/tracks/{slug}` | admin | MVP-Full | → 204, ghi `ended_at` (giữ lịch sử); không đang phụ trách → 404; ghi audit `mentor.track_end` |
+| `GET /tracks/{slug}/mentors` | đã đăng nhập | MVP-Full | mentor đang phụ trách track (`PersonRef[]`: id, githubLogin, displayName, avatarUrl), ai phụ trách lâu nhất đứng trước; không có email |
 | `POST /admin/users/{id}/approve` | admin, mentor | MVP | `pending` → `active`, ghi audit |
 | `GET /admin/approved-emails` | admin | MVP | danh sách email được duyệt; không mở cho vai trò khác |
 | `PUT /admin/approved-emails` | admin | MVP | `{emails[], note?, mode: replace\|append}`; chuẩn hóa chữ thường, 1 giao dịch; audit chỉ ghi số lượng thêm/bớt |
