@@ -430,11 +430,12 @@ Ghi: chỉ `CertificatesRepository` (module `certificates`) đọc/ghi bảng n�
 | handled_by | uuid | null, FK → users (set null) — người đổi trạng thái gần nhất |
 | staff_note | text | null; CHECK 1–2000 ký tự — chỉ admin/mentor thấy |
 | github_issue_url | text | null — issue đã tạo trong repo track (mỗi báo cáo một issue) |
+| github_issue_requested_at | timestamptz | null — đặt khi bắt đầu tạo issue ("giữ chỗ") để hai lần bấm chỉ tạo một issue; xoá khi GitHub lỗi; giữ chỗ cũ hơn 5 phút được lấy lại |
 | created_at, updated_at | timestamptz | |
 | closed_at | timestamptz | null; CHECK `(status in ('resolved','dismissed')) = (closed_at is not null)` |
-| IX | (track_id, status, created_at desc), (status, created_at desc), (reporter_id, created_at desc) | danh sách theo track/trạng thái; giới hạn 10 báo cáo/24 giờ/người |
+| IX | (track_id, status, created_at desc), (status, created_at desc), (reporter_id, created_at desc), (created_at desc) | danh sách theo track/trạng thái; giới hạn 10 báo cáo/24 giờ/người |
 
-Ghi: chỉ module `content-reports` đọc/ghi bảng này. Trình duyệt chỉ gửi id; track, tên và commit do API tra trong catalog. Đổi trạng thái dùng `update … where status = <cũ>` nên hai người đổi cùng lúc thì một người nhận 409 và người báo chỉ nhận một thông báo. Chuyển trạng thái hợp lệ: `open` ⇄ `in_progress`, hai trạng thái này → `resolved`/`dismissed`, đã đóng thì chỉ mở lại về `open`. Audit: `content_report.status` (track, từ → sang), `content_report.issue` (repo, link); không chép nội dung báo cáo.
+Ghi: chỉ module `content-reports` đọc/ghi bảng này. Trình duyệt chỉ gửi id; track, tên và commit do API tra trong catalog. Đổi trạng thái hay ghi chú dùng `update … where status = <cũ> and updated_at = <bản người sửa đã thấy>` nên hai người sửa cùng lúc thì một người nhận 409 và người báo chỉ nhận một thông báo. Giới hạn 10 báo cáo/24 giờ: đếm và ghi trong một transaction sau `pg_advisory_xact_lock` theo id người báo. Chuyển trạng thái hợp lệ: `open` ⇄ `in_progress`, hai trạng thái này → `resolved`/`dismissed`, đã đóng thì chỉ mở lại về `open`. Audit: `content_report.status` (track, từ → sang), `content_report.issue` (repo, link); không chép nội dung báo cáo.
 
 ### 3.16f `notifications`, `notification_preferences` [P2, F13]
 **Mục đích:** chuông thông báo trong app và email tóm tắt tuỳ chọn (learning-hub#49). Migration `20261119120000_notifications`.

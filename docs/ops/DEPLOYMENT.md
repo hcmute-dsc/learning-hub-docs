@@ -231,13 +231,14 @@ Mỗi tuần có đúng một dòng `leaderboard-week:<YYYY-Www>`; chạy lại 
 - Mỗi lần đăng tay và cập nhật ghi vào **Nhật ký**. Chỉ admin.
 
 ### 3.11. Tạo issue GitHub từ báo lỗi nội dung (không bắt buộc)
-Trang **Quản trị → Báo lỗi** (`/admin/content-reports`, [learning-hub#121](https://github.com/hcmute-dsc/learning-hub/issues/121)) có nút **Tạo issue trên GitHub**: API mở issue trong repo của lộ trình (loại lỗi, mô tả, đoạn trích, link bài, commit; **không** có tên hay email người báo). Thiếu token thì nút bị ẩn, mentor tạo issue bằng tay.
+Trang **Quản trị → Báo lỗi** (`/admin/content-reports`, [learning-hub#121](https://github.com/hcmute-dsc/learning-hub/issues/121)) có nút **Tạo issue trên GitHub**: API mở issue trong repo của lộ trình (loại lỗi, mô tả, đoạn trích, link bài, commit; **không** có tên hay email người báo), bằng **GitHub App của org** `hcmute-dsc-learning-hub` ([SECURITY §10](../product/SECURITY.md)). Thiếu cấu hình thì nút bị ẩn, mentor tạo issue bằng tay. Secret `PROJECT_APP_PRIVATE_KEY` của Actions không dùng được trên VPS, nên VPS có khóa riêng.
 
-1. Chủ sở hữu org `hcmute-dsc` tạo fine-grained personal access token (tài khoản bot nếu có): resource owner `hcmute-dsc`, repo `learning-hub-track-*` (hoặc tất cả), quyền Repository → **Issues: Read and write**, hạn tối đa 1 năm (ghi ngày hết hạn vào mục 1).
-2. Trên VPS, tự gõ vào `.env`: `CONTENT_ISSUES_GITHUB_TOKEN=<token>`; `docker compose -f docker-compose.prod.yml up -d api`.
-3. Thử: mở một báo lỗi, bấm nút. Lỗi 502 "không có quyền Issues: write" là token thiếu repo hoặc quyền.
+**Owner của org làm (một lần):**
+1. Org Settings → Developer settings → GitHub Apps → `hcmute-dsc-learning-hub` → Permissions & events → Repository permissions → **Issues: Read and write** → Save.
+2. Org Settings → Third-party Access → GitHub Apps → `hcmute-dsc-learning-hub` → Configure → **chấp nhận quyền mới** (Review request). Kiểm tra Repository access gồm các repo `learning-hub-track-*`.
+3. Trang App → Private keys → **Generate a private key** (khóa riêng cho VPS); ghi lại **Client ID**.
 
-Khi chuyển sang GitHub App (SECURITY §10): App cần **Issues: Read and write** trên các repo track; chỉ đổi adapter `apps/api/src/integrations/github/github-issue.tracker.ts`. Chi tiết: `deploy/README.md` Bước 15.
+**Trên VPS** (tự gõ, không dán khóa vào chat hay issue): thêm `GITHUB_APP_CLIENT_ID=<Client ID>` và `GITHUB_APP_PRIVATE_KEY=<nội dung .pem trên một dòng, xuống dòng viết thành \n>` vào `.env` (lệnh có sẵn ở `deploy/README.md` Bước 15), xoá file `.pem`, rồi `docker compose -f docker-compose.prod.yml up -d api`. Thử bằng một báo lỗi đang mở: thông báo lỗi nói rõ App chưa cài trên repo, chưa có quyền Issues, hay khóa sai. Nghi lộ khóa: xoá khóa đó ở trang App, tạo khóa mới.
 
 ## 4. Việc thường ngày
 
