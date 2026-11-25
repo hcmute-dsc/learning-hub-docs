@@ -40,7 +40,7 @@ Quy tắc bắt buộc:
 ## 4. Rate limiting
 
 - Reverse proxy (Caddy rate-limit hoặc Nginx `limit_req`) + `@nestjs/throttler` trong API.
-- Mặc định 100 req/phút/IP; auth 5/phút; `POST submissions` 10/phút/user và **giới hạn nộp lại**: tối đa 5 lần chạy checker/giờ/bài/user (bảo vệ quota Actions); webhook không tính theo IP mà theo chữ ký hợp lệ.
+- Mặc định 100 req/phút/IP; auth 5/phút; báo lỗi nội dung (`POST /content-reports`) 10 lần/24 giờ/user (đếm và ghi dưới advisory lock, learning-hub#121); `POST submissions` 10/phút/user và **giới hạn nộp lại**: tối đa 5 lần chạy checker/giờ/bài/user (bảo vệ quota Actions); webhook không tính theo IP mà theo chữ ký hợp lệ.
 - Phản hồi 429 + `Retry-After`.
 
 ## 5. CSRF, XSS, SQL injection
@@ -122,6 +122,7 @@ Runner nhiều ngôn ngữ: chỉ Future, chưa xây ở MVP (ADR-07, ADR-08).
 | Đối tượng | Quyền | Ghi chú |
 | --- | --- | --- |
 | GitHub App (hub) | `Metadata: read`, `Contents: read`, `Pull requests: read`, `Actions: write` (chỉ để dispatch workflow ở checker repo), `Checks: read` | Cài đặt chỉ trên `learning-hub-content` và `learning-hub-checker`; không cài trên toàn org |
+| GitHub App của org `hcmute-dsc-learning-hub` (đang dùng) | `Issues: Read and write` trên các repo `learning-hub-track-*` ("Tạo issue trên GitHub" từ báo lỗi nội dung, learning-hub#121), cùng quyền thêm vào Project #1 của Actions | API xin **installation token cho đúng một repo, chỉ `issues: write`**, hết hạn 1 giờ, chỉ giữ trong bộ nhớ. Khóa riêng của VPS (`GITHUB_APP_PRIVATE_KEY`) tách khỏi khóa của Actions (`PROJECT_APP_PRIVATE_KEY`) để thu hồi riêng. Issue không chứa tên hay email người báo |
 | OAuth App (đăng nhập) | `read:user`, `user:email` (đọc email đã xác minh), (`read:org` chỉ khi bật kiểm tra org tùy chọn) | Có thể dùng chính GitHub App (user-to-server) để gộp |
 | PAT | **Không dùng** | Nếu bắt buộc, fine-grained, hết hạn ≤ 90 ngày, gắn tài khoản tổ chức, không phải cá nhân. Ngoại lệ tạm thời (MVP-Lite): `CONTENT_GITHUB_TOKEN` **tuỳ chọn** cho `GithubContentSource`, chỉ để nâng rate limit khi đọc content repo công khai — fine-grained, read-only, theo điều kiện trên; bỏ khi có GitHub App |
 | Deploy | Token GitHub Actions mặc định `contents: read`; deploy key riêng | Không dùng quyền admin |

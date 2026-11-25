@@ -10,7 +10,7 @@
 | Nội dung (đọc là chính) | `tracks`, `modules`, `lessons`, `exercises`, `exercise_prerequisites`, `content_versions` | **Git** (DB là bản sao có chỉ mục; catalog chỉ được ghi khi **publish** một content version, sync chỉ ghi `content_versions`) |
 | Người dùng & quyền | `users`, `roles`, `user_roles`, `approved_emails` | DB |
 | Học tập | `enrollments`, `lesson_progress`, `submissions`, `test_runs` | DB |
-| Mentoring | `mentor_assignments`, `reviews`, `review_comments`, `review_thanks` | DB |
+| Mentoring | `mentor_assignments`, `reviews`, `review_comments`, `review_thanks`, `content_reports` | DB |
 | Vận hành | `audit_logs` | DB |
 | Thông báo (MVP-Full) | `push_subscriptions` | DB |
 | Thông báo trong app (P2, F13) | `notifications`, `notification_preferences` | DB |
@@ -53,6 +53,8 @@ erDiagram
   users ||--o{ notifications : "receives (P2)"
   users ||--o| notification_preferences : "chooses (P2)"
   users ||--o{ user_badges : "earns (P2)"
+  users ||--o{ content_reports : "reports / handles"
+  tracks ||--o{ content_reports : "reported in"
 ```
 
 Ghi chú: `exercise_prerequisites` là quan hệ tự tham chiếu `exercises`↔`exercises`. Mentor/mentee đều là `users` (hai FK trong `mentor_assignments`).
@@ -409,6 +411,32 @@ PK `(user_id, badge)` → cấp huy hiệu idempotent (`insert … on conflict d
 
 Ghi: chỉ `CertificatesRepository` (module `certificates`) đọc/ghi bảng này. Thu hồi dùng `update … where revoked_at is null` nên hai admin bấm cùng lúc chỉ một người thành công (người kia nhận 409).
 
+### 3.16g `content_reports` [MVP-Full, learning-hub#121]
+**Mục đích:** "Báo lỗi nội dung": thành viên báo lỗi trên trang bài học, bài tập, Cài đặt / Tài liệu thêm, Từ vựng; admin và mọi mentor xử lý ở `/admin/content-reports`. Migration `20261125120000_content_reports`.
+
+| Cột | Kiểu | Ghi chú |
+| --- | --- | --- |
+| id | uuid | PK (v7) |
+| reporter_id | uuid | FK → users (restrict) |
+| track_id | uuid | FK → tracks (restrict) |
+| target_kind | text | CHECK `lesson` \| `exercise` \| `track_page` \| `glossary` |
+| target_ref | text | id bài học/bài tập; `setup` \| `resources` cho trang track; `glossary` |
+| target_title | text | not null — tên lúc báo (giữ được khi bài đổi tên hay bị lưu trữ) |
+| commit_sha | char(40) | null — commit nội dung người báo đang đọc (repo riêng của track với registry); null với nội dung local |
+| category | text | CHECK `typo` \| `wrong_knowledge` \| `broken_code` \| `wrong_answer` \| `broken_media` \| `other` |
+| description | text | not null; CHECK 1–2000 ký tự |
+| quote | text | null; CHECK 1–500 ký tự — đoạn bị sai, chép từ trang |
+| status | text | default `open`; CHECK `open` \| `in_progress` \| `resolved` \| `dismissed` |
+| handled_by | uuid | null, FK → users (set null) — người đổi trạng thái gần nhất |
+| staff_note | text | null; CHECK 1–2000 ký tự — chỉ admin/mentor thấy |
+| github_issue_url | text | null — issue đã tạo trong repo track (mỗi báo cáo một issue) |
+| github_issue_requested_at | timestamptz | null — đặt khi bắt đầu tạo issue ("giữ chỗ") để hai lần bấm chỉ tạo một issue; xoá khi GitHub lỗi; giữ chỗ cũ hơn 5 phút được lấy lại |
+| created_at, updated_at | timestamptz | |
+| closed_at | timestamptz | null; CHECK `(status in ('resolved','dismissed')) = (closed_at is not null)` |
+| IX | (track_id, status, created_at desc), (status, created_at desc), (reporter_id, created_at desc), (created_at desc) | danh sách theo track/trạng thái; giới hạn 10 báo cáo/24 giờ/người |
+
+Ghi: chỉ module `content-reports` đọc/ghi bảng này. Trình duyệt chỉ gửi id; track, tên và commit do API tra trong catalog. Đổi trạng thái hay ghi chú dùng `update … where status = <cũ> and updated_at = <bản người sửa đã thấy>` nên hai người sửa cùng lúc thì một người nhận 409 và người báo chỉ nhận một thông báo. Giới hạn 10 báo cáo/24 giờ: đếm và ghi trong một transaction sau `pg_advisory_xact_lock` theo id người báo. Chuyển trạng thái hợp lệ: `open` ⇄ `in_progress`, hai trạng thái này → `resolved`/`dismissed`, đã đóng thì chỉ mở lại về `open`. Audit: `content_report.status` (track, từ → sang), `content_report.issue` (repo, link); không chép nội dung báo cáo.
+
 ### 3.16f `notifications`, `notification_preferences` [P2, F13]
 **Mục đích:** chuông thông báo trong app và email tóm tắt tuỳ chọn (learning-hub#49). Migration `20261119120000_notifications`.
 
@@ -420,13 +448,13 @@ Luồng: domain event → listener ghi `outbox_events` (chỉ id) → worker tro
 | --- | --- | --- |
 | id | uuid | PK (v7) |
 | user_id | uuid | FK → users, on delete cascade |
-| type | text | CHECK `review_completed` \| `review_requested` \| `track_published` \| `review_message` \| `review_thanks` |
+| type | text | CHECK `review_completed` \| `review_requested` \| `track_published` \| `review_message` \| `review_thanks` \| `content_report` |
 | payload | jsonb | `{title, body, link}`: chữ dựng sẵn lúc ghi, `link` là đường dẫn trong web; đọc chuông không cần join |
 | source_event_id | bigint | null — dòng `outbox_events` đã sinh ra nó; UQ `(source_event_id, user_id)` nên chạy lại không tạo trùng |
 | read_at | timestamptz | null = chưa đọc |
 | created_at | timestamptz | |
 
-IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor và admin đang active (admin mở được trang review), trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord); `review_message` → thành viên và mentor của review, trừ người viết (admin viết thì cả hai nhận); `review_thanks` → mentor được cảm ơn (learning-hub#41).
+IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor và admin đang active (admin mở được trang review), trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord); `review_message` → thành viên và mentor của review, trừ người viết (admin viết thì cả hai nhận); `review_thanks` → mentor được cảm ơn (learning-hub#41); `content_report` → người gửi báo lỗi nội dung, khi báo cáo chuyển sang `resolved` hoặc `dismissed` (learning-hub#121; không báo khi chính người xử lý là người gửi).
 
 `notification_preferences` — lựa chọn email tóm tắt; không có dòng = tắt (mặc định):
 
