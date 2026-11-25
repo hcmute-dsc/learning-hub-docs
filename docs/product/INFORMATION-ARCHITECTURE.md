@@ -38,6 +38,7 @@ flowchart TD
   Tracks["tracks"]
   Track["tracks/slug"]
   TrackDocs["tracks/slug/setup, resources"]
+  TrackStats["tracks/slug/stats"]
   Module["tracks/slug/module"]
   Lesson["lessons/id"]
   Exercise["exercises/id"]
@@ -60,6 +61,7 @@ flowchart TD
   Login --> Dash
   Dash --> Tracks --> Track --> Module --> Lesson
   Track --> TrackDocs
+  Track --> TrackStats
   Dash --> TrackDocs
   Module --> Exercise --> Sub
   Dash --> MySubs
@@ -95,7 +97,7 @@ Dashboard admin (`/admin`): số thành viên `pending`, số track published, v
 ```
 Track  (catalog card: tiêu đề, level, giờ ước tính, tags, số bài, người đóng góp)
  └─ Trang Track
-     • Tab: Tổng quan · Cài đặt · Tài liệu thêm · Từ vựng (mỗi tab chỉ có khi track có docs/setup.md, docs/resources.md, glossary.yaml)
+     • Tab: Tổng quan · Cài đặt · Tài liệu thêm · Từ vựng · Thống kê (mỗi tab chỉ có khi track có docs/setup.md, docs/resources.md, glossary.yaml; Thống kê chỉ cho admin và mentor)
      • Giới thiệu + "Sau khi học bạn có thể…" (outcomes)
      • Điều kiện tiên quyết (track khuyến nghị)
      • Lộ trình: danh sách Module (có % tiến độ)
@@ -134,6 +136,7 @@ Bố cục hai cột (desktop):
 - **Màn hình review**: 2 cột — trái: liên kết/diff PR + kết quả test + lịch sử lần nộp; phải: form review (comment theo dòng, nhận xét tổng, chọn `approved`/`changes_requested`).
 - **Mentee của tôi** (`/mentor/mentees`): danh sách, tiến độ từng track, hoạt động gần nhất, ghi chú riêng của mentor [P2].
 - **Yêu cầu mentoring**: danh sách `requested` để nhận/từ chối.
+- **Thống kê track** (`/tracks/<slug>/stats`) [P2]: admin và mọi mentor xem được mọi track (giống hàng đợi review); người khác không thấy tab, mở link thì thấy thông báo không có quyền. Gồm: thẻ tổng (ghi danh, đang học 14 ngày, hoàn thành, bài chờ review, review trung vị), phễu theo chương và từng bài (thanh ngang), biểu đồ 12 tuần (ghi danh, người hoạt động; tuần từ thứ Hai, giờ VN), bài tập khó (nộp lần đầu chưa đạt, chờ review lâu nhất), học viên không hoạt động ≥ 7 ngày hoặc chưa từng hoạt động sau 7 ngày ghi danh (link `/u/<login>`) để mentor hỏi thăm. Admin có link chéo với `/admin/reports?track=…` cùng khoảng ngày. Đã làm ([learning-hub#118](https://github.com/hcmute-dsc/learning-hub/issues/118))
 
 ## 9. Admin dashboard
 
