@@ -114,7 +114,7 @@ Module
  ├─ Lesson 1 … n   (đọc)
  └─ Exercise 1 … n (làm)
 ```
-Trang **Lesson** gồm: breadcrumb (Track › Module › Lesson), mục tiêu bài, nội dung Markdown (lần đầu mỗi từ mới có gạch chân chấm và chú thích), hộp "Từ mới trong bài" thu gọn ở cuối nội dung (khi bài có `terms:`, CONTENT-SPECIFICATION §3.1c), mục lục (desktop), khối "Bài tập liên quan", điều hướng Trước/Sau, nút **Đánh dấu đã học**, nút **Báo lỗi nội dung** (form nhỏ: loại lỗi, mô tả, đoạn trích lấy từ chữ đang bôi đen; cũng có trên trang bài tập, Từ vựng, Cài đặt / Tài liệu thêm; tối đa 10 lần/24 giờ, learning-hub#121), liên kết "Sửa trên GitHub" [P2], dấu thời gian cập nhật.
+Trang **Lesson** gồm: breadcrumb (Track › Module › Lesson), mục tiêu bài, nội dung Markdown (lần đầu mỗi từ mới có gạch chân chấm và chú thích), hộp "Từ mới trong bài" thu gọn ở cuối nội dung (khi bài có `terms:`, CONTENT-SPECIFICATION §3.1c), mục lục (desktop), khối "Bài tập liên quan", điều hướng Trước/Sau, nút **Đánh dấu đã học**, nút **Báo lỗi nội dung** (form nhỏ: loại lỗi, mô tả, đoạn trích lấy từ chữ đang bôi đen; cũng có trên trang bài tập, Từ vựng, Cài đặt / Tài liệu thêm; tối đa 10 lần/24 giờ, learning-hub#121), liên kết "Sửa trên GitHub" [P2] (chỉ admin, mentor và content_maintainer thấy, cả trên trang Từ vựng và Cài đặt / Tài liệu thêm; thành viên dùng nút "Báo lỗi nội dung", [learning-hub#122](https://github.com/hcmute-dsc/learning-hub/issues/122)), dấu thời gian cập nhật.
 Trang **Module**: danh sách xen kẽ lesson/exercise theo thứ tự đề xuất, trạng thái từng mục (khóa/chưa/đang/xong).
 
 ## 6. Trải nghiệm bài tập (Exercise)
