@@ -119,7 +119,7 @@ Ký hiệu: C = controllers, S = application services, R = repositories, E = dom
 - **Trách nhiệm:** yêu cầu mentor, gán, kết thúc, danh sách mentee.
 - C: `MentorshipController` (`POST /mentorship/requests`, `GET /me/mentorship`, `GET /mentor/mentees`), `AdminMentorshipController` (`POST /admin/mentorship/{id}/assign`).
 - S: `MentorshipService`, `AssignmentStateMachine` (domain). R: `MentorAssignmentRepository`.
-- Cấu hình (chốt theo học kỳ, không hard-code): `MENTOR_MAX_MENTEES` (mặc định 5), `REVIEW_TARGET_HOURS` (mặc định 72, chỉ là mục tiêu để hiển thị/đo). MVP đọc từ env; sau có thể chuyển thành setting admin.
+- Cấu hình (chốt theo học kỳ, không hard-code): `MENTOR_MAX_MENTEES` (mặc định 5, số mentee `active` của một mentor trên mọi track; env của api, có trong `.env.example`), `REVIEW_TARGET_HOURS` (mặc định 72, chỉ là mục tiêu để hiển thị/đo). MVP đọc từ env; sau có thể chuyển thành setting admin.
 - E: `MentorRequested`, `MentorAssigned`, `MentorshipEnded`. D: `users`.
 
 ### notifications
@@ -243,6 +243,8 @@ Theo tinh thần RFC 9457 (problem+json):
 | `GET /admin/mentors` | admin | MVP-Full | "Mentor" ([learning-hub#120](https://github.com/hcmute-dsc/learning-hub/issues/120)): `{ mentors: [{ mentor, tracks: [{slug, title, since}], activeMentees }], tracks }`. Mentor = tài khoản `active` có vai trò `mentor`, kể cả chưa phụ trách track nào; `tracks` là các track đang hoạt động để chọn |
 | `POST /admin/mentors/{mentorId}/tracks` | admin | MVP-Full | `{ trackSlug }` → 204. Track không có hoặc đã lưu trữ → 404; tài khoản không phải mentor đang hoạt động → 409; đã phụ trách track đó → 409; ghi audit `mentor.track_assign` |
 | `DELETE /admin/mentors/{mentorId}/tracks/{slug}` | admin | MVP-Full | → 204, ghi `ended_at` (giữ lịch sử); không đang phụ trách → 404; ghi audit `mentor.track_end` |
+| `GET /admin/mentors/mentees?track=` | admin | MVP-Full | US-11: `{ track, maxMentees, mentors: [{ mentor, activeMentees, inTrack }], members: [{ member, mentor, since }] }`. `members` = thành viên active đã ghi danh track (không `dropped`), theo tên; `mentors` = mentor đang hoạt động, ai phụ trách track này đứng trước. Track không có hoặc đã lưu trữ → 404 |
+| `PUT /admin/mentors/mentees/{menteeId}` | admin | MVP-Full | `{ trackSlug, mentorId \| null }` → 204. Gán, đổi (dòng cũ `ended`) hoặc bỏ (`null`); chọn lại đúng mentor đang có thì không đổi gì. 409 khi: tự làm mentor của mình, thành viên chưa ghi danh, người được chọn không phải mentor đang hoạt động, mentor đã đủ `MENTOR_MAX_MENTEES`. Ghi audit `mentor.assign` / `mentor.unassign` |
 | `GET /tracks/{slug}/mentors` | đã đăng nhập | MVP-Full | mentor đang phụ trách track (`PersonRef[]`: id, githubLogin, displayName, avatarUrl), ai phụ trách lâu nhất đứng trước; không có email |
 | `POST /admin/users/{id}/approve` | admin, mentor | MVP | `pending` → `active`, ghi audit |
 | `GET /admin/approved-emails` | admin | MVP | danh sách email được duyệt; không mở cho vai trò khác |

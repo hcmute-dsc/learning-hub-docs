@@ -339,6 +339,14 @@ IX `(mentor_id, is_public, created_at desc)`.
 | check | `mentor_id is null or mentor_id <> mentee_id` | |
 | partial UQ | `(mentee_id, track_id) where status in ('requested','active')` | 1 yêu cầu/assignment mở mỗi track (dùng `coalesce(track_id, '0000…')` cho null) |
 
+Admin gán ở `/admin/mentors?track=` (US-11, [learning-hub#120](https://github.com/hcmute-dsc/learning-hub/issues/120)):
+- Chỉ thành viên đã ghi danh track (enrollment không `dropped`) mới được gán mentor. Mentor phải là tài khoản `active` có vai trò `mentor`.
+- Gán mới tạo dòng `active` (`decided_by` = admin, `started_at`). Đổi mentor thì dòng cũ thành `ended` (ghi `ended_at`) rồi tạo dòng mới. Bỏ mentor thì dòng thành `ended`. Không xoá dòng nào.
+- Thành viên đã tự xin mentor (dòng `requested`, #7): admin gán thì chính dòng đó chuyển sang `active`; admin bỏ thì thành `declined`.
+- Một mentor kèm tối đa `MENTOR_MAX_MENTEES` dòng `active` trên mọi track. Số này được đếm rồi ghi dưới advisory lock theo mentor, nên hai admin không cùng lấy được chỗ cuối.
+- Audit: `mentor.assign` / `mentor.unassign`, metadata gồm `menteeLogin`, `track`, `mentorLogin`, `previousMentorLogin`.
+- Hàng đợi review đọc các dòng `active` để làm bộ lọc "Mentee của tôi" và đếm mentee không hoạt động.
+
 ### 3.15b `track_mentors` [MVP-Full]
 
 Mentor phụ trách một track ([learning-hub#120](https://github.com/hcmute-dsc/learning-hub/issues/120)). Admin giao ở `/admin/mentors`; trang track hiện tên mentor phụ trách cho thành viên. Một track có nhiều mentor, một mentor phụ trách nhiều track. Không xoá dòng: bỏ giao thì ghi `ended_at`/`ended_by`, nên lịch sử ai phụ trách track nào vẫn còn. Migration `20261126000000_track_mentors`.
