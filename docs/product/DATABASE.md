@@ -476,13 +476,13 @@ Luồng: domain event → listener ghi `outbox_events` (chỉ id) → worker tro
 | --- | --- | --- |
 | id | uuid | PK (v7) |
 | user_id | uuid | FK → users, on delete cascade |
-| type | text | CHECK `review_completed` \| `review_requested` \| `track_published` \| `review_message` \| `review_thanks` \| `content_report` |
+| type | text | CHECK `review_completed` \| `review_requested` \| `track_published` \| `review_message` \| `review_thanks` \| `content_report` \| `mentor_assignment` |
 | payload | jsonb | `{title, body, link}`: chữ dựng sẵn lúc ghi, `link` là đường dẫn trong web; đọc chuông không cần join |
 | source_event_id | bigint | null — dòng `outbox_events` đã sinh ra nó; UQ `(source_event_id, user_id)` nên chạy lại không tạo trùng |
 | read_at | timestamptz | null = chưa đọc |
 | created_at | timestamptz | |
 
-IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor và admin đang active (admin mở được trang review), trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord); `review_message` → thành viên và mentor của review, trừ người viết (admin viết thì cả hai nhận); `review_thanks` → mentor được cảm ơn (learning-hub#41); `content_report` → người gửi báo lỗi nội dung, khi báo cáo chuyển sang `resolved` hoặc `dismissed` (learning-hub#121; không báo khi chính người xử lý là người gửi).
+IX `(user_id, read_at, created_at desc)`. Người nhận: `review_completed` → thành viên nộp bài; `review_requested` → mentor và admin đang active (admin mở được trang review), trừ người nộp; `track_published` → mọi thành viên active, chỉ khi publish có **lộ trình mới** (sửa bài vẫn chỉ báo Discord); `review_message` → thành viên và mentor của review, trừ người viết (admin viết thì cả hai nhận); `review_thanks` → mentor được cảm ơn (learning-hub#41); `content_report` → người gửi báo lỗi nội dung, khi báo cáo chuyển sang `resolved` hoặc `dismissed` (learning-hub#121; không báo khi chính người xử lý là người gửi). `mentor_assignment` → khi admin gán, đổi hoặc bỏ mentor của mentee (learning-hub#131, migration `20261127000000_mentor_assignment_bell`): mentee ("Bạn có mentor ở …", link hồ sơ mentor; bỏ mentor thì "Bạn tạm chưa có mentor ở …"), mentor mới ("Bạn kèm thêm … ở …", link `/review?track=&mentee=`), mentor cũ khi đổi hoặc bỏ; không báo cho chính admin vừa thao tác.
 
 `notification_preferences` — lựa chọn email tóm tắt; không có dòng = tắt (mặc định):
 
